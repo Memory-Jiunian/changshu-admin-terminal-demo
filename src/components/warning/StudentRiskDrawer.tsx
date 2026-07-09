@@ -71,7 +71,7 @@ export function StudentRiskDrawer({
   return (
     <Sheet onOpenChange={onOpenChange} open={open && Boolean(warning)}>
       {warning ? (
-        <SheetContent className="flex w-[520px] max-w-[calc(100vw-24px)] gap-0 p-0 sm:max-w-[560px]">
+        <SheetContent className="flex h-full w-[520px] max-w-[calc(100vw-24px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[560px]">
           <SheetHeader className="shrink-0 border-b border-neutral-200 px-5 py-4 pr-14 text-left">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -95,7 +95,7 @@ export function StudentRiskDrawer({
             </div>
           </SheetHeader>
 
-          <ScrollArea className="min-h-0 flex-1 bg-neutral-100">
+          <ScrollArea className="min-h-0 flex-1 overflow-hidden bg-neutral-100">
             <div className="space-y-4 p-5">
               <section className="rounded-lg border border-neutral-200 bg-white p-4">
                 <div className="mb-4 flex items-start justify-between gap-3">

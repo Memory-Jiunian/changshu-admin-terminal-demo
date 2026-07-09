@@ -56,6 +56,35 @@ export type QuickFilterValue =
   | "mine"
   | "new_feedback";
 
+export type TimeRangeFilter = "today" | "last_3_days" | "last_7_days";
+
+export type AdvancedFilterValues = {
+  gradeClass: string[];
+  riskLevel: RiskLevel[];
+  currentStatus: WarningStatus[];
+  clueType: ClueType[];
+  responsibleTeacher: string[];
+  timeRange: TimeRangeFilter[];
+  feedbackStatus: FeedbackStatus[];
+};
+
+export type AdvancedFilterKey = keyof AdvancedFilterValues;
+
+export type AdvancedFilterOptions = {
+  gradeClass: string[];
+  responsibleTeacher: string[];
+};
+
+export const emptyAdvancedFilters: AdvancedFilterValues = {
+  gradeClass: [],
+  riskLevel: [],
+  currentStatus: [],
+  clueType: [],
+  responsibleTeacher: [],
+  timeRange: [],
+  feedbackStatus: [],
+};
+
 export const statusLabels: Record<StatusTabValue, string> = {
   all: "全部",
   pending_review: "待复核",
@@ -70,7 +99,7 @@ export const statusLabels: Record<StatusTabValue, string> = {
 export const riskLevelLabels: Record<RiskLevel, string> = {
   medium: "中风险",
   high: "高风险",
-  critical: "危急",
+  critical: "危险",
 };
 
 export const feedbackStatusLabels: Record<FeedbackStatus, string> = {
@@ -88,3 +117,8 @@ export const clueTypeLabels: Record<ClueType, string> = {
   teacher_report: "班主任上报",
 };
 
+export const timeRangeLabels: Record<TimeRangeFilter, string> = {
+  today: "今日",
+  last_3_days: "近 3 天",
+  last_7_days: "近 7 天",
+};

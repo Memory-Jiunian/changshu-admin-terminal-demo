@@ -1,17 +1,13 @@
-import { Filter, Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 
+import { AdvancedFilterDialog } from "@/components/warning/AdvancedFilterDialog";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   statusLabels,
+  type AdvancedFilterOptions,
+  type AdvancedFilterValues,
   type QuickFilterValue,
   type StatusTabValue,
 } from "@/types/warning";
@@ -20,10 +16,13 @@ type WarningFilterBarProps = {
   status: StatusTabValue;
   quickFilter: QuickFilterValue | null;
   searchValue: string;
+  advancedFilters: AdvancedFilterValues;
+  advancedOptions: AdvancedFilterOptions;
   statusCounts: Record<StatusTabValue, number>;
   onStatusChange: (value: StatusTabValue) => void;
   onQuickFilterChange: (value: QuickFilterValue) => void;
   onSearchChange: (value: string) => void;
+  onAdvancedFiltersChange: (value: AdvancedFilterValues) => void;
 };
 
 const statusOrder: StatusTabValue[] = [
@@ -45,25 +44,17 @@ const quickFilters: Array<{ label: string; value: QuickFilterValue }> = [
   { label: "有新反馈", value: "new_feedback" },
 ];
 
-const advancedFilterFields = [
-  "年级 / 班级",
-  "风险等级",
-  "线索类型",
-  "负责心理老师",
-  "时间范围",
-  "反馈状态",
-  "反馈超时",
-  "有新反馈",
-];
-
 export function WarningFilterBar({
   status,
   quickFilter,
   searchValue,
+  advancedFilters,
+  advancedOptions,
   statusCounts,
   onStatusChange,
   onQuickFilterChange,
   onSearchChange,
+  onAdvancedFiltersChange,
 }: WarningFilterBarProps) {
   return (
     <section className="rounded-lg bg-neutral-200/70 p-3">
@@ -113,57 +104,13 @@ export function WarningFilterBar({
             />
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                className="h-10 gap-2 rounded-md text-neutral-900"
-                type="button"
-                variant="ghost"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-                高级筛选
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="z-50 w-80 rounded-lg border-neutral-200 bg-white p-0 shadow-lg"
-              sideOffset={8}
-            >
-              <div className="p-4">
-                <DropdownMenuLabel className="flex items-center gap-2 px-0 py-0 text-base font-semibold text-neutral-950">
-                  <Filter className="h-4 w-4" />
-                  高级筛选
-                </DropdownMenuLabel>
-                <p className="mt-2 text-xs leading-5 text-neutral-500">
-                  当前为筛选占位，后续支持按以下条件组合筛选。
-                </p>
-              </div>
-
-              <DropdownMenuSeparator className="my-0" />
-
-              <div className="grid grid-cols-2 gap-2 p-4">
-                {advancedFilterFields.map((field) => (
-                  <div
-                    className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs font-medium text-neutral-700"
-                    key={field}
-                  >
-                    {field}
-                  </div>
-                ))}
-              </div>
-
-              <DropdownMenuSeparator className="my-0" />
-
-              <div className="p-4">
-                <div className="rounded-md bg-neutral-100 px-3 py-2 text-xs font-medium text-neutral-500">
-                  第一版暂不启用筛选条件
-                </div>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <AdvancedFilterDialog
+            onApply={onAdvancedFiltersChange}
+            options={advancedOptions}
+            value={advancedFilters}
+          />
         </div>
       </div>
     </section>
   );
 }
-

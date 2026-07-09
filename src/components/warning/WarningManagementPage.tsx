@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 
+import { StudentRiskDrawer } from "@/components/warning/StudentRiskDrawer";
 import { WarningFilterBar } from "@/components/warning/WarningFilterBar";
 import { WarningTable } from "@/components/warning/WarningTable";
 import { warningMockData } from "@/data/warningMock";
@@ -174,7 +175,7 @@ export function WarningManagementPage() {
 
   function handleViewDetail(item: WarningItem) {
     setSelectedWarning(item);
-    console.log("Phase 2 detail placeholder:", item.id, item.studentName);
+    console.log("Phase 3 detail drawer:", item.id, item.studentName);
   }
 
   return (
@@ -192,16 +193,20 @@ export function WarningManagementPage() {
         statusCounts={statusCounts}
       />
 
-      {selectedWarning ? (
-        <div className="rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-700">
-          已选择 {selectedWarning.studentName}。本阶段仅保留详情入口占位，右侧详情抽屉将在 Phase 3 实现。
-        </div>
-      ) : null}
-
       <WarningTable
         items={filteredWarnings}
         onViewDetail={handleViewDetail}
         selectedId={selectedWarning?.id ?? null}
+      />
+
+      <StudentRiskDrawer
+        onOpenChange={(drawerOpen) => {
+          if (!drawerOpen) {
+            setSelectedWarning(null);
+          }
+        }}
+        open={selectedWarning !== null}
+        warning={selectedWarning}
       />
     </div>
   );

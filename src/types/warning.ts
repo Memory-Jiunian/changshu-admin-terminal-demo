@@ -30,6 +30,14 @@ export type WarningTimelineItem = {
   description: string;
 };
 
+export type WarningFeedbackRecord = {
+  id: string;
+  authorRole: string;
+  authorName: string;
+  content: string;
+  submittedAt: string;
+};
+
 export type WarningItem = {
   id: string;
   studentName: string;
@@ -44,6 +52,7 @@ export type WarningItem = {
   assessmentSummary: string;
   aiSummary: string;
   teacherFeedbackSummary: string;
+  feedbackRecords: WarningFeedbackRecord[];
   timeline: WarningTimelineItem[];
 };
 

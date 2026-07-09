@@ -1,6 +1,5 @@
 import { ExternalLink } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { clueTypeLabels, type WarningItem } from "@/types/warning";
 
@@ -12,14 +11,18 @@ type RiskEvidenceProps = {
 export function RiskEvidence({ warning, onPlaceholderAction }: RiskEvidenceProps) {
   return (
     <section className="rounded-lg border border-neutral-200 bg-white p-4">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3">
         <h3 className="text-sm font-semibold text-neutral-950">风险依据</h3>
-        <Badge className="border-neutral-300 bg-neutral-100 text-neutral-800" variant="outline">
-          {clueTypeLabels[warning.clueType]}
-        </Badge>
       </div>
 
       <div className="space-y-3">
+        <div>
+          <div className="text-xs font-semibold text-neutral-500">线索类型</div>
+          <p className="mt-1 text-sm leading-6 text-neutral-800">
+            {clueTypeLabels[warning.clueType]}
+          </p>
+        </div>
+
         <div>
           <div className="text-xs font-semibold text-neutral-500">测评摘要</div>
           <p className="mt-1 text-sm leading-6 text-neutral-800">{warning.assessmentSummary}</p>

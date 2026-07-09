@@ -19,6 +19,7 @@ import {
   riskLevelLabels,
   statusLabels,
   type RiskLevel,
+  type WarningStatus,
   type WarningItem,
 } from "@/types/warning";
 
@@ -46,6 +47,10 @@ function OverviewItem({ label, value }: OverviewItemProps) {
       <div className="mt-1 text-sm font-medium text-neutral-900">{value}</div>
     </div>
   );
+}
+
+function shouldShowFeedback(status: WarningStatus) {
+  return status !== "pending_review" && status !== "observing";
 }
 
 export function StudentRiskDrawer({
@@ -130,10 +135,12 @@ export function StudentRiskDrawer({
                 onPlaceholderAction={handlePlaceholderAction}
                 warning={warning}
               />
-              <FeedbackPanel
-                onPlaceholderAction={handlePlaceholderAction}
-                warning={warning}
-              />
+              {shouldShowFeedback(warning.currentStatus) ? (
+                <FeedbackPanel
+                  onPlaceholderAction={handlePlaceholderAction}
+                  warning={warning}
+                />
+              ) : null}
               <ProcessTimeline items={warning.timeline} />
             </div>
           </ScrollArea>

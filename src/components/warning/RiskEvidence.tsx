@@ -1,12 +1,20 @@
 import { ExternalLink } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { clueTypeLabels, type WarningItem } from "@/types/warning";
+import { clueTypeLabels, type ClueType, type WarningItem } from "@/types/warning";
 
 type RiskEvidenceProps = {
   warning: WarningItem;
   onPlaceholderAction: (label: string) => void;
 };
+
+function getEvidenceClueTypeLabel(clueType: ClueType) {
+  if (clueType === "screening_abnormal") {
+    return clueTypeLabels.deep_assessment;
+  }
+
+  return clueTypeLabels[clueType];
+}
 
 export function RiskEvidence({ warning, onPlaceholderAction }: RiskEvidenceProps) {
   return (
@@ -19,7 +27,7 @@ export function RiskEvidence({ warning, onPlaceholderAction }: RiskEvidenceProps
         <div>
           <div className="text-xs font-semibold text-neutral-500">线索类型</div>
           <p className="mt-1 text-sm leading-6 text-neutral-800">
-            {clueTypeLabels[warning.clueType]}
+            {getEvidenceClueTypeLabel(warning.clueType)}
           </p>
         </div>
 

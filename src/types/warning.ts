@@ -53,6 +53,7 @@ export type WarningItem = {
   aiSummary: string;
   teacherFeedbackSummary: string;
   feedbackRecords: WarningFeedbackRecord[];
+  hasUnreadFeedback: boolean;
   timeline: WarningTimelineItem[];
 };
 
@@ -122,7 +123,7 @@ export const feedbackStatusLabels: Record<FeedbackStatus, string> = {
 export const clueTypeLabels: Record<ClueType, string> = {
   screening_abnormal: "普筛异常",
   deep_assessment: "深度测评",
-  ai_chat: "AI 倾诉",
+  ai_chat: "AI倾诉",
   teacher_report: "班主任上报",
 };
 

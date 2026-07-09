@@ -46,7 +46,10 @@ const actionsByStatus: Record<WarningStatus, DrawerAction[]> = {
     { label: "查看复测结果" },
     { label: "更新状态", emphasis: "primary", opensDialog: true },
   ],
-  referral: [{ label: "记录转介结果", emphasis: "primary" }],
+  referral: [
+    { label: "记录转介结果", emphasis: "primary" },
+    { label: "安排复测" },
+  ],
   closed: [{ label: "查看归档记录", emphasis: "primary" }],
 };
 

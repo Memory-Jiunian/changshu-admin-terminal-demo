@@ -38,6 +38,22 @@ function getSortedFeedbackRecords(records: WarningFeedbackRecord[]) {
   return [...records].sort((left, right) => right.submittedAt.localeCompare(left.submittedAt));
 }
 
+function getEffectiveFeedbackStatus(warning: WarningItem): FeedbackStatus {
+  if (warning.feedbackRecords.length === 0) {
+    if (warning.feedbackStatus === "feedback_overdue") {
+      return "feedback_overdue";
+    }
+
+    if (warning.feedbackStatus === "pending_feedback") {
+      return "pending_feedback";
+    }
+
+    return "not_requested";
+  }
+
+  return warning.hasUnreadFeedback ? "new_feedback" : "feedback_received";
+}
+
 function FeedbackRecordItem({ record }: { record: WarningFeedbackRecord }) {
   return (
     <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2">
@@ -53,6 +69,7 @@ function FeedbackRecordItem({ record }: { record: WarningFeedbackRecord }) {
 }
 
 export function FeedbackPanel({ warning, onPlaceholderAction }: FeedbackPanelProps) {
+  const effectiveFeedbackStatus = getEffectiveFeedbackStatus(warning);
   const feedbackRecords = getSortedFeedbackRecords(warning.feedbackRecords);
   const hasFeedback = feedbackRecords.length > 0;
   const hasMultipleFeedback = feedbackRecords.length > 1;
@@ -62,8 +79,8 @@ export function FeedbackPanel({ warning, onPlaceholderAction }: FeedbackPanelPro
     <section className="rounded-lg border border-neutral-200 bg-white p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-neutral-950">班主任反馈</h3>
-        <Badge className={feedbackBadgeClass[warning.feedbackStatus]} variant="outline">
-          {feedbackStatusLabels[warning.feedbackStatus]}
+        <Badge className={feedbackBadgeClass[effectiveFeedbackStatus]} variant="outline">
+          {feedbackStatusLabels[effectiveFeedbackStatus]}
         </Badge>
       </div>
 
@@ -92,7 +109,7 @@ export function FeedbackPanel({ warning, onPlaceholderAction }: FeedbackPanelPro
           </Button>
         ) : null}
 
-        {warning.feedbackStatus === "feedback_overdue" ? (
+        {effectiveFeedbackStatus === "feedback_overdue" ? (
           <Button
             className="h-8 gap-1 border-neutral-300"
             onClick={() => onPlaceholderAction("提醒班主任反馈")}

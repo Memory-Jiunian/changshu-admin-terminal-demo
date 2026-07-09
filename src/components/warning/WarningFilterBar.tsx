@@ -11,9 +11,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  clueTypeLabels,
-  feedbackStatusLabels,
-  riskLevelLabels,
   statusLabels,
   type QuickFilterValue,
   type StatusTabValue,
@@ -46,6 +43,17 @@ const quickFilters: Array<{ label: string; value: QuickFilterValue }> = [
   { label: "反馈超时", value: "feedback_overdue" },
   { label: "我的负责", value: "mine" },
   { label: "有新反馈", value: "new_feedback" },
+];
+
+const advancedFilterFields = [
+  "年级 / 班级",
+  "风险等级",
+  "线索类型",
+  "负责心理老师",
+  "时间范围",
+  "反馈状态",
+  "反馈超时",
+  "有新反馈",
 ];
 
 export function WarningFilterBar({
@@ -116,32 +124,39 @@ export function WarningFilterBar({
                 高级筛选
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 p-4">
-              <DropdownMenuLabel className="flex items-center gap-2 px-0 text-base">
-                <Filter className="h-4 w-4" />
-                筛选器
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="space-y-4 text-sm text-neutral-600">
-                <div>
-                  <p className="font-semibold text-neutral-900">年级、班级</p>
-                  <p className="mt-1">后续可按年级和班级缩小范围。</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-neutral-900">风险等级</p>
-                  <p className="mt-1">{Object.values(riskLevelLabels).join(" / ")}</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-neutral-900">线索类型</p>
-                  <p className="mt-1">{Object.values(clueTypeLabels).join(" / ")}</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-neutral-900">负责心理老师</p>
-                  <p className="mt-1">陈老师 / 周老师 / 刘老师</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-neutral-900">反馈状态</p>
-                  <p className="mt-1">{Object.values(feedbackStatusLabels).join(" / ")}</p>
+            <DropdownMenuContent
+              align="end"
+              className="z-50 w-80 rounded-lg border-neutral-200 bg-white p-0 shadow-lg"
+              sideOffset={8}
+            >
+              <div className="p-4">
+                <DropdownMenuLabel className="flex items-center gap-2 px-0 py-0 text-base font-semibold text-neutral-950">
+                  <Filter className="h-4 w-4" />
+                  高级筛选
+                </DropdownMenuLabel>
+                <p className="mt-2 text-xs leading-5 text-neutral-500">
+                  当前为筛选占位，后续支持按以下条件组合筛选。
+                </p>
+              </div>
+
+              <DropdownMenuSeparator className="my-0" />
+
+              <div className="grid grid-cols-2 gap-2 p-4">
+                {advancedFilterFields.map((field) => (
+                  <div
+                    className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs font-medium text-neutral-700"
+                    key={field}
+                  >
+                    {field}
+                  </div>
+                ))}
+              </div>
+
+              <DropdownMenuSeparator className="my-0" />
+
+              <div className="p-4">
+                <div className="rounded-md bg-neutral-100 px-3 py-2 text-xs font-medium text-neutral-500">
+                  第一版暂不启用筛选条件
                 </div>
               </div>
             </DropdownMenuContent>

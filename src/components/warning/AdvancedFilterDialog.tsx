@@ -12,7 +12,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
   clueTypeLabels,
@@ -232,20 +231,18 @@ export function AdvancedFilterDialog({
           ) : null}
         </Button>
       </DialogTrigger>
-      <DialogContent className="grid h-[70vh] max-w-[720px] grid-rows-[auto_auto_auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0">
-        <DialogHeader className="flex-row items-center justify-between space-y-0 px-5 py-4 pr-12">
+      <DialogContent className="flex h-[70vh] max-w-[720px] flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="shrink-0 flex-row items-center justify-between space-y-0 border-b border-neutral-200 px-5 py-4 pr-12">
           <DialogTitle className="text-lg font-semibold text-neutral-950">高级筛选</DialogTitle>
           <Button className="h-8 px-3" onClick={resetDraftFilters} type="button" variant="ghost">
             重置
           </Button>
         </DialogHeader>
 
-        <Separator />
-
-        <div className="px-5 py-4">
-          <div className="mb-2 text-xs font-semibold text-neutral-500">已选条件</div>
+        <div className="shrink-0 border-b border-neutral-200 px-5 py-2.5">
+          <div className="mb-1.5 text-xs font-semibold text-neutral-500">已选条件</div>
           {selectedChips.length > 0 ? (
-            <div className="flex max-h-20 flex-wrap gap-2 overflow-y-auto pr-1">
+            <div className="flex max-h-24 flex-wrap gap-2 overflow-y-auto pr-1">
               {selectedChips.map((chip) => (
                 <Badge
                   className="gap-1 rounded-full border-neutral-300 bg-neutral-100 py-1 pl-3 pr-2 text-neutral-800"
@@ -266,16 +263,14 @@ export function AdvancedFilterDialog({
               ))}
             </div>
           ) : (
-            <div className="rounded-md border border-dashed border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-500">
+            <div className="rounded-md border border-dashed border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm text-neutral-500">
               暂未选择高级筛选条件
             </div>
           )}
         </div>
 
-        <Separator />
-
-        <div className="grid min-h-0 flex-1 grid-cols-[180px_1fr]">
-          <div className="border-r border-neutral-200 bg-neutral-50 p-3">
+        <div className="grid min-h-0 flex-1 grid-cols-[180px_1fr] items-stretch">
+          <div className="h-full border-r border-neutral-200 bg-neutral-50 p-3">
             <div className="space-y-1">
               {categories.map((category) => {
                 const selectedCount = draftFilters[category.key].length;
@@ -336,9 +331,7 @@ export function AdvancedFilterDialog({
           </ScrollArea>
         </div>
 
-        <Separator />
-
-        <DialogFooter className="px-5 py-4">
+        <DialogFooter className="shrink-0 border-t border-neutral-200 px-5 py-4">
           <Button onClick={resetDraftFilters} type="button" variant="outline">
             重置
           </Button>

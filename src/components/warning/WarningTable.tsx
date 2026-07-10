@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import {
   feedbackStatusLabels,
+  getEffectiveRiskLevel,
   riskLevelLabels,
   statusLabels,
   type FeedbackStatus,
@@ -75,50 +76,54 @@ export function WarningTable({ items, selectedId, onViewDetail }: WarningTablePr
             </TableHeader>
             <TableBody>
               {items.length > 0 ? (
-                items.map((item) => (
-                  <TableRow
-                    className={cn(
-                      "h-14 text-[15px] font-medium",
-                      selectedId === item.id && "bg-neutral-100",
-                    )}
-                    key={item.id}
-                  >
-                    <TableCell className="pl-6">
-                      <div>
-                        <div className="font-semibold text-neutral-950">{item.studentName}</div>
-                        <div className="mt-1 text-xs text-neutral-500">{item.gradeClass}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={riskBadgeClass[item.riskLevel]} variant="outline">
-                        {riskLevelLabels[item.riskLevel]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-neutral-800">
-                      {statusLabels[item.currentStatus]}
-                    </TableCell>
-                    <TableCell className="text-neutral-900">{item.latestActivity}</TableCell>
-                    <TableCell className="whitespace-nowrap text-neutral-700">
-                      {item.activityTime}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={feedbackBadgeClass[item.feedbackStatus]} variant="outline">
-                        {feedbackStatusLabels[item.feedbackStatus]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="pr-6 text-right">
-                      <Button
-                        className="gap-2 px-0 font-semibold text-neutral-900 hover:bg-transparent"
-                        onClick={() => onViewDetail(item)}
-                        type="button"
-                        variant="ghost"
-                      >
-                        <Eye className="h-4 w-4" />
-                        查看详情
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                items.map((item) => {
+                  const riskLevel = getEffectiveRiskLevel(item);
+
+                  return (
+                    <TableRow
+                      className={cn(
+                        "h-14 text-[15px] font-medium",
+                        selectedId === item.id && "bg-neutral-100",
+                      )}
+                      key={item.id}
+                    >
+                      <TableCell className="pl-6">
+                        <div>
+                          <div className="font-semibold text-neutral-950">{item.studentName}</div>
+                          <div className="mt-1 text-xs text-neutral-500">{item.gradeClass}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={riskBadgeClass[riskLevel]} variant="outline">
+                          {riskLevelLabels[riskLevel]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-neutral-800">
+                        {statusLabels[item.currentStatus]}
+                      </TableCell>
+                      <TableCell className="text-neutral-900">{item.latestActivity}</TableCell>
+                      <TableCell className="whitespace-nowrap text-neutral-700">
+                        {item.activityTime}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={feedbackBadgeClass[item.feedbackStatus]} variant="outline">
+                          {feedbackStatusLabels[item.feedbackStatus]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="pr-6 text-right">
+                        <Button
+                          className="gap-2 px-0 font-semibold text-neutral-900 hover:bg-transparent"
+                          onClick={() => onViewDetail(item)}
+                          type="button"
+                          variant="ghost"
+                        >
+                          <Eye className="h-4 w-4" />
+                          查看详情
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               ) : (
                 <TableRow>
                   <TableCell className="h-36 text-center text-neutral-500" colSpan={7}>
@@ -133,4 +138,3 @@ export function WarningTable({ items, selectedId, onViewDetail }: WarningTablePr
     </Card>
   );
 }
-

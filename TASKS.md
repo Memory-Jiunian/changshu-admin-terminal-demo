@@ -43,13 +43,13 @@
 - [x] Synchronize domain specification
 - [x] Synchronize workflow specification
 - [x] Synchronize acceptance baseline
-- [ ] Refactor source and evidence data model
-- [ ] Implement formal warning confirmation dialog
-- [ ] Add intervention records module
-- [ ] Add re-test records module
-- [ ] Sort timeline newest first
-- [ ] Check code against the latest specifications
-- [ ] Build / test / commit / push
+- [x] Refactor source and evidence data model
+- [x] Implement formal warning confirmation dialog
+- [x] Add intervention records module
+- [x] Add re-test records module
+- [x] Sort timeline newest first
+- [x] Check code against the latest specifications
+- [x] Build / test / commit / push
 
 Active scope: Phase 3.5. Do not implement a clue-pool page or start the full Phase 4 action flow.
 

@@ -1,34 +1,68 @@
 import { ExternalLink } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { clueTypeLabels, type ClueType, type WarningItem } from "@/types/warning";
+import {
+  riskLevelLabels,
+  warningEvidenceTypeLabels,
+  warningSourceTypeLabels,
+  type WarningItem,
+} from "@/types/warning";
 
 type RiskEvidenceProps = {
   warning: WarningItem;
   onPlaceholderAction: (label: string) => void;
 };
 
-function getEvidenceClueTypeLabel(clueType: ClueType) {
-  if (clueType === "screening_abnormal") {
-    return clueTypeLabels.deep_assessment;
-  }
-
-  return clueTypeLabels[clueType];
-}
-
 export function RiskEvidence({ warning, onPlaceholderAction }: RiskEvidenceProps) {
   return (
     <section className="rounded-lg border border-neutral-200 bg-white p-4">
-      <div className="mb-3">
-        <h3 className="text-sm font-semibold text-neutral-950">风险依据</h3>
-      </div>
+      <h3 className="mb-3 text-sm font-semibold text-neutral-950">风险依据</h3>
 
-      <div className="space-y-3">
-        <div>
-          <div className="text-xs font-semibold text-neutral-500">线索类型</div>
-          <p className="mt-1 text-sm leading-6 text-neutral-800">
-            {getEvidenceClueTypeLabel(warning.clueType)}
-          </p>
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <div className="text-xs font-semibold text-neutral-500">来源</div>
+            <p className="mt-1 text-sm font-medium text-neutral-800">
+              {warningSourceTypeLabels[warning.sourceType]}
+            </p>
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-neutral-500">系统提示风险等级</div>
+            <p className="mt-1 text-sm font-medium text-neutral-800">
+              {riskLevelLabels[warning.suggestedRiskLevel]}
+            </p>
+          </div>
+          <div className="col-span-2">
+            <div className="text-xs font-semibold text-neutral-500">风险依据</div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {warning.evidenceTypes.map((evidenceType) => (
+                <Badge
+                  className="border-neutral-200 bg-neutral-100 text-neutral-700"
+                  key={evidenceType}
+                  variant="outline"
+                >
+                  {warningEvidenceTypeLabels[evidenceType]}
+                </Badge>
+              ))}
+            </div>
+          </div>
+          <div className="col-span-2">
+            <div className="text-xs font-semibold text-neutral-500">心理老师确认风险等级</div>
+            <p className="mt-1 text-sm font-medium text-neutral-900">
+              {warning.confirmedRiskLevel
+                ? riskLevelLabels[warning.confirmedRiskLevel]
+                : "待心理老师确认"}
+            </p>
+          </div>
+          {warning.riskLevelAdjustmentReason ? (
+            <div className="col-span-2 rounded-md bg-neutral-50 px-3 py-2">
+              <div className="text-xs font-semibold text-neutral-500">风险等级调整理由</div>
+              <p className="mt-1 text-sm leading-6 text-neutral-800">
+                {warning.riskLevelAdjustmentReason}
+              </p>
+            </div>
+          ) : null}
         </div>
 
         <div>

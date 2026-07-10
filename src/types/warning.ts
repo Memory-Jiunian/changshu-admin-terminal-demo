@@ -16,17 +16,21 @@ export type FeedbackStatus =
 
 export type RiskLevel = "medium" | "high" | "critical";
 
-export type ClueType =
+export type WarningSourceType =
   | "screening_abnormal"
-  | "deep_assessment"
+  | "teacher_report"
+  | "ai_chat_trigger";
+
+export type WarningEvidenceType =
+  | "teacher_report"
   | "ai_chat"
-  | "teacher_report";
+  | "deep_assessment";
 
 export type WarningTimelineItem = {
   id: string;
   title: string;
   operator: string;
-  time: string;
+  occurredAt: string;
   description: string;
 };
 
@@ -38,23 +42,54 @@ export type WarningFeedbackRecord = {
   submittedAt: string;
 };
 
+export type WarningInterventionRecord = {
+  id: string;
+  occurredAt: string;
+  authorName: string;
+  method: string;
+  summary: string;
+  judgment: string;
+  followUpPlan: string;
+};
+
+export type WarningRetestRecord = {
+  id: string;
+  arrangedAt: string;
+  plannedAt: string;
+  completedAt?: string;
+  resultSummary?: string;
+  comparison?: string;
+  conclusion?: string;
+};
+
 export type WarningItem = {
   id: string;
   studentName: string;
   gradeClass: string;
-  riskLevel: RiskLevel;
+  sourceType: WarningSourceType;
+  evidenceTypes: WarningEvidenceType[];
+  suggestedRiskLevel: RiskLevel;
+  confirmedRiskLevel?: RiskLevel;
+  riskLevelAdjustmentReason?: string;
   currentStatus: WarningStatus;
   latestActivity: string;
   activityTime: string;
   feedbackStatus: FeedbackStatus;
   responsibleTeacher: string;
-  clueType: ClueType;
   assessmentSummary: string;
   aiSummary: string;
   teacherFeedbackSummary: string;
   feedbackRecords: WarningFeedbackRecord[];
   hasUnreadFeedback: boolean;
+  interventionRecords: WarningInterventionRecord[];
+  retestRecords: WarningRetestRecord[];
   timeline: WarningTimelineItem[];
+};
+
+export type ConfirmFormalWarningValues = {
+  confirmedRiskLevel: RiskLevel;
+  judgmentNote: string;
+  riskLevelAdjustmentReason: string;
 };
 
 export type StatusTabValue = WarningStatus | "all";
@@ -72,7 +107,7 @@ export type AdvancedFilterValues = {
   gradeClass: string[];
   riskLevel: RiskLevel[];
   currentStatus: WarningStatus[];
-  clueType: ClueType[];
+  evidenceTypes: WarningEvidenceType[];
   responsibleTeacher: string[];
   timeRange: TimeRangeFilter[];
   feedbackStatus: FeedbackStatus[];
@@ -89,7 +124,7 @@ export const emptyAdvancedFilters: AdvancedFilterValues = {
   gradeClass: [],
   riskLevel: [],
   currentStatus: [],
-  clueType: [],
+  evidenceTypes: [],
   responsibleTeacher: [],
   timeRange: [],
   feedbackStatus: [],
@@ -120,11 +155,16 @@ export const feedbackStatusLabels: Record<FeedbackStatus, string> = {
   new_feedback: "有新反馈",
 };
 
-export const clueTypeLabels: Record<ClueType, string> = {
+export const warningSourceTypeLabels: Record<WarningSourceType, string> = {
   screening_abnormal: "普筛异常",
-  deep_assessment: "深度测评",
-  ai_chat: "AI倾诉",
   teacher_report: "班主任上报",
+  ai_chat_trigger: "AI倾诉主动触发",
+};
+
+export const warningEvidenceTypeLabels: Record<WarningEvidenceType, string> = {
+  teacher_report: "班主任上报",
+  ai_chat: "AI倾诉",
+  deep_assessment: "深度测评",
 };
 
 export const timeRangeLabels: Record<TimeRangeFilter, string> = {
@@ -132,3 +172,7 @@ export const timeRangeLabels: Record<TimeRangeFilter, string> = {
   last_3_days: "近 3 天",
   last_7_days: "近 7 天",
 };
+
+export function getEffectiveRiskLevel(warning: WarningItem): RiskLevel {
+  return warning.confirmedRiskLevel ?? warning.suggestedRiskLevel;
+}

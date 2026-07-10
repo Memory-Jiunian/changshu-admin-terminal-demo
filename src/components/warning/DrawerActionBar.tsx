@@ -14,24 +14,26 @@ type DrawerActionBarProps = {
   status: WarningStatus;
   actionMessage: string;
   onAction: (label: string) => void;
+  onConfirmFormalWarning: () => void;
 };
 
 type DrawerAction = {
   label: string;
   emphasis?: "primary" | "secondary";
   opensDialog?: boolean;
+  opensFormalWarningDialog?: boolean;
 };
 
 const actionsByStatus: Record<WarningStatus, DrawerAction[]> = {
   pending_review: [
-    { label: "驳回" },
+    { label: "结束本次线索处理" },
     { label: "继续观察", emphasis: "secondary" },
-    { label: "确认正式预警", emphasis: "primary" },
+    { label: "确认正式预警", emphasis: "primary", opensFormalWarningDialog: true },
   ],
   observing: [
     { label: "继续观察", emphasis: "secondary" },
-    { label: "确认正式预警", emphasis: "primary" },
-    { label: "驳回" },
+    { label: "确认正式预警", emphasis: "primary", opensFormalWarningDialog: true },
+    { label: "结束本次线索处理" },
   ],
   formal_warning: [
     { label: "请求补充反馈" },
@@ -55,11 +57,21 @@ const actionsByStatus: Record<WarningStatus, DrawerAction[]> = {
 
 const retestStatusOptions = ["风险解除并闭环", "继续干预", "转介"];
 
-export function DrawerActionBar({ status, actionMessage, onAction }: DrawerActionBarProps) {
+export function DrawerActionBar({
+  status,
+  actionMessage,
+  onAction,
+  onConfirmFormalWarning,
+}: DrawerActionBarProps) {
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const actions = actionsByStatus[status];
 
   function handleAction(action: DrawerAction) {
+    if (action.opensFormalWarningDialog) {
+      onConfirmFormalWarning();
+      return;
+    }
+
     if (action.opensDialog) {
       setUpdateDialogOpen(true);
       return;

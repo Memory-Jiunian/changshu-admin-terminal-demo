@@ -8,10 +8,14 @@ The first version focuses only on:
 
 - Warning management default list
 - Student risk detail drawer
-- Three drawer states:
+- Seven drawer states:
   - Pending review
+  - Observing
   - Formal warning
   - In intervention
+  - Pending re-test
+  - Referral
+  - Closed
 
 Do not implement unrelated pages unless the task explicitly asks for them.
 
@@ -114,6 +118,10 @@ Required UI:
      - Reject
      - Continue observation
      - Confirm formal warning
+   - Observing:
+     - Continue observation
+     - Confirm formal warning
+     - Reject
    - Formal warning:
      - Request supplementary feedback
      - Record intervention
@@ -121,6 +129,14 @@ Required UI:
      - Add intervention record
      - Arrange re-test
      - Referral
+   - Pending re-test:
+     - View re-test result
+     - Update status
+   - Referral:
+     - Record referral result
+     - Arrange re-test
+   - Closed:
+     - View archive record
 
 Do not implement:
 
@@ -225,12 +241,16 @@ Risk level options:
 - high
 - critical
 
-Clue type options:
+Risk-evidence clue type options:
 
-- screening_abnormal
 - deep_assessment
 - ai_chat
 - teacher_report
+
+`screening_abnormal` is a flow trigger or timeline event. It must not be treated
+as a risk-evidence clue type or displayed as one in the detail drawer. If a
+legacy filter or internal field retains this code, it does not change the
+domain meaning above.
 
 Remember:
 
@@ -276,7 +296,9 @@ The selected row may be lightly highlighted.
 
 The drawer bottom actions change based on currentStatus.
 
-Action buttons in this version can update mock state locally, but should not call a real API.
+Phase 4 action buttons may update mock state locally, but must not call a real API.
+Before Phase 4, action buttons remain placeholders unless a task explicitly
+authorizes state changes.
 
 When action succeeds:
 
@@ -296,16 +318,24 @@ When action fails:
 
 ## Current active scope
 
-Current active scope is Phase 1: Warning Management Page.
+Current active scope is Phase 3.4: workflow specification baseline for the
+Warning Management Page.
 
 Only implement:
 
 - Warning management default list
 - Student risk detail drawer
-- Three drawer states:
+- Seven drawer states:
   - Pending review
+  - Observing
   - Formal warning
   - In intervention
+  - Pending re-test
+  - Referral
+  - Closed
+
+The current task is documentation-only. Phase 4 local mock state changes have
+not started.
 
 Do not implement other pages until their PRD is confirmed.
 
@@ -342,17 +372,73 @@ Before reporting completion, check the work from these perspectives:
 
 ---
 
-## Document priority
+## Specification priority
 
 When documents conflict, follow this order:
 
-1. AGENTS.md for long-term rules and project boundaries
-2. PRD.md for current product requirements
-3. DESIGN.md for visual and component rules
-4. TASKS.md for current implementation sequence
-5. README.md for running and project overview
+1. AGENTS.md for long-term rules, role boundaries, and development gates
+2. docs/specs/DOMAIN_SPEC.md for canonical domain terms and permissions
+3. docs/specs/flows/warning-management-flow.md for state transitions and side effects
+4. PRD.md for page behavior and current product requirements
+5. docs/tests/warning-drawer-acceptance.md for executable acceptance baselines
+6. DESIGN.md for visual and component rules
+7. TASKS.md for current implementation sequence
+8. README.md for running and project overview
 
-If implementation differs from PRD, update PRD or ask before changing behavior.
+The acceptance document verifies the higher-priority specifications; it must not
+silently redefine them. If implementation differs from a higher-priority
+document, update the specification with product confirmation or ask before
+changing behavior.
+
+---
+
+## Business understanding gate
+
+Before changing business code, restate the intended behavior in terms of:
+
+- actor and permission boundary
+- trigger and source path
+- current status and feedback status
+- allowed action and successful next status
+- system automation, notification, and timeline side effects
+- privacy constraints and prohibited information
+- upstream inputs and downstream consumers
+- acceptance cases that prove the behavior
+
+Compare the restatement with the specification priority above. If a required
+rule is missing, contradictory, or cannot be represented by the current domain
+model, stop implementation and ask for product confirmation. Do not fill a
+business gap with an implementation assumption.
+
+## Issue classification
+
+Classify specification and implementation issues before resolving them:
+
+- A — Domain definition: terms, state meanings, clue types, and business invariants.
+- B — Role and privacy: who may view, decide, operate, or receive notifications.
+- C — Workflow and state transition: triggers, allowed actions, next states, and forbidden transitions.
+- D — Data semantics: field meaning, source of truth, feedback read state, ordering, and derived labels.
+- E — Experience and presentation: module visibility, button placement, list columns, copy, and interaction behavior.
+- F — Engineering and delivery: component boundaries, mock/API behavior, build, Git, deployment, and test coverage.
+
+A single issue may have more than one class. Resolve higher-priority domain,
+permission, workflow, and data questions before UI or engineering work.
+
+## Workflow change impact check
+
+Any workflow change must check both upstream and downstream behavior, including:
+
+- source events and entry into the pending-review clue pool
+- current-status and feedback-status semantics
+- allowed drawer actions and successful next states
+- automatic mini-program tasks, reminders, and notification recipients
+- timeline event name, actor, timestamp, and ordering
+- list filters, badges, detail module visibility, and acceptance cases
+- archive, re-test, referral, and future backend contract implications
+
+Update every affected specification and acceptance case in the same task. If
+the impact cannot be determined from the specifications, stop and ask rather
+than implementing a partial flow.
 
 ---
 
@@ -366,3 +452,4 @@ Before committing, run:
 
 ```bash
 npm run build
+```

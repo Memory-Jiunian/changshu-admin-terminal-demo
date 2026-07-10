@@ -2,21 +2,22 @@
 
 ## Phase 1: Project setup
 
-- [ ] Create Vite + React + TypeScript project
-- [ ] Install Tailwind CSS
-- [ ] Install and initialize shadcn/ui
-- [ ] Add base shadcn components
-- [ ] Create app shell layout
+- [x] Create Vite + React + TypeScript project
+- [x] Install Tailwind CSS
+- [x] Install and initialize shadcn/ui
+- [x] Add base shadcn components
+- [x] Create app shell layout
 
 ## Phase 2: Warning management list
 
-- [ ] Add mock warning data
-- [ ] Add TypeScript types
-- [ ] Implement status tabs
-- [ ] Implement quick filters
-- [ ] Implement search input
-- [ ] Implement warning table
-- [ ] Table fields:
+- [x] Add mock warning data
+- [x] Add TypeScript types
+- [x] Implement status tabs
+- [x] Implement quick filters
+- [x] Implement search input
+- [x] Implement advanced filters
+- [x] Implement warning table
+- [x] Table fields:
   - Student information
   - Risk level
   - Current status
@@ -27,19 +28,26 @@
 
 ## Phase 3: Student risk drawer
 
-- [ ] Implement right-side Sheet drawer
-- [ ] Add student overview
-- [ ] Add risk evidence section
-- [ ] Add teacher feedback section
-- [ ] Add process timeline
-- [ ] Add fixed bottom actions
+- [x] Implement right-side Sheet drawer
+- [x] Add student overview
+- [x] Add risk evidence section
+- [x] Add teacher feedback section
+- [x] Add process timeline
+- [x] Add fixed bottom actions
+- [x] Implement all seven drawer status variants
+- [x] Align Phase 3.3 workflow, timeline, clue type, and feedback rules
+- [ ] Phase 3.4: establish workflow specification and acceptance baseline (in progress)
 
-## Phase 4: State variants
+## Phase 4: Local mock state changes after drawer actions
 
-- [ ] Pending review drawer state
-- [ ] Formal warning drawer state
-- [ ] In intervention drawer state
-- [ ] Mock local state updates
+- [ ] Define local action result mapping from the approved workflow specification
+- [ ] Update current status and feedback status after successful actions
+- [ ] Update latest activity and activity time
+- [ ] Append timeline records
+- [ ] Preserve state and user input on failed actions
+- [ ] Add success and failure feedback
+
+Phase 4 has not started.
 
 ## Phase 5: Polish and validation
 

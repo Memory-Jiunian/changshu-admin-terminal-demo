@@ -40,8 +40,9 @@ The list page should only show factual information:
 Do not show "next action" in the list.  
 Do not let the system tell the psychological teacher what professional action must be taken next.
 
-Line/clue type should not be shown in the default table.  
-Line/clue type may appear in the detail drawer and advanced filters only.
+Source type and evidence types should not be shown in the default table.
+They may appear as separate fields in the detail drawer; advanced-filter clue
+type means evidence type only.
 
 ---
 
@@ -53,7 +54,7 @@ Allowed:
 
 - View student risk detail
 - Review risk clue
-- Reject clue
+- End the current clue handling
 - Mark observation
 - Confirm formal warning
 - Request supplementary feedback
@@ -62,16 +63,23 @@ Allowed:
 - Record referral
 - Close archive
 
-### Homeroom teacher / Grade director
+The responsible psychological teacher can view and operate the complete warning
+detail. Other psychological teachers may normally see only whether the item is
+assigned, whether it is being handled, and who owns it. Full cross-owner access
+requires transfer, invited collaboration, emergency takeover, or psychological
+center leader authorization, and must be audited. This version defines the
+boundary but does not implement a real permission system.
 
-They are not main users of this admin terminal.
+### Homeroom teacher
+
+Homeroom teachers are not main users of this admin terminal.
 
 They use the mini-program to:
 
-- Receive collaboration tasks
+- Report abnormal observations
 - Submit factual observation
-- Submit feedback progress
-- Leave supervision trace
+- Submit collaboration feedback
+- Remind students to complete re-tests on time
 
 They must not:
 
@@ -80,6 +88,19 @@ They must not:
 - Modify risk status
 - View full AI conversation
 - View full psychological assessment details
+
+### Grade director
+
+Grade directors are not main users of this admin terminal. They use the
+mini-program to:
+
+- View collaboration progress
+- Send supervision reminders
+- Leave supervision records
+
+They must not submit student factual observations or homeroom-teacher
+collaboration feedback. They also must not judge risk level, confirm formal
+warnings, modify risk status, or view full AI conversations and assessments.
 
 ### School leader
 
@@ -110,18 +131,20 @@ Required UI:
    - Student overview
    - Risk evidence
    - Homeroom teacher feedback
+   - Intervention records
+   - Re-test records
    - Process timeline
    - Fixed bottom action buttons
 
 4. Drawer state variants
    - Pending review:
-     - Reject
+     - End current clue handling
      - Continue observation
      - Confirm formal warning
    - Observing:
      - Continue observation
      - Confirm formal warning
-     - Reject
+     - End current clue handling
    - Formal warning:
      - Request supplementary feedback
      - Record intervention
@@ -205,16 +228,21 @@ At minimum, warning items should include:
 - id
 - studentName
 - gradeClass
-- riskLevel
+- sourceType
+- evidenceTypes
+- suggestedRiskLevel
+- confirmedRiskLevel
+- riskLevelAdjustmentReason
 - currentStatus
 - latestActivity
 - activityTime
 - feedbackStatus
 - responsibleTeacher
-- clueType
 - assessmentSummary
 - aiSummary
 - teacherFeedbackSummary
+- interventionRecords
+- retestRecords
 - timeline
 
 Main status options:
@@ -241,22 +269,42 @@ Risk level options:
 - high
 - critical
 
-Risk-evidence clue type options:
+Source type options:
+
+- screening_abnormal
+- teacher_report
+- ai_chat_trigger
+
+`sourceType` describes how the item was first discovered.
+
+Risk-evidence type options:
 
 - deep_assessment
 - ai_chat
 - teacher_report
 
-`screening_abnormal` is a flow trigger or timeline event. It must not be treated
-as a risk-evidence clue type or displayed as one in the detail drawer. If a
-legacy filter or internal field retains this code, it does not change the
-domain meaning above.
+`evidenceTypes` describes the evidence actually reviewed by the psychological
+teacher. `screening_abnormal` must never appear in `evidenceTypes`.
+
+Do not use one `clueType` field to represent both source and evidence.
+
+Risk level fields:
+
+- `suggestedRiskLevel` is a system, AI, or assessment suggestion only.
+- `confirmedRiskLevel` is the final level selected by the psychological teacher.
+- When the levels differ, `riskLevelAdjustmentReason` is required.
+- Effective display level is `confirmedRiskLevel ?? suggestedRiskLevel`.
 
 Remember:
 
 - currentStatus and feedbackStatus are different fields.
 - feedbackStatus must not replace currentStatus.
-- clueType must not appear in the default table.
+- sourceType and evidenceTypes must not appear in the default table.
+
+The clue pool is an upstream business container, not a warning-management main
+status. An item enters `pending_review` only after required supplementary
+assessment is complete and reviewable evidence has been formed. The clue-pool
+page is outside the current active scope.
 
 ---
 
@@ -296,9 +344,9 @@ The selected row may be lightly highlighted.
 
 The drawer bottom actions change based on currentStatus.
 
-Phase 4 action buttons may update mock state locally, but must not call a real API.
-Before Phase 4, action buttons remain placeholders unless a task explicitly
-authorizes state changes.
+Action buttons must not call a real API. Phase 3.5 explicitly authorizes only
+the local mock transition for "Confirm formal warning". Other action buttons
+remain placeholders until a later task authorizes their state changes.
 
 When action succeeds:
 
@@ -318,8 +366,8 @@ When action fails:
 
 ## Current active scope
 
-Current active scope is Phase 3.4: workflow specification baseline for the
-Warning Management Page.
+Current active scope is Phase 3.5: warning workflow model calibration and
+student risk drawer correction.
 
 Only implement:
 
@@ -334,8 +382,9 @@ Only implement:
   - Referral
   - Closed
 
-The current task is documentation-only. Phase 4 local mock state changes have
-not started.
+The clue-pool page is not in scope. Phase 4 full local mock state changes have
+not started; only the Phase 3.5 formal-warning confirmation transition is
+authorized.
 
 Do not implement other pages until their PRD is confirmed.
 
@@ -352,7 +401,7 @@ Before reporting completion, check the work from these perspectives:
 - Does the page respect that psychological teachers make professional judgments?
 - Does the list only show factual information?
 - Are currentStatus and feedbackStatus separated?
-- Is clueType hidden from the default table?
+- Are sourceType and evidenceTypes hidden from the default table?
 
 ### UX perspective
 
@@ -386,9 +435,11 @@ When documents conflict, follow this order:
 8. README.md for running and project overview
 
 The acceptance document verifies the higher-priority specifications; it must not
-silently redefine them. If implementation differs from a higher-priority
-document, update the specification with product confirmation or ask before
-changing behavior.
+silently redefine them. For the current task, the documents updated by the
+latest confirmed requirements are the source of truth. If older PRD text, mock
+data, or code conflicts with them, update or remove the older conflicting rule.
+If the latest specifications still conflict with each other, stop and ask
+before changing behavior.
 
 ---
 

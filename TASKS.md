@@ -36,7 +36,22 @@
 - [x] Add fixed bottom actions
 - [x] Implement all seven drawer status variants
 - [x] Align Phase 3.3 workflow, timeline, clue type, and feedback rules
-- [ ] Phase 3.4: establish workflow specification and acceptance baseline (in progress)
+- [x] Phase 3.4: establish workflow specification and acceptance baseline
+
+## Phase 3.5: Warning workflow model calibration and drawer correction
+
+- [x] Synchronize domain specification
+- [x] Synchronize workflow specification
+- [x] Synchronize acceptance baseline
+- [ ] Refactor source and evidence data model
+- [ ] Implement formal warning confirmation dialog
+- [ ] Add intervention records module
+- [ ] Add re-test records module
+- [ ] Sort timeline newest first
+- [ ] Check code against the latest specifications
+- [ ] Build / test / commit / push
+
+Active scope: Phase 3.5. Do not implement a clue-pool page or start the full Phase 4 action flow.
 
 ## Phase 4: Local mock state changes after drawer actions
 

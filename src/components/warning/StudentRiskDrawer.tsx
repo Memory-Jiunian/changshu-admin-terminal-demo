@@ -1,29 +1,12 @@
-import { Maximize2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { DETAIL_DRAWER_CLASS } from "@/components/layout/detail-view-config";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { ConfirmFormalWarningDialog } from "@/components/warning/ConfirmFormalWarningDialog";
-import { DrawerActionBar } from "@/components/warning/DrawerActionBar";
-import { FeedbackPanel } from "@/components/warning/FeedbackPanel";
-import { InterventionRecords } from "@/components/warning/InterventionRecords";
-import { ProcessTimeline } from "@/components/warning/ProcessTimeline";
-import { RetestRecords } from "@/components/warning/RetestRecords";
-import { RiskEvidence } from "@/components/warning/RiskEvidence";
-import {
-  statusLabels,
-  type ConfirmFormalWarningValues,
-  type WarningItem,
-  type WarningStatus,
-} from "@/types/warning";
+import { WarningDetailContent } from "@/components/warning/WarningDetailContent";
+import { WarningDetailFullscreen } from "@/components/warning/WarningDetailFullscreen";
+import { cn } from "@/lib/utils";
+import type { ConfirmFormalWarningValues, WarningItem } from "@/types/warning";
 
 type StudentRiskDrawerProps = {
   warning: WarningItem | null;
@@ -35,37 +18,6 @@ type StudentRiskDrawerProps = {
   ) => void;
 };
 
-type OverviewItemProps = {
-  label: string;
-  value: string;
-};
-
-const interventionStatuses: WarningStatus[] = [
-  "in_intervention",
-  "pending_retest",
-  "referral",
-  "closed",
-];
-
-function OverviewItem({ label, value }: OverviewItemProps) {
-  return (
-    <div>
-      <div className="text-xs font-semibold text-neutral-500">{label}</div>
-      <div className="mt-1 text-sm font-medium text-neutral-900">{value}</div>
-    </div>
-  );
-}
-
-function shouldShowFeedback(status: WarningStatus) {
-  return status !== "pending_review" && status !== "observing";
-}
-
-function shouldShowInterventionRecords(warning: WarningItem) {
-  return (
-    interventionStatuses.includes(warning.currentStatus) || warning.interventionRecords.length > 0
-  );
-}
-
 export function StudentRiskDrawer({
   warning,
   open,
@@ -74,10 +26,12 @@ export function StudentRiskDrawer({
 }: StudentRiskDrawerProps) {
   const [actionMessage, setActionMessage] = useState("");
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [fullscreenOpen, setFullscreenOpen] = useState(false);
 
   useEffect(() => {
     setActionMessage("");
     setConfirmDialogOpen(false);
+    setFullscreenOpen(false);
   }, [warning?.id, open]);
 
   function handlePlaceholderAction(label: string) {
@@ -98,92 +52,46 @@ export function StudentRiskDrawer({
     setActionMessage("已确认正式预警，列表和详情已同步更新。");
   }
 
+  function handleCloseDetail() {
+    setFullscreenOpen(false);
+    onOpenChange(false);
+  }
+
   return (
     <>
       <Sheet onOpenChange={onOpenChange} open={open && Boolean(warning)}>
         {warning ? (
-          <SheetContent className="flex h-full w-[520px] max-w-[calc(100vw-24px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[560px]">
-            <SheetHeader className="shrink-0 border-b border-neutral-200 px-5 py-4 pr-14 text-left">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <SheetTitle className="text-lg font-semibold text-neutral-950">
-                    学生风险详情
-                  </SheetTitle>
-                  <SheetDescription className="mt-1 text-sm text-neutral-500">
-                    {warning.studentName} · {warning.id}
-                  </SheetDescription>
-                </div>
-                <Button
-                  className="h-8 gap-1"
-                  onClick={() => handlePlaceholderAction("全屏查看")}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  <Maximize2 className="h-3.5 w-3.5" />
-                  全屏查看
-                </Button>
-              </div>
-            </SheetHeader>
-
-            <ScrollArea className="min-h-0 flex-1 overflow-hidden bg-neutral-100">
-              <div className="space-y-4 p-5">
-                <section className="rounded-lg border border-neutral-200 bg-white p-4">
-                  <div className="mb-4 flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-xl font-semibold text-neutral-950">
-                        {warning.studentName}
-                      </div>
-                      <div className="mt-1 text-sm font-medium text-neutral-500">
-                        {warning.gradeClass}
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <Badge
-                        className="border-neutral-300 bg-neutral-100 text-neutral-800"
-                        variant="outline"
-                      >
-                        {statusLabels[warning.currentStatus]}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <OverviewItem label="负责心理老师" value={warning.responsibleTeacher} />
-                    <OverviewItem label="动态发生时间" value={warning.activityTime} />
-                    <div className="col-span-2">
-                      <OverviewItem label="最新动态" value={warning.latestActivity} />
-                    </div>
-                  </div>
-                </section>
-
-                <RiskEvidence
-                  onPlaceholderAction={handlePlaceholderAction}
-                  warning={warning}
-                />
-                {shouldShowFeedback(warning.currentStatus) ? (
-                  <FeedbackPanel
-                    onPlaceholderAction={handlePlaceholderAction}
-                    warning={warning}
-                  />
-                ) : null}
-                {shouldShowInterventionRecords(warning) ? (
-                  <InterventionRecords records={warning.interventionRecords} />
-                ) : null}
-                <RetestRecords records={warning.retestRecords} />
-                <ProcessTimeline items={warning.timeline} />
-              </div>
-            </ScrollArea>
-
-            <DrawerActionBar
+          <SheetContent
+            className={cn(
+              "flex h-full flex-col gap-0 overflow-hidden p-0",
+              DETAIL_DRAWER_CLASS,
+            )}
+          >
+            <SheetTitle className="sr-only">学生风险详情</SheetTitle>
+            <SheetDescription className="sr-only">
+              查看当前学生风险事项及处置记录。
+            </SheetDescription>
+            <WarningDetailContent
               actionMessage={actionMessage}
-              onAction={handlePlaceholderAction}
+              mode="drawer"
               onConfirmFormalWarning={() => setConfirmDialogOpen(true)}
-              status={warning.currentStatus}
+              onOpenFullscreen={() => setFullscreenOpen(true)}
+              onPlaceholderAction={handlePlaceholderAction}
+              warning={warning}
             />
           </SheetContent>
         ) : null}
       </Sheet>
+
+      <WarningDetailFullscreen
+        actionMessage={actionMessage}
+        onCloseDetail={handleCloseDetail}
+        onConfirmFormalWarning={() => setConfirmDialogOpen(true)}
+        onOpenChange={setFullscreenOpen}
+        onPlaceholderAction={handlePlaceholderAction}
+        open={fullscreenOpen}
+        warning={warning}
+      />
 
       <ConfirmFormalWarningDialog
         onConfirm={handleConfirm}

@@ -58,18 +58,33 @@
 - [x] Hide source and evidence-type labels in the risk-evidence body
 - [x] Update drawer acceptance rules
 
-Active scope: Phase 3.6. Do not implement a clue-pool page or start the full Phase 4 action flow.
+## Phase 4: Warning management local mock flow
 
-## Phase 4: Local mock state changes after drawer actions
+- [x] Define typed action mapping from the approved workflow specification
+- [x] Add active-item disposition and record fields
+- [x] Implement observation and end-review actions
+- [x] Implement supplementary-feedback action
+- [x] Implement intervention record actions
+- [x] Implement re-test scheduling, result viewing, and status updates
+- [x] Implement referral start and result actions
+- [x] Implement archive viewing
+- [x] Add reusable detail drawer width and shared detail content
+- [x] Implement fullscreen warning detail
+- [x] Synchronize list, counts, filters, drawer, fullscreen, records, and timeline
+- [x] Add validation and duplicate-submit protection
 
-- [ ] Define local action result mapping from the approved workflow specification
-- [ ] Update current status and feedback status after successful actions
-- [ ] Update latest activity and activity time
-- [ ] Append timeline records
-- [ ] Preserve state and user input on failed actions
-- [ ] Add success and failure feedback
+## Phase 4.5: Warning management final regression
 
-Phase 4 has not started.
+- [x] Main flow regression
+- [x] Branch flow regression
+- [x] Drawer and fullscreen data consistency
+- [x] Filter and count regression
+- [x] Documentation synchronization
+- [x] Build / commit / push
+
+Active scope: Warning management frozen after Phase 4.5.
+Next planned module: student profile.
+Do not implement student profile until its acceptance matrix and Codex task are approved.
 
 ## Phase 5: Polish and validation
 

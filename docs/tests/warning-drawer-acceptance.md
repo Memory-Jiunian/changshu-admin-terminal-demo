@@ -11,12 +11,16 @@
 - [ ] `sourceType` 和 `evidenceTypes` 分开建模。
 - [ ] 来源只允许普筛异常、班主任上报、AI倾诉主动触发。
 - [ ] 风险依据只允许班主任上报、AI倾诉、深度测评。
-- [ ] 风险依据模块展示 `evidenceTypes`，不把 `sourceType` 当作风险依据标签。
-- [ ] 来源说明可以展示 `sourceType`，普筛异常只出现在来源和时间线。
+- [ ] `sourceType` 和 `evidenceTypes` 保留在数据模型中，但当前风险依据正文不直接展示来源或依据类型标签列表。
+- [ ] 普筛异常只可用于来源语义和时间线，不作为风险依据。
 - [ ] `suggestedRiskLevel` 和 `confirmedRiskLevel` 分开建模。
 - [ ] 有效展示等级为 `confirmedRiskLevel ?? suggestedRiskLevel`。
 - [ ] 只有心理老师确认正式预警后，`confirmedRiskLevel` 才有值。
 - [ ] `confirmedRiskLevel` 与 `suggestedRiskLevel` 不同时存在非空调整理由。
+- [ ] 学生信息卡不展示风险等级标签，仍展示当前状态标签。
+- [ ] 风险依据标题右侧展示当前有效风险等级；已确认时显示 `confirmedRiskLevel`，未确认时显示 `suggestedRiskLevel`。
+- [ ] 风险依据正文不展示“来源”字段或 `evidenceTypes` 标签列表。
+- [ ] 系统提示等级、心理老师确认等级和风险等级调整理由仍正常展示。
 
 ## 3. 待复核
 

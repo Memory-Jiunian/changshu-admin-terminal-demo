@@ -19,11 +19,8 @@ import { ProcessTimeline } from "@/components/warning/ProcessTimeline";
 import { RetestRecords } from "@/components/warning/RetestRecords";
 import { RiskEvidence } from "@/components/warning/RiskEvidence";
 import {
-  getEffectiveRiskLevel,
-  riskLevelLabels,
   statusLabels,
   type ConfirmFormalWarningValues,
-  type RiskLevel,
   type WarningItem,
   type WarningStatus,
 } from "@/types/warning";
@@ -41,12 +38,6 @@ type StudentRiskDrawerProps = {
 type OverviewItemProps = {
   label: string;
   value: string;
-};
-
-const riskBadgeClass: Record<RiskLevel, string> = {
-  medium: "border-neutral-200 bg-neutral-100 text-neutral-700",
-  high: "border-neutral-300 bg-neutral-900 text-white",
-  critical: "border-neutral-900 bg-white text-neutral-950",
 };
 
 const interventionStatuses: WarningStatus[] = [
@@ -107,12 +98,10 @@ export function StudentRiskDrawer({
     setActionMessage("已确认正式预警，列表和详情已同步更新。");
   }
 
-  const effectiveRiskLevel = warning ? getEffectiveRiskLevel(warning) : null;
-
   return (
     <>
       <Sheet onOpenChange={onOpenChange} open={open && Boolean(warning)}>
-        {warning && effectiveRiskLevel ? (
+        {warning ? (
           <SheetContent className="flex h-full w-[520px] max-w-[calc(100vw-24px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[560px]">
             <SheetHeader className="shrink-0 border-b border-neutral-200 px-5 py-4 pr-14 text-left">
               <div className="flex items-start justify-between gap-3">
@@ -150,9 +139,6 @@ export function StudentRiskDrawer({
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <Badge className={riskBadgeClass[effectiveRiskLevel]} variant="outline">
-                        {riskLevelLabels[effectiveRiskLevel]}
-                      </Badge>
                       <Badge
                         className="border-neutral-300 bg-neutral-100 text-neutral-800"
                         variant="outline"

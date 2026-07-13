@@ -3,9 +3,9 @@ import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  getEffectiveRiskLevel,
   riskLevelLabels,
-  warningEvidenceTypeLabels,
-  warningSourceTypeLabels,
+  type RiskLevel,
   type WarningItem,
 } from "@/types/warning";
 
@@ -14,40 +14,33 @@ type RiskEvidenceProps = {
   onPlaceholderAction: (label: string) => void;
 };
 
+const riskBadgeClass: Record<RiskLevel, string> = {
+  medium: "border-neutral-200 bg-neutral-100 text-neutral-700",
+  high: "border-neutral-300 bg-neutral-900 text-white",
+  critical: "border-neutral-900 bg-white text-neutral-950",
+};
+
 export function RiskEvidence({ warning, onPlaceholderAction }: RiskEvidenceProps) {
+  const effectiveRiskLevel = getEffectiveRiskLevel(warning);
+
   return (
     <section className="rounded-lg border border-neutral-200 bg-white p-4">
-      <h3 className="mb-3 text-sm font-semibold text-neutral-950">风险依据</h3>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-neutral-950">风险依据</h3>
+        <Badge className={riskBadgeClass[effectiveRiskLevel]} variant="outline">
+          {riskLevelLabels[effectiveRiskLevel]}
+        </Badge>
+      </div>
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <div className="text-xs font-semibold text-neutral-500">来源</div>
-            <p className="mt-1 text-sm font-medium text-neutral-800">
-              {warningSourceTypeLabels[warning.sourceType]}
-            </p>
-          </div>
           <div>
             <div className="text-xs font-semibold text-neutral-500">系统提示风险等级</div>
             <p className="mt-1 text-sm font-medium text-neutral-800">
               {riskLevelLabels[warning.suggestedRiskLevel]}
             </p>
           </div>
-          <div className="col-span-2">
-            <div className="text-xs font-semibold text-neutral-500">风险依据</div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {warning.evidenceTypes.map((evidenceType) => (
-                <Badge
-                  className="border-neutral-200 bg-neutral-100 text-neutral-700"
-                  key={evidenceType}
-                  variant="outline"
-                >
-                  {warningEvidenceTypeLabels[evidenceType]}
-                </Badge>
-              ))}
-            </div>
-          </div>
-          <div className="col-span-2">
+          <div>
             <div className="text-xs font-semibold text-neutral-500">心理老师确认风险等级</div>
             <p className="mt-1 text-sm font-medium text-neutral-900">
               {warning.confirmedRiskLevel

@@ -51,7 +51,14 @@
 - [x] Check code against the latest specifications
 - [x] Build / test / commit / push
 
-Active scope: Phase 3.5. Do not implement a clue-pool page or start the full Phase 4 action flow.
+## Phase 3.6: Simplify risk evidence presentation
+
+- [x] Move effective risk-level badge to the risk-evidence heading
+- [x] Remove the duplicate risk badge from the student overview
+- [x] Hide source and evidence-type labels in the risk-evidence body
+- [x] Update drawer acceptance rules
+
+Active scope: Phase 3.6. Do not implement a clue-pool page or start the full Phase 4 action flow.
 
 ## Phase 4: Local mock state changes after drawer actions
 

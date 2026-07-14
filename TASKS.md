@@ -82,9 +82,23 @@
 - [x] Documentation synchronization
 - [x] Build / commit / push
 
-Active scope: Warning management frozen after Phase 4.5.
+## Phase 4.6: Warning collaboration and archive refinement
+
+- [x] Synchronize feedback deadline and re-request rules
+- [x] Define homeroom-teacher collaboration information
+- [x] Define re-test scale and objective result boundaries
+- [x] Define complete read-only archive contents
+- [ ] Implement shared effective feedback status
+- [ ] Extend confirmation and feedback request data
+- [ ] Add centralized re-test scale catalog
+- [ ] Implement full re-test record viewing
+- [ ] Expand read-only archive dialog
+- [ ] Run regression / build / commit / push
+
+Active scope: Warning management will be frozen after Phase 4.6.
 Next planned module: student profile.
 Do not implement student profile until its acceptance matrix and Codex task are approved.
+Clue pool remains documented as an upstream future slice and is not the next implementation task.
 
 ## Phase 5: Polish and validation
 

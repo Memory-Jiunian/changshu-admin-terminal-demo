@@ -158,6 +158,26 @@ Warning business rules remain frozen.
 Active scope: Student profile Phase 5.2A.1 information architecture and filter semantics.
 Only profile-to-warning-detail-and-back navigation is approved. Detailed records, fullscreen, PDF export, and all other cross-module routes remain out of scope.
 
+## Phase 5.2B: Complete student case records
+
+- [x] Add case-detail view model
+- [x] Add internal profile/case drawer navigation
+- [x] Extend return context for case detail
+- [x] Extract shared read-only case record components
+- [x] Refactor archive dialog to shared components
+- [x] Add case overview
+- [x] Add risk evidence
+- [x] Add feedback request and feedback history
+- [x] Add intervention history
+- [x] Add retest history
+- [x] Add referral and outcome history
+- [x] Add complete case timeline
+- [x] Add empty and error states
+- [x] Run regression / build / commit / push
+
+Active scope: Student profile Phase 5.2B read-only complete records grouped by warning case.
+Fullscreen, PDF export, raw assessment/AI records, cross-case record indexes, workbench, and clue pool remain out of scope. Warning business rules remain frozen.
+
 ## Phase 6: Polish and validation
 
 - [ ] Match prototype layout

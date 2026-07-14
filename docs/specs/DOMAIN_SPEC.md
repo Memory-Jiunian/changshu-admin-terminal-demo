@@ -267,3 +267,12 @@ confirmedRiskLevel ?? suggestedRiskLevel
 - 事项来源、是否形成正式预警和是否有干预记录读取学生全部关联事项。
 - 是否形成正式预警仅以存在 `confirmedRiskLevel` 为准；正式预警及后续状态缺失该字段属于数据异常。
 - 本轮唯一允许的跨模块路径是学生档案查看对应预警详情并返回原档案上下文。
+
+## 17. Phase 5.2B 事项记录不变量
+
+- 学生档案的完整专业记录以 `WarningItem.id` 为主线聚合，不建立跨事项平铺的记录副本。
+- 档案事项详情只读，任何查看、展开、切换和返回行为均不得写业务时间线。
+- `feedbackRequests`、`feedbackRecords`、`interventionRecords`、`retestRecords`、`referralRecords` 和 `timeline` 继续以共享 warning 为唯一真值。
+- 测评和 AI 当前只提供摘要级证据；原始问卷、逐题记录和完整对话不存在时不得伪造或提供假入口。
+- “查看完整记录”属于档案内审阅；“查看预警详情”属于进入预警管理处理事项，职责不得混用。
+- 记录数组可为展示排序而复制，但不得改变共享 warning 中的原始数组顺序。

@@ -16,11 +16,13 @@ The current implemented modules are:
   - Pending re-test
   - Referral
   - Closed
-- Student profile Phase 5.2A:
+- Student profile Phase 5.2B:
   - List
   - Search and filters
   - Shared warning-derived summaries
   - Core read-only detail drawer
+  - Read-only complete records grouped by warning case
+  - Shared archive/case record components
 
 Do not implement unrelated pages unless the task explicitly asks for them.
 
@@ -117,7 +119,7 @@ Do not expose full student risk detail to school leaders in this version.
 ## Current implementation scope
 
 Warning management is frozen. The active implementation slice is student
-profile Phase 5.2A: shared warning data and the core read-only detail drawer.
+profile Phase 5.2B: read-only complete records grouped by warning case.
 
 Required UI:
 
@@ -167,7 +169,7 @@ Required UI:
    - Closed:
      - View archive record
 
-5. Student profile Phase 5.2A
+5. Student profile Phase 5.2B
    - Student profile list
    - Name and student-number search
    - Linked grade and class filters
@@ -176,6 +178,9 @@ Required UI:
    - Warning-derived list summaries
    - Core drawer sections: student information, current overview, active case,
      enrollment history, and historical case summaries
+   - Internal read-only case-detail view
+   - Shared case overview, evidence, feedback, intervention, re-test, referral,
+     outcome, and timeline sections
    - Shared detail width
 
 Do not implement:
@@ -188,9 +193,9 @@ Do not implement:
 - School overview page
 - Mini-program notification integration
 - Full AI conversation page
-- Detailed student profile record modules
+- Raw assessment-question and full AI-conversation record modules
 - Student profile fullscreen mode
-- Complete caseId aggregation UI
+- Cross-case record index UI
 - Clue-pool page
 - Organization and account CRUD
 
@@ -287,6 +292,7 @@ Feedback status options:
 
 Risk level options:
 
+- low
 - medium
 - high
 - critical
@@ -388,20 +394,20 @@ When action fails:
 
 ## Current active scope
 
-Student profile Phase 5.2A.1 is approved. Implement the five-column student
-list, grade/class browsing tabs, school-wide keyword search, pagination,
-refined profile filters, and the read-only core drawer information
-architecture. Detailed professional record modules and fullscreen remain out
-of scope.
+Student profile Phase 5.2B is approved. Implement read-only complete records
+grouped by `WarningItem.id`, internal profile/case-detail drawer navigation,
+shared read-only case-record components, and the extended typed return context.
+Fullscreen, PDF export, raw assessment/AI records, and cross-case record indexes
+remain out of scope.
 
 The only approved cross-module route in this slice is:
 
 `Student profile -> matching warning detail -> original student profile context`.
 
-App-level typed return context must restore the keyword, grade tab, class tab,
-advanced filters, page, selected student, drawer open state, and drawer scroll
-position. Do not add workbench/profile, warning/profile, archive/profile,
-re-test/profile, or other cross-module entry points.
+App-level typed return context must also restore the profile/case-detail view,
+selected case, separate scroll positions, and expanded record sections. Do not
+add workbench/profile, warning/profile, archive/profile, re-test/profile, or
+other cross-module entry points.
 
 Student identity and enrollment history are stable student data. Current risk,
 current warning status, responsible psychological teacher, intervention-history

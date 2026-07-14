@@ -305,6 +305,20 @@ AdminDataProvider 初始化 warningMockData
 → 恢复搜索、Tab、筛选、页码、选中学生、抽屉和滚动位置
 ```
 
+## 8.6 Phase 5.2B 事项详情流程
+
+```text
+学生档案概览
+→ 当前或历史事项点击“查看完整记录”
+→ 同一抽屉切换到 case_detail(warningId)
+→ 只渲染该事项的共享只读记录
+→ 返回学生档案并恢复概览滚动位置
+```
+
+若从事项详情点击“查看预警详情”，App returnContext 还需保存 `drawerView`、`selectedCaseId`、`profileScrollTop`、`caseDetailScrollTop` 和 `expandedRecordSections`。事项已不存在或与学生不匹配时安全退回概览并提示数据已更新。
+
+事项记录排序：反馈请求按 `requestedAt`、反馈按 `submittedAt`、干预按 `occurredAt`、复测按 `arrangedAt`、转介按 `referredAt`、时间线按 `occurredAt` 倒序。排序只作用于派生副本。
+
 ### 9.1 单个事项展示顺序
 按业务含义展示：
 

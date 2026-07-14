@@ -132,7 +132,6 @@ DETAIL_DRAWER_WIDTH
 | 左侧导航 | 点击学生档案 | 无 |
 | 工作台 | 点击学生 | studentId |
 | 预警管理 | 查看学生档案 | studentId、warningId、returnContext |
-| 干预记录 | 查看学生档案 | studentId、interventionId、returnContext |
 
 ### 7.2 出口
 

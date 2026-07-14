@@ -109,14 +109,14 @@ Clue pool remains documented as an upstream future slice and is not the next imp
 
 ## Phase 5.1: Student profile list
 
-- [ ] Add student profile types
-- [ ] Add student profile mock coverage
-- [ ] Implement name and student-number search
-- [ ] Implement linked grade and class filters
-- [ ] Implement advanced filters
-- [ ] Implement the three-column-group student list
-- [ ] Add the minimum identity-only drawer
-- [ ] Run acceptance regression, build, commit, and push
+- [x] Add student profile types
+- [x] Add student profile mock coverage
+- [x] Implement name and student-number search
+- [x] Implement linked grade and class filters
+- [x] Implement advanced filters
+- [x] Implement the three-column-group student list
+- [x] Add the minimum identity-only drawer
+- [x] Run acceptance regression, build, commit, and push
 
 Active scope: Student profile Phase 5.1: list, search, filters, types and mock only.
 Do not implement the full profile drawer until Phase 5.2 is approved.

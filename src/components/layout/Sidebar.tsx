@@ -1,13 +1,31 @@
 import { cn } from "@/lib/utils";
 
-const navItems = ["工作台", "预警管理", "干预记录", "学生档案", "校级总览"];
+export type AppPage = "warning-management" | "student-profile";
 
-export function Sidebar() {
+type NavigationItem = {
+  label: string;
+  page?: AppPage;
+};
+
+const navItems: NavigationItem[] = [
+  { label: "工作台" },
+  { label: "预警管理", page: "warning-management" },
+  { label: "学生档案", page: "student-profile" },
+  { label: "校级总览" },
+  { label: "系统设置" },
+];
+
+type SidebarProps = {
+  activePage: AppPage;
+  onNavigate: (page: AppPage) => void;
+};
+
+export function Sidebar({ activePage, onNavigate }: SidebarProps) {
   return (
     <aside className="w-44 shrink-0 bg-neutral-700 py-6 text-white">
       <nav className="space-y-1">
         {navItems.map((item) => {
-          const isActive = item === "预警管理";
+          const isActive = item.page === activePage;
 
           return (
             <button
@@ -18,10 +36,11 @@ export function Sidebar() {
                   ? "border-neutral-950 bg-white text-neutral-950"
                   : "border-transparent text-white hover:bg-white/10",
               )}
-              key={item}
+              key={item.label}
+              onClick={() => item.page && onNavigate(item.page)}
               type="button"
             >
-              {item}
+              {item.label}
             </button>
           );
         })}
@@ -29,4 +48,3 @@ export function Sidebar() {
     </aside>
   );
 }
-

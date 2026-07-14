@@ -5,7 +5,11 @@ export type StudentProfileReturnState = {
   page: number;
   selectedStudentId: string | null;
   drawerOpen: boolean;
-  drawerScrollTop: number;
+  drawerView: "profile" | "case_detail";
+  selectedCaseId?: string;
+  profileScrollTop: number;
+  caseDetailScrollTop: number;
+  expandedRecordSections: string[];
   browsePageBeforeSearch: number;
 };
 

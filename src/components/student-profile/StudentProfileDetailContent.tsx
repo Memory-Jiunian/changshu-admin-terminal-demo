@@ -6,9 +6,12 @@ import { StudentCaseSummaryList } from "@/components/student-profile/StudentCase
 import { StudentProfileOverview } from "@/components/student-profile/StudentProfileOverview";
 import type { StudentProfileDetail } from "@/types/studentProfile";
 
-export function StudentProfileDetailContent({ detail, onViewWarning }: { detail: StudentProfileDetail; onViewWarning: (warningId: string) => void }) {
+export function StudentProfileDetailContent({ detail, notice, onViewCaseRecord, onViewWarning }: { detail: StudentProfileDetail; notice?: string; onViewCaseRecord: (warningId: string) => void; onViewWarning: (warningId: string) => void }) {
   return (
     <div className="pb-6">
+      {notice ? (
+        <div className="mx-6 mt-5 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{notice}</div>
+      ) : null}
       {detail.dataIssues.length > 0 ? (
         <div className="mx-6 mt-5 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           <div className="flex items-center gap-2 font-medium"><AlertTriangle className="h-4 w-4" />数据关联异常</div>
@@ -16,9 +19,9 @@ export function StudentProfileDetailContent({ detail, onViewWarning }: { detail:
         </div>
       ) : null}
       <StudentProfileOverview detail={detail} />
-      <StudentActiveCase activeCase={detail.activeCase} onViewWarning={onViewWarning} />
+      <StudentActiveCase activeCase={detail.activeCase} onViewCaseRecord={onViewCaseRecord} onViewWarning={onViewWarning} />
       <EnrollmentHistory items={detail.student.enrollmentHistory} />
-      <StudentCaseSummaryList cases={detail.historicalCases} onViewWarning={onViewWarning} />
+      <StudentCaseSummaryList cases={detail.historicalCases} onViewCaseRecord={onViewCaseRecord} onViewWarning={onViewWarning} />
     </div>
   );
 }

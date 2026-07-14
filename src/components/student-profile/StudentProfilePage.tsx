@@ -12,7 +12,7 @@ import { getFirstAvailableClass, loadStudentClassPreference, saveStudentClassPre
 import { cloneStudentProfileFilterQuery, createDefaultStudentProfileFilterQuery, filterStudentProfiles, getStudentProfileFilterOptions, paginateStudentProfiles } from "@/lib/student-profile-filters";
 import { useAdminData } from "@/state/AdminDataProvider";
 import type { StudentProfileReturnState } from "@/types/navigation";
-import { createDefaultStudentProfileAdvancedFilters } from "@/types/studentProfile";
+import { createDefaultStudentProfileAdvancedFilters, type StudentProfileDrawerView } from "@/types/studentProfile";
 
 type LoadState = "ready" | "loading" | "error";
 
@@ -47,7 +47,22 @@ export function StudentProfilePage({ initialLoadState = "ready", initialReturnSt
   const browsePageBeforeSearchRef = useRef(
     initialReturnState?.browsePageBeforeSearch ?? initialReturnState?.page ?? 1,
   );
-  const [drawerScrollTop, setDrawerScrollTop] = useState(initialReturnState?.drawerScrollTop ?? 0);
+  const initialCaseId = initialReturnState?.selectedCaseId;
+  const [drawerView, setDrawerView] = useState<StudentProfileDrawerView>(
+    initialReturnState?.drawerView === "case_detail" && initialCaseId
+      ? { type: "case_detail", warningId: initialCaseId }
+      : { type: "profile" },
+  );
+  const [profileScrollTop, setProfileScrollTop] = useState(
+    initialReturnState?.profileScrollTop ?? 0,
+  );
+  const [caseDetailScrollTop, setCaseDetailScrollTop] = useState(
+    initialReturnState?.caseDetailScrollTop ?? 0,
+  );
+  const [expandedRecordSections, setExpandedRecordSections] = useState<string[]>(
+    initialReturnState?.expandedRecordSections ?? ["overview"],
+  );
+  const [caseNotice, setCaseNotice] = useState<string>();
   const [loadState, setLoadState] = useState<LoadState>(initialLoadState);
   const filteredProfiles = useMemo(() => filterStudentProfiles(summaries, query), [query, summaries]);
   const pagination = useMemo(
@@ -62,6 +77,12 @@ export function StudentProfilePage({ initialLoadState = "ready", initialReturnSt
     () => selectedStudent ? buildStudentProfileDetail(selectedStudent, warnings) : null,
     [selectedStudent, warnings],
   );
+  const selectedCaseDetail = useMemo(
+    () => drawerView.type === "case_detail"
+      ? selectedDetail?.caseDetails[drawerView.warningId]
+      : undefined,
+    [drawerView, selectedDetail],
+  );
   const hasFilters = Boolean(query.keyword ||
     query.advanced.riskLevel.length || query.advanced.warningStatus.length ||
     query.advanced.hasCurrentWarning.length || query.advanced.sourceType.length ||
@@ -74,6 +95,17 @@ export function StudentProfilePage({ initialLoadState = "ready", initialReturnSt
       setCurrentPage(pagination.currentPage);
     }
   }, [currentPage, pagination.currentPage]);
+
+  useEffect(() => {
+    if (
+      drawerView.type === "case_detail" &&
+      selectedDetail &&
+      !selectedDetail.caseDetails[drawerView.warningId]
+    ) {
+      setDrawerView({ type: "profile" });
+      setCaseNotice("事项记录已更新或不再属于当前学生，已返回学生档案概览。");
+    }
+  }, [drawerView, selectedDetail]);
 
   function resetAll() {
     setQuery((current) => ({
@@ -111,9 +143,26 @@ export function StudentProfilePage({ initialLoadState = "ready", initialReturnSt
       page: pagination.currentPage,
       selectedStudentId,
       drawerOpen: Boolean(selectedDetail),
-      drawerScrollTop,
+      drawerView: drawerView.type,
+      selectedCaseId: drawerView.type === "case_detail" ? drawerView.warningId : undefined,
+      profileScrollTop,
+      caseDetailScrollTop,
+      expandedRecordSections: [...expandedRecordSections],
       browsePageBeforeSearch: browsePageBeforeSearchRef.current,
     });
+  }
+
+  function handleViewCaseRecord(warningId: string) {
+    if (!selectedDetail?.caseDetails[warningId]) {
+      setCaseNotice("未找到该事项记录，数据可能已更新。");
+      setDrawerView({ type: "profile" });
+      return;
+    }
+
+    setCaseNotice(undefined);
+    setCaseDetailScrollTop(0);
+    setExpandedRecordSections(["overview"]);
+    setDrawerView({ type: "case_detail", warningId });
   }
 
   function handleKeywordChange(keyword: string) {
@@ -165,7 +214,14 @@ export function StudentProfilePage({ initialLoadState = "ready", initialReturnSt
             totalProfiles={filteredProfiles.length}
             onPageChange={setCurrentPage}
             onReset={resetAll}
-            onView={(profile) => setSelectedStudentId(profile.studentId)}
+            onView={(profile) => {
+              setSelectedStudentId(profile.studentId);
+              setDrawerView({ type: "profile" });
+              setProfileScrollTop(0);
+              setCaseDetailScrollTop(0);
+              setExpandedRecordSections(["overview"]);
+              setCaseNotice(undefined);
+            }}
             profiles={pagination.items}
             selectedStudentId={selectedStudentId ?? undefined}
           />
@@ -173,12 +229,30 @@ export function StudentProfilePage({ initialLoadState = "ready", initialReturnSt
       ) : null}
 
       <StudentProfileDrawer
+        caseDetail={selectedCaseDetail}
+        caseDetailScrollTop={caseDetailScrollTop}
         detail={selectedDetail}
-        initialScrollTop={drawerScrollTop}
-        onOpenChange={(open) => { if (!open) { setSelectedStudentId(null); setDrawerScrollTop(0); } }}
-        onScrollTopChange={setDrawerScrollTop}
+        expandedRecordSections={expandedRecordSections}
+        notice={caseNotice}
+        onBackToProfile={() => setDrawerView({ type: "profile" })}
+        onCaseDetailScrollTopChange={setCaseDetailScrollTop}
+        onExpandedRecordSectionsChange={setExpandedRecordSections}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedStudentId(null);
+            setDrawerView({ type: "profile" });
+            setProfileScrollTop(0);
+            setCaseDetailScrollTop(0);
+            setExpandedRecordSections(["overview"]);
+            setCaseNotice(undefined);
+          }
+        }}
+        onProfileScrollTopChange={setProfileScrollTop}
+        onViewCaseRecord={handleViewCaseRecord}
         onViewWarning={handleOpenWarningDetail}
         open={Boolean(selectedDetail)}
+        profileScrollTop={profileScrollTop}
+        view={drawerView}
       />
     </section>
   );

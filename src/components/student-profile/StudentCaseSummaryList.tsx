@@ -9,7 +9,7 @@ const outcomeLabels = {
   ended_without_warning: "未形成正式预警",
 } as const;
 
-export function StudentCaseSummaryList({ cases, onViewWarning }: { cases: StudentProfileCaseSummary[]; onViewWarning: (warningId: string) => void }) {
+export function StudentCaseSummaryList({ cases, onViewCaseRecord, onViewWarning }: { cases: StudentProfileCaseSummary[]; onViewCaseRecord: (warningId: string) => void; onViewWarning: (warningId: string) => void }) {
   return (
     <section className="px-6 py-5">
       <h3 className="text-sm font-semibold text-neutral-950">历史事项摘要</h3>
@@ -32,7 +32,10 @@ export function StudentCaseSummaryList({ cases, onViewWarning }: { cases: Studen
                 <div className="col-span-2"><dt className="text-neutral-500">最终结果 / 结束原因</dt><dd className="mt-1 leading-6 text-neutral-800">{item.outcomeDescription}</dd></div>
               </dl>
               <div className="mt-3 text-xs text-neutral-500">反馈 {item.feedbackCount} · 干预 {item.interventionCount} · 复测 {item.retestCount} · 转介 {item.referralCount}</div>
-              <Button className="mt-3 w-full" onClick={() => onViewWarning(item.warningId)} size="sm" type="button" variant="outline">查看预警详情</Button>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Button onClick={() => onViewCaseRecord(item.warningId)} size="sm" type="button">查看完整记录</Button>
+                <Button onClick={() => onViewWarning(item.warningId)} size="sm" type="button" variant="outline">查看预警详情</Button>
+              </div>
             </div>
           ))}
         </div>

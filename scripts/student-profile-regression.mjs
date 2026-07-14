@@ -57,6 +57,9 @@ const summaries = aggregate.buildStudentProfileSummaries(students, warnings);
 const defaultQuery = filters.createDefaultStudentProfileFilterQuery();
 const defaultResults = filters.filterStudentProfiles(summaries, defaultQuery);
 const options = filters.getStudentProfileFilterOptions(summaries);
+const isNewestFirst = (items, field) => items.every(
+  (item, index) => index === 0 || items[index - 1][field] >= item[field],
+);
 
 assert(students.length >= 10, "mock covers list scenarios");
 assert(defaultResults.length > 0 && defaultResults.every((item) => item.enrollmentStatus === "enrolled"), "default list only includes enrolled students");
@@ -152,16 +155,20 @@ const pendingDetail = aggregate.buildStudentProfileDetail(pendingStudent, warnin
 assert(pendingDetail.activeCase?.warningId === "WRN-20260708-001", "active case uses the matching warning");
 assert(pendingDetail.activeCase?.startedAt === "2026-07-07 16:20", "active case starts at the earliest timeline event");
 assert(pendingDetail.historicalCases.length === 0, "active-only student has no fabricated history");
+assert(pendingDetail.caseDetails["WRN-20260708-001"]?.summary.warningId === "WRN-20260708-001", "active case detail is keyed by warning id");
+assert(aggregate.getStudentProfileCaseDetail(pendingDetail, "WRN-20260708-001") === pendingDetail.caseDetails["WRN-20260708-001"], "case-detail selector returns the matching case");
 
 const closedStudent = students.find((student) => student.studentId === "STU-0007");
 const closedDetail = aggregate.buildStudentProfileDetail(closedStudent, warnings);
 assert(!closedDetail.activeCase && closedDetail.historicalCases[0]?.outcome === "closed", "closed warning is historical only");
 assert(!closedDetail.summary.currentResponsiblePsychologist, "historical-only student has no current owner");
+assert(closedDetail.caseDetails["WRN-20260704-007"]?.summary.outcome === "closed", "closed history has a complete case detail");
 
 const endedStudent = students.find((student) => student.studentId === "STU-0011");
 const endedDetail = aggregate.buildStudentProfileDetail(endedStudent, warnings);
 assert(!endedDetail.activeCase && endedDetail.historicalCases[0]?.outcome === "ended_without_warning", "inactive ended warning is historical");
 assert(endedDetail.historicalCases[0]?.outcomeDescription.includes("不形成正式预警"), "ended history keeps its reason");
+assert(endedDetail.caseDetails["WRN-20260701-011"]?.feedbackRecords.length === 0, "ended-without-warning detail keeps explicit empty records");
 
 const noCaseStudent = students.find((student) => student.studentId === "STU-0105");
 const noCaseDetail = aggregate.buildStudentProfileDetail(noCaseStudent, warnings);
@@ -170,10 +177,41 @@ assert(!noCaseDetail.summary.activeRiskLevel && !noCaseDetail.summary.activeWarn
 
 const interventionSummary = summaries.find((summary) => summary.studentId === "STU-0004");
 assert(interventionSummary.hasInterventionRecords, "intervention records are derived from all warning records");
+const interventionStudent = students.find((student) => student.studentId === "STU-0004");
+const interventionDetail = aggregate.buildStudentProfileDetail(interventionStudent, warnings);
+const richCase = interventionDetail.caseDetails["WRN-20260707-004"];
+assert(richCase.feedbackRequests.length === warnings.find((warning) => warning.id === richCase.summary.warningId).feedbackRequests.length, "feedback request count matches warning data");
+assert(richCase.feedbackRecords.length === warnings.find((warning) => warning.id === richCase.summary.warningId).feedbackRecords.length, "feedback record count matches warning data");
+assert(richCase.interventionRecords.length >= 2 && isNewestFirst(richCase.interventionRecords, "occurredAt"), "multiple interventions are newest first");
+assert(isNewestFirst(richCase.feedbackRequests, "requestedAt") && isNewestFirst(richCase.feedbackRecords, "submittedAt"), "feedback requests and records are independently sorted");
+
+const formalStudent = students.find((student) => student.studentId === "STU-0003");
+const requestOnlyCase = aggregate.buildStudentProfileDetail(formalStudent, warnings).caseDetails["WRN-20260708-003"];
+assert(requestOnlyCase.feedbackRequests.length > 0 && requestOnlyCase.feedbackRecords.length === 0, "case detail covers feedback request without feedback");
+
+const retestStudent = students.find((student) => student.studentId === "STU-0005");
+const retestCase = aggregate.buildStudentProfileDetail(retestStudent, warnings).caseDetails["WRN-20260706-005"];
+assert(retestCase.retestRecords.length >= 2 && isNewestFirst(retestCase.retestRecords, "arrangedAt"), "multiple retests are newest first");
+assert(retestCase.retestRecords.every((record) => record.scaleNames.length > 0), "retest records retain scale names");
+assert(retestCase.retestRecords.some((record) => !record.completedAt), "case detail covers an unfinished retest without fabricated result");
+
+const referralStudent = students.find((student) => student.studentId === "STU-0006");
+const referralCase = aggregate.buildStudentProfileDetail(referralStudent, warnings).caseDetails["WRN-20260705-006"];
+assert(isNewestFirst(referralCase.referralRecords, "referredAt") && isNewestFirst(referralCase.timeline, "occurredAt"), "referrals and timeline are newest first");
+const pendingReferralStudent = students.find((student) => student.studentId === "STU-0010");
+const pendingReferralCase = aggregate.buildStudentProfileDetail(pendingReferralStudent, warnings).caseDetails["WRN-20260708-010"];
+assert(pendingReferralCase.referralRecords.some((record) => !record.resultRecordedAt), "case detail covers referral without a result");
+
+const originalTimelineOrder = warnings.find((warning) => warning.id === "WRN-20260708-001").timeline.map((item) => item.id).join(",");
+aggregate.buildStudentProfileCaseDetail(warnings.find((warning) => warning.id === "WRN-20260708-001"));
+assert(warnings.find((warning) => warning.id === "WRN-20260708-001").timeline.map((item) => item.id).join(",") === originalTimelineOrder, "case-detail sorting does not mutate shared warning arrays");
 
 const missingStudent = { ...noCaseStudent, studentId: "STU-MISSING", warningCaseIds: ["WRN-MISSING"] };
 const missingDetail = aggregate.buildStudentProfileDetail(missingStudent, warnings);
 assert(missingDetail.dataIssues.some((issue) => issue.includes("不存在")), "missing association is reported");
+const mismatchedStudent = { ...noCaseStudent, warningCaseIds: ["WRN-20260708-001"] };
+const mismatchedDetail = aggregate.buildStudentProfileDetail(mismatchedStudent, warnings);
+assert(mismatchedDetail.dataIssues.some((issue) => issue.includes("属于其他学生")) && !mismatchedDetail.caseDetails["WRN-20260708-001"], "student mismatch is reported and excluded from case details");
 
 const extraActive = {
   ...warnings.find((warning) => warning.id === "WRN-20260708-002"),
@@ -253,14 +291,32 @@ assert(refreshedSummary.activeWarningStatus === "observing", "profile summary re
 assert(refreshedDetail.activeCase?.latestActivity === "心理老师标记继续观察", "profile detail reads updated shared warning activity");
 assert(sharedWarnings.find((warning) => warning.id === updatedWarning.warning.id).currentStatus === "observing", "updated warning remains available when returning to warning management");
 
+const interventionWarning = warnings.find((warning) => warning.id === "WRN-20260707-004");
+const addedIntervention = actions.applyWarningAction(
+  interventionWarning,
+  { type: "add_intervention", values: { occurredAt: "2026-07-14 13:00", method: "面谈", summary: "共享记录回归", judgment: "继续观察", followUpPlan: "一周后复盘" } },
+  "2026-07-14 13:00",
+);
+assert(addedIntervention.success, "warning intervention action succeeds for profile record sync");
+const interventionWarnings = warnings.map((warning) => warning.id === interventionWarning.id ? addedIntervention.warning : warning);
+const refreshedCaseDetail = aggregate.buildStudentProfileDetail(interventionStudent, interventionWarnings).caseDetails[interventionWarning.id];
+assert(refreshedCaseDetail.interventionRecords.length === interventionWarning.interventionRecords.length + 1 && refreshedCaseDetail.interventionRecords[0].summary === "共享记录回归", "profile case detail reflects a newly added shared intervention");
+
 const appSource = readFileSync("src/App.tsx", "utf8");
 const warningPageSource = readFileSync("src/components/warning/WarningManagementPage.tsx", "utf8");
 const confirmDialogSource = readFileSync("src/components/warning/ConfirmFormalWarningDialog.tsx", "utf8");
 const navigationSource = readFileSync("src/types/navigation.ts", "utf8");
+const archiveSource = readFileSync("src/components/warning/ArchiveRecordDialog.tsx", "utf8");
+const activeCaseSource = readFileSync("src/components/student-profile/StudentActiveCase.tsx", "utf8");
+const historyCaseSource = readFileSync("src/components/student-profile/StudentCaseSummaryList.tsx", "utf8");
+const retestSectionSource = readFileSync("src/components/case-records/CaseRetestSection.tsx", "utf8");
 assert(appSource.includes("<AdminDataProvider>"), "provider is mounted above page switching");
 assert(appSource.includes("StudentProfileWarningReturnContext") && appSource.includes("profileState"), "app owns a typed profile return context");
-assert(["query", "page", "selectedStudentId", "drawerOpen", "drawerScrollTop"].every((field) => navigationSource.includes(`${field}:`)), "return context covers profile filters, page, selection, drawer, and scroll");
+assert(["query", "page", "selectedStudentId", "drawerOpen", "drawerView", "selectedCaseId", "profileScrollTop", "caseDetailScrollTop", "expandedRecordSections"].every((field) => navigationSource.includes(`${field}`)), "return context covers profile, case, scroll, and expanded-section state");
 assert(warningPageSource.includes("useAdminData()") && !warningPageSource.includes("warningMockData"), "warning page consumes shared state instead of a local mock copy");
 assert(confirmDialogSource.includes('["medium", "high", "critical"]') && !confirmDialogSource.includes('["low"'), "formal-warning confirmation excludes low risk");
+assert(archiveSource.includes("CaseRecordContent") && !archiveSource.includes("ProcessTimeline"), "archive dialog uses shared read-only case record components");
+assert(activeCaseSource.includes("查看完整记录") && activeCaseSource.includes("查看预警详情") && historyCaseSource.includes("查看完整记录"), "profile summary actions distinguish complete records from warning detail");
+assert(!retestSectionSource.includes("record.conclusion") && retestSectionSource.includes("尚未完成复测"), "shared retest records show objective results without psychologist conclusion");
 
 console.log(`student profile regression assertions: ${assertionCount} passed`);

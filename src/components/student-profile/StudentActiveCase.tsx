@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import type { StudentProfileCaseSummary } from "@/types/studentProfile";
 import { feedbackStatusLabels, riskLevelLabels, statusLabels, warningSourceTypeLabels } from "@/types/warning";
 
-export function StudentActiveCase({ activeCase, onViewWarning }: { activeCase?: StudentProfileCaseSummary; onViewWarning: (warningId: string) => void }) {
+export function StudentActiveCase({ activeCase, onViewCaseRecord, onViewWarning }: { activeCase?: StudentProfileCaseSummary; onViewCaseRecord: (warningId: string) => void; onViewWarning: (warningId: string) => void }) {
   return (
     <section className="border-b border-neutral-200 px-6 py-5">
       <h3 className="text-sm font-semibold text-neutral-950">当前活动事项</h3>
@@ -32,7 +32,10 @@ export function StudentActiveCase({ activeCase, onViewWarning }: { activeCase?: 
             <div><div className="text-lg font-semibold">{activeCase.retestCount}</div><div className="text-neutral-500">复测</div></div>
             <div><div className="text-lg font-semibold">{activeCase.referralCount}</div><div className="text-neutral-500">转介</div></div>
           </div>
-          <Button className="mt-4 w-full" onClick={() => onViewWarning(activeCase.warningId)} type="button" variant="outline">查看预警详情</Button>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Button onClick={() => onViewCaseRecord(activeCase.warningId)} type="button">查看完整记录</Button>
+            <Button onClick={() => onViewWarning(activeCase.warningId)} type="button" variant="outline">查看预警详情</Button>
+          </div>
         </div>
       ) : (
         <div className="mt-4 rounded-md border border-dashed border-neutral-300 bg-neutral-50 px-4 py-4 text-sm">

@@ -3,10 +3,10 @@ import { useMemo, useState } from "react";
 import { StudentRiskDrawer } from "@/components/warning/StudentRiskDrawer";
 import { WarningFilterBar } from "@/components/warning/WarningFilterBar";
 import { WarningTable } from "@/components/warning/WarningTable";
-import { warningMockData } from "@/data/warningMock";
 import { applyConfirmFormalWarning, applyWarningAction } from "@/lib/warning-actions";
 import { getEffectiveFeedbackStatus } from "@/lib/warning-feedback";
 import { formatMockDateTime, WARNING_MOCK_TODAY } from "@/lib/warning-time";
+import { useAdminData } from "@/state/AdminDataProvider";
 import {
   emptyAdvancedFilters,
   getEffectiveRiskLevel,
@@ -98,7 +98,7 @@ function matchesAdvancedFilters(item: WarningItem, filters: AdvancedFilterValues
 
 export function WarningManagementPage() {
   const currentTime = formatMockDateTime();
-  const [warnings, setWarnings] = useState<WarningItem[]>(() => warningMockData);
+  const { warnings, setWarnings } = useAdminData();
   const [activeStatus, setActiveStatus] = useState<StatusTabValue>("all");
   const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilterValue | null>(null);
   const [searchValue, setSearchValue] = useState("");

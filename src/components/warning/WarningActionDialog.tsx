@@ -55,8 +55,9 @@ type FormState = {
   referralType: string;
   organization: string;
   reason: string;
-  resultRecordedAt: string;
-  resultSummary: string;
+  followUpOccurredAt: string;
+  followUpAuthorName: string;
+  followUpSummary: string;
   outcome: RetestStatusOutcome | "";
 };
 
@@ -69,7 +70,7 @@ const dialogTitles: Record<WarningFormActionType, string> = {
   schedule_retest: "安排复测",
   start_referral: "发起转介",
   update_retest_status: "更新复测后状态",
-  record_referral_result: "记录转介结果",
+  add_referral_follow_up: "新增转介跟进",
 };
 
 const outcomeOptions: Array<{ value: RetestStatusOutcome; label: string }> = [
@@ -103,8 +104,9 @@ function getInitialForm(warning?: WarningItem | null): FormState {
     referralType: "",
     organization: "",
     reason: "",
-    resultRecordedAt: now,
-    resultSummary: "",
+    followUpOccurredAt: now,
+    followUpAuthorName: warning?.responsibleTeacher ?? "",
+    followUpSummary: "",
     outcome: "",
   };
 }
@@ -179,7 +181,7 @@ export function WarningActionDialog({
     right.arrangedAt.localeCompare(left.arrangedAt),
   )[0];
   const canUpdateRetest = Boolean(latestRetest?.completedAt);
-  const hasPendingReferral = warning.referralRecords.some((record) => !record.resultRecordedAt);
+  const hasReferral = warning.referralRecords.length > 0;
   const dialogTitle = action === "request_feedback" &&
     getFeedbackActionAvailability(warning, formatDateTimeInput(getMockDateTimeInput())).kind === "rerequest"
       ? "重新请求反馈"
@@ -282,17 +284,18 @@ export function WarningActionDialog({
               },
             }
           : null;
-      case "record_referral_result":
-        if (!hasPendingReferral) {
-          setFormError("当前没有待记录结果的转介事项。");
+      case "add_referral_follow_up":
+        if (!hasReferral) {
+          setFormError("当前没有可跟进的转介记录。");
           return null;
         }
-        return requireFields(["resultRecordedAt", "resultSummary"])
+        return requireFields(["followUpOccurredAt", "followUpAuthorName", "followUpSummary"])
           ? {
               type: action,
               values: {
-                resultRecordedAt: formatDateTimeInput(form.resultRecordedAt),
-                resultSummary: form.resultSummary.trim(),
+                occurredAt: formatDateTimeInput(form.followUpOccurredAt),
+                authorName: form.followUpAuthorName.trim(),
+                summary: form.followUpSummary.trim(),
               },
             }
           : null;
@@ -450,14 +453,17 @@ export function WarningActionDialog({
             </>
           ) : null}
 
-          {action === "record_referral_result" ? (
+          {action === "add_referral_follow_up" ? (
             <>
-              {!hasPendingReferral ? <div className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">当前没有待记录结果的转介事项。</div> : null}
-              <Field error={errors.resultRecordedAt} label="结果记录时间" required>
-                <Input onChange={(event) => updateField("resultRecordedAt", event.target.value)} type="datetime-local" value={form.resultRecordedAt} />
+              {!hasReferral ? <div className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">当前没有可跟进的转介记录。</div> : null}
+              <Field error={errors.followUpOccurredAt} label="跟进时间" required>
+                <Input onChange={(event) => updateField("followUpOccurredAt", event.target.value)} type="datetime-local" value={form.followUpOccurredAt} />
               </Field>
-              <Field error={errors.resultSummary} label="转介结果摘要" required>
-                <TextArea onChange={(value) => updateField("resultSummary", value)} placeholder="记录外部转介反馈" value={form.resultSummary} />
+              <Field error={errors.followUpAuthorName} label="记录人" required>
+                <Input onChange={(event) => updateField("followUpAuthorName", event.target.value)} value={form.followUpAuthorName} />
+              </Field>
+              <Field error={errors.followUpSummary} label="跟进摘要" required>
+                <TextArea onChange={(value) => updateField("followUpSummary", value)} placeholder="记录本次外部转介跟进情况" value={form.followUpSummary} />
               </Field>
             </>
           ) : null}

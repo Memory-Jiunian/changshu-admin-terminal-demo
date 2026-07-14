@@ -220,6 +220,7 @@ export function applyWarningAction(
         referralType: values.referralType.trim(),
         organization: values.organization.trim() || undefined,
         reason: values.reason.trim(),
+        followUpRecords: [],
       };
       return {
         success: true,
@@ -239,35 +240,50 @@ export function applyWarningAction(
         }),
       };
     }
-    case "record_referral_result": {
-      const recordIndex = warning.referralRecords.findIndex(
-        (record) => !record.resultRecordedAt,
-      );
-      if (recordIndex < 0) {
-        return { success: false, message: "当前没有待记录结果的转介事项。" };
+    case "add_referral_follow_up": {
+      const recordIndex = warning.referralRecords
+        .map((record, index) => ({ record, index }))
+        .sort((left, right) => right.record.referredAt.localeCompare(left.record.referredAt))[0]?.index;
+      if (recordIndex === undefined) {
+        return { success: false, message: "当前没有可跟进的转介记录。" };
       }
-
+      const values = submission.values;
+      const summary = values.summary.trim();
+      const authorName = values.authorName.trim();
+      if (!values.occurredAt || !authorName || !summary) {
+        return { success: false, message: "请完整填写跟进时间、记录人和跟进摘要。" };
+      }
+      const selectedRecord = warning.referralRecords[recordIndex];
+      const duplicate = selectedRecord.followUpRecords.some(
+        (item) => item.occurredAt === values.occurredAt &&
+          item.authorName === authorName && item.summary === summary,
+      );
+      if (duplicate) {
+        return { success: false, message: "相同的转介跟进已经记录，请勿重复提交。" };
+      }
+      const followUp = {
+        id: makeId("RFF", warning, values.occurredAt, selectedRecord.followUpRecords.length),
+        occurredAt: values.occurredAt,
+        authorName,
+        summary,
+      };
       const referralRecords = warning.referralRecords.map((record, index) =>
         index === recordIndex
-          ? {
-              ...record,
-              resultRecordedAt: submission.values.resultRecordedAt,
-              resultSummary: submission.values.resultSummary.trim(),
-            }
+          ? { ...record, followUpRecords: [followUp, ...record.followUpRecords] }
           : record,
       );
       return {
         success: true,
-        message: "转介结果已记录，事项保持转介中。",
-        warning: withActivity(warning, submission.values.resultRecordedAt, "心理老师记录转介结果", {
+        message: "转介跟进已新增，事项保持转介中。",
+        warning: withActivity(warning, values.occurredAt, "心理老师新增转介跟进", {
           currentStatus: "referral",
           referralRecords,
           timeline: [
             timelineItem(
               warning,
-              submission.values.resultRecordedAt,
-              "记录转介结果",
-              `心理老师记录外部转介反馈：${submission.values.resultSummary.trim()}。事项保持转介中，不自动生成复测结果。`,
+              values.occurredAt,
+              "新增转介跟进",
+              `${authorName}记录转介跟进：${summary}。事项保持转介中，不自动生成复测结果。`,
             ),
             ...warning.timeline,
           ],
@@ -330,6 +346,7 @@ export function applyWarningAction(
         referredAt: occurredAt,
         referralType: "复测后转介",
         reason: "心理老师根据复测结果决定转介",
+        followUpRecords: [],
       };
       return {
         success: true,

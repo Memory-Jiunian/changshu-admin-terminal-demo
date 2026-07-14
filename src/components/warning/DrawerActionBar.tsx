@@ -41,7 +41,7 @@ const actionsByStatus: Record<WarningStatus, DrawerAction[]> = {
     { type: "update_retest_status", label: "更新状态", emphasis: "primary" },
   ],
   referral: [
-    { type: "record_referral_result", label: "记录转介结果", emphasis: "primary" },
+    { type: "add_referral_follow_up", label: "新增转介跟进", emphasis: "primary" },
     { type: "schedule_retest", label: "安排复测" },
   ],
   closed: [{ type: "view_archive", label: "查看归档记录", emphasis: "primary" }],

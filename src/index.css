@@ -60,3 +60,29 @@
   }
 }
 
+.print-report {
+  display: none;
+}
+
+@media print {
+  @page { margin: 16mm; }
+  body * { visibility: hidden !important; }
+  .print-report, .print-report * { visibility: visible !important; }
+  .print-report {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    color: #111;
+    background: #fff;
+    font-size: 11pt;
+    line-height: 1.55;
+  }
+  .print-report h1 { font-size: 20pt; margin: 0 0 4mm; }
+  .print-report h2 { font-size: 15pt; margin: 8mm 0 3mm; border-bottom: 1px solid #bbb; padding-bottom: 2mm; }
+  .print-report h3 { font-size: 12pt; margin: 5mm 0 2mm; }
+  .print-report p { margin: 1.5mm 0; }
+  .print-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3mm 8mm; margin: 4mm 0; }
+  .print-grid dt { color: #666; font-size: 9pt; }
+  .print-grid dd { margin: 0; }
+  .print-case { break-before: page; }
+}

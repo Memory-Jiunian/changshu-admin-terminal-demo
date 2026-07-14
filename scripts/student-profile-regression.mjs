@@ -14,6 +14,9 @@ function moduleUrl(code) {
 const warningTypesUrl = moduleUrl(compile("src/types/warning.ts"));
 const studentTypesUrl = moduleUrl(compile("src/types/studentProfile.ts"));
 const feedbackUrl = moduleUrl(compile("src/lib/warning-feedback.ts"));
+const recordsUrl = moduleUrl(
+  compile("src/lib/warning-records.ts").replaceAll('"@/types/warning"', `"${warningTypesUrl}"`),
+);
 const actionsUrl = moduleUrl(
   compile("src/lib/warning-actions.ts")
     .replaceAll('"@/types/warning"', `"${warningTypesUrl}"`)
@@ -22,7 +25,8 @@ const actionsUrl = moduleUrl(
 const aggregateUrl = moduleUrl(
   compile("src/lib/student-profile-aggregate.ts")
     .replaceAll('"@/types/studentProfile"', `"${studentTypesUrl}"`)
-    .replaceAll('"@/types/warning"', `"${warningTypesUrl}"`),
+    .replaceAll('"@/types/warning"', `"${warningTypesUrl}"`)
+    .replaceAll('"@/lib/warning-records"', `"${recordsUrl}"`),
 );
 const filtersUrl = moduleUrl(
   compile("src/lib/student-profile-filters.ts").replaceAll(
@@ -200,7 +204,7 @@ const referralCase = aggregate.buildStudentProfileDetail(referralStudent, warnin
 assert(isNewestFirst(referralCase.referralRecords, "referredAt") && isNewestFirst(referralCase.timeline, "occurredAt"), "referrals and timeline are newest first");
 const pendingReferralStudent = students.find((student) => student.studentId === "STU-0010");
 const pendingReferralCase = aggregate.buildStudentProfileDetail(pendingReferralStudent, warnings).caseDetails["WRN-20260708-010"];
-assert(pendingReferralCase.referralRecords.some((record) => !record.resultRecordedAt), "case detail covers referral without a result");
+assert(pendingReferralCase.referralRecords.some((record) => record.followUpRecords.length === 0), "case detail covers referral without follow-up");
 
 const originalTimelineOrder = warnings.find((warning) => warning.id === "WRN-20260708-001").timeline.map((item) => item.id).join(",");
 aggregate.buildStudentProfileCaseDetail(warnings.find((warning) => warning.id === "WRN-20260708-001"));
@@ -310,6 +314,8 @@ const archiveSource = readFileSync("src/components/warning/ArchiveRecordDialog.t
 const activeCaseSource = readFileSync("src/components/student-profile/StudentActiveCase.tsx", "utf8");
 const historyCaseSource = readFileSync("src/components/student-profile/StudentCaseSummaryList.tsx", "utf8");
 const retestSectionSource = readFileSync("src/components/case-records/CaseRetestSection.tsx", "utf8");
+const exportDialogSource = readFileSync("src/components/student-profile/StudentProfileExportDialog.tsx", "utf8");
+const exportReportSource = readFileSync("src/components/student-profile/StudentProfilePrintableReport.tsx", "utf8");
 assert(appSource.includes("<AdminDataProvider>"), "provider is mounted above page switching");
 assert(appSource.includes("StudentProfileWarningReturnContext") && appSource.includes("profileState"), "app owns a typed profile return context");
 assert(["query", "page", "selectedStudentId", "drawerOpen", "drawerView", "selectedCaseId", "profileScrollTop", "caseDetailScrollTop", "expandedRecordSections"].every((field) => navigationSource.includes(`${field}`)), "return context covers profile, case, scroll, and expanded-section state");
@@ -318,5 +324,11 @@ assert(confirmDialogSource.includes('["medium", "high", "critical"]') && !confir
 assert(archiveSource.includes("CaseRecordContent") && !archiveSource.includes("ProcessTimeline"), "archive dialog uses shared read-only case record components");
 assert(activeCaseSource.includes("查看完整记录") && activeCaseSource.includes("查看预警详情") && historyCaseSource.includes("查看完整记录"), "profile summary actions distinguish complete records from warning detail");
 assert(!retestSectionSource.includes("record.conclusion") && retestSectionSource.includes("尚未完成复测"), "shared retest records show objective results without psychologist conclusion");
+assert(richCase.riskEvidence.deepAssessmentRecords.some((record) => record.responses.length > 0), "case detail exposes structured assessment responses from warning data");
+assert(richCase.riskEvidence.aiConversationRecords.some((record) => record.messages.length > 0), "case detail exposes visible AI messages from warning data");
+assert(richCase.feedbackCollaboration.rounds.length > 0 && richCase.timeline.some((item) => item.id.startsWith("TL-FEEDBACK-")), "case detail derives feedback rounds and feedback timeline events");
+assert(referralCase.referralRecords.some((record) => record.followUpRecords.length > 0), "legacy referral results migrate to follow-up records");
+assert(exportDialogSource.includes('type="checkbox"') && exportDialogSource.includes("window.print()"), "profile export requires explicit sensitive-record selection and uses browser print");
+assert(exportReportSource.includes("includeSensitiveSourceRecords") && !exportReportSource.includes("html2canvas"), "export report excludes sensitive source records by default and avoids screenshots");
 
 console.log(`student profile regression assertions: ${assertionCount} passed`);

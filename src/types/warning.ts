@@ -36,10 +36,69 @@ export type WarningTimelineItem = {
 
 export type WarningFeedbackRecord = {
   id: string;
+  requestId?: string;
   authorRole: string;
   authorName: string;
   content: string;
   submittedAt: string;
+};
+
+export type WarningFeedbackRound = {
+  request: WarningFeedbackRequest;
+  records: WarningFeedbackRecord[];
+};
+
+export type WarningFeedbackCollaboration = {
+  rounds: WarningFeedbackRound[];
+  proactiveRecords: WarningFeedbackRecord[];
+  unmatchedRecords: WarningFeedbackRecord[];
+  dataIssues: string[];
+};
+
+export type WarningAssessmentDimensionResult = {
+  id: string;
+  name: string;
+  score?: number;
+  level?: string;
+  summary?: string;
+};
+
+export type WarningAssessmentResponseItem = {
+  id: string;
+  questionText: string;
+  answerText: string;
+  score?: number;
+};
+
+export type WarningDeepAssessmentRecord = {
+  id: string;
+  scaleId: string;
+  scaleName: string;
+  startedAt?: string;
+  completedAt: string;
+  totalScore?: number;
+  riskLevel: RiskLevel;
+  resultSummary: string;
+  dimensions: WarningAssessmentDimensionResult[];
+  responses: WarningAssessmentResponseItem[];
+  gradeClassAtTime?: string;
+};
+
+export type WarningAiConversationMessage = {
+  id: string;
+  role: "student" | "assistant";
+  sentAt: string;
+  content: string;
+  riskMarker?: string;
+};
+
+export type WarningAiConversationRecord = {
+  id: string;
+  startedAt: string;
+  endedAt?: string;
+  triggerMessageId?: string;
+  summary: string;
+  messages: WarningAiConversationMessage[];
 };
 
 export type WarningFeedbackRequestStatus = "pending" | "overdue" | "completed";
@@ -78,13 +137,23 @@ export type WarningRetestRecord = {
 
 export type WarningDisposition = "active" | "ended_without_warning";
 
+export type WarningReferralFollowUpRecord = {
+  id: string;
+  occurredAt: string;
+  authorName: string;
+  summary: string;
+};
+
 export type WarningReferralRecord = {
   id: string;
   referredAt: string;
   referralType: string;
   organization?: string;
   reason: string;
+  followUpRecords: WarningReferralFollowUpRecord[];
+  /** @deprecated Migrated to followUpRecords. */
   resultRecordedAt?: string;
+  /** @deprecated Migrated to followUpRecords. */
   resultSummary?: string;
 };
 
@@ -107,6 +176,8 @@ export type WarningItem = {
   headTeacherPhone: string;
   assessmentSummary: string;
   aiSummary: string;
+  deepAssessmentRecords: WarningDeepAssessmentRecord[];
+  aiConversationRecords: WarningAiConversationRecord[];
   teacherFeedbackSummary: string;
   feedbackRecords: WarningFeedbackRecord[];
   feedbackRequests: WarningFeedbackRequest[];
@@ -144,7 +215,7 @@ export type WarningActionType =
   | "start_referral"
   | "view_retest_result"
   | "update_retest_status"
-  | "record_referral_result"
+  | "add_referral_follow_up"
   | "view_archive";
 
 export type RetestStatusOutcome = "close" | "continue_intervention" | "referral";
@@ -184,8 +255,8 @@ export type WarningActionSubmission =
       values: { referralType: string; organization: string; reason: string };
     }
   | {
-      type: "record_referral_result";
-      values: { resultRecordedAt: string; resultSummary: string };
+      type: "add_referral_follow_up";
+      values: { occurredAt: string; authorName: string; summary: string };
     }
   | { type: "update_retest_status"; values: { outcome: RetestStatusOutcome } };
 

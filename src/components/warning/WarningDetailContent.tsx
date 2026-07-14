@@ -8,8 +8,10 @@ import { FeedbackPanel } from "@/components/warning/FeedbackPanel";
 import { InterventionRecords } from "@/components/warning/InterventionRecords";
 import { ProcessTimeline } from "@/components/warning/ProcessTimeline";
 import { RetestRecords } from "@/components/warning/RetestRecords";
+import { ReferralRecords } from "@/components/warning/ReferralRecords";
 import { RiskEvidence } from "@/components/warning/RiskEvidence";
 import { cn } from "@/lib/utils";
+import { buildEffectiveWarningTimeline } from "@/lib/warning-records";
 import {
   statusLabels,
   type WarningActionType,
@@ -97,7 +99,7 @@ export function WarningDetailContent({
 }: WarningDetailContentProps) {
   const isFullscreen = mode === "fullscreen";
   const feedback = shouldShowFeedback(warning.currentStatus) ? (
-    <FeedbackPanel currentTime={currentTime} onPlaceholderAction={onPlaceholderAction} warning={warning} />
+    <FeedbackPanel currentTime={currentTime} warning={warning} />
   ) : null;
   const interventions = shouldShowInterventionRecords(warning) ? (
     <InterventionRecords records={warning.interventionRecords} />
@@ -148,23 +150,25 @@ export function WarningDetailContent({
             <>
               <div className="space-y-4">
                 <StudentOverview warning={warning} />
-                <RiskEvidence onPlaceholderAction={onPlaceholderAction} warning={warning} />
+                <RiskEvidence warning={warning} />
                 {feedback}
               </div>
               <div className="space-y-4">
                 {interventions}
                 <RetestRecords records={warning.retestRecords} />
-                <ProcessTimeline items={warning.timeline} />
+                <ReferralRecords warning={warning} />
+                <ProcessTimeline items={buildEffectiveWarningTimeline(warning)} />
               </div>
             </>
           ) : (
             <>
               <StudentOverview warning={warning} />
-              <RiskEvidence onPlaceholderAction={onPlaceholderAction} warning={warning} />
+              <RiskEvidence warning={warning} />
               {feedback}
               {interventions}
               <RetestRecords records={warning.retestRecords} />
-              <ProcessTimeline items={warning.timeline} />
+              <ReferralRecords warning={warning} />
+              <ProcessTimeline items={buildEffectiveWarningTimeline(warning)} />
             </>
           )}
         </div>

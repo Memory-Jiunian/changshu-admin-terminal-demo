@@ -1,4 +1,14 @@
-import type { WarningItem } from "@/types/warning";
+import type {
+  WarningAiConversationRecord,
+  WarningDeepAssessmentRecord,
+  WarningFeedbackRequestStatus,
+  WarningItem,
+  WarningReferralRecord,
+} from "@/types/warning";
+
+type LegacyReferralRecord = Omit<WarningReferralRecord, "followUpRecords"> & {
+  followUpRecords?: WarningReferralRecord["followUpRecords"];
+};
 
 type WarningMockSeed = Omit<
   WarningItem,
@@ -6,11 +16,15 @@ type WarningMockSeed = Omit<
   | "headTeacherName"
   | "headTeacherPhone"
   | "feedbackRequests"
+  | "deepAssessmentRecords"
+  | "aiConversationRecords"
   | "isActive"
   | "disposition"
   | "referralRecords"
 > &
-  Partial<Pick<WarningItem, "isActive" | "disposition" | "referralRecords">>;
+  Partial<Pick<WarningItem, "isActive" | "disposition">> & {
+    referralRecords?: LegacyReferralRecord[];
+  };
 
 const warningMockSeeds: WarningMockSeed[] = [
   {
@@ -225,13 +239,6 @@ const warningMockSeeds: WarningMockSeed[] = [
         description: "心理老师记录个体访谈和后续跟进计划。",
       },
       {
-        id: "TL-004-6",
-        title: "班主任提交反馈",
-        operator: "王老师",
-        occurredAt: "2026-07-07 16:30",
-        description: "班主任补充新反馈，提示学生课间独处时间变长。",
-      },
-      {
         id: "TL-004-5",
         title: "新增干预记录",
         operator: "陈老师",
@@ -386,7 +393,7 @@ const warningMockSeeds: WarningMockSeed[] = [
     suggestedRiskLevel: "critical",
     confirmedRiskLevel: "critical",
     currentStatus: "referral",
-    latestActivity: "记录转介结果",
+    latestActivity: "新增转介跟进",
     activityTime: "2026-07-05 17:20",
     feedbackStatus: "feedback_overdue",
     responsibleTeacher: "周老师",
@@ -421,7 +428,7 @@ const warningMockSeeds: WarningMockSeed[] = [
     timeline: [
       {
         id: "TL-006-6",
-        title: "记录转介结果",
+        title: "新增转介跟进",
         operator: "周老师",
         occurredAt: "2026-07-05 17:20",
         description: "心理老师记录外部转介反馈，事项保持转介中，不自动生成复测结果。",
@@ -591,7 +598,7 @@ const warningMockSeeds: WarningMockSeed[] = [
       },
       {
         id: "TL-007-R2",
-        title: "记录转介结果",
+        title: "新增转介跟进",
         operator: "陈老师",
         occurredAt: "2026-06-29 16:00",
         description: "心理老师记录外部咨询结果，后续另行安排复测。",
@@ -665,13 +672,6 @@ const warningMockSeeds: WarningMockSeed[] = [
     interventionRecords: [],
     retestRecords: [],
     timeline: [
-      {
-        id: "TL-008-6",
-        title: "班主任提交反馈",
-        operator: "吴老师",
-        occurredAt: "2026-07-03 12:20",
-        description: "班主任补充事实观察，心理老师已查看。",
-      },
       {
         id: "TL-008-5",
         title: "请求补充反馈",
@@ -991,6 +991,57 @@ const warningMockSeeds: WarningMockSeed[] = [
   },
 ];
 
+function buildDeepAssessmentRecords(
+  warning: WarningMockSeed,
+  index: number,
+): WarningDeepAssessmentRecord[] {
+  if (!warning.evidenceTypes.includes("deep_assessment")) return [];
+  const completedAt = warning.timeline.find((item) => item.title.includes("补充评估完成"))?.occurredAt
+    ?? warning.activityTime;
+  const base: WarningDeepAssessmentRecord = {
+    id: `DA-${warning.id}-1`,
+    scaleId: index % 2 === 0 ? "phq-9" : "gad-7",
+    scaleName: index % 2 === 0 ? "PHQ-9 抑郁症筛查量表" : "GAD-7 广泛性焦虑量表",
+    startedAt: completedAt,
+    completedAt,
+    totalScore: warning.suggestedRiskLevel === "critical" ? 20 : warning.suggestedRiskLevel === "high" ? 15 : 9,
+    riskLevel: warning.suggestedRiskLevel,
+    resultSummary: warning.assessmentSummary,
+    gradeClassAtTime: warning.gradeClass,
+    dimensions: [
+      { id: "mood", name: "情绪状态", score: index % 5 + 3, level: "需关注", summary: "近期情绪波动较明显。" },
+      { id: "sleep", name: "睡眠与精力", score: index % 4 + 2, level: "轻度异常", summary: "睡眠或精力状态出现阶段性变化。" },
+    ],
+    responses: [
+      { id: "q1", questionText: "过去两周是否经常感到情绪低落？", answerText: "有几天", score: 1 },
+      { id: "q2", questionText: "过去两周睡眠是否受到影响？", answerText: "超过一半天数", score: 2 },
+      { id: "q3", questionText: "这些情况是否影响学习和日常活动？", answerText: "有一些影响", score: 1 },
+    ],
+  };
+  return warning.id === "WRN-20260704-007"
+    ? [{ ...base, id: `DA-${warning.id}-2`, completedAt: "2026-07-04 14:30", resultSummary: "复测前结构化测评显示整体风险表达较前期下降。" }, base]
+    : [base];
+}
+
+function buildAiConversationRecords(
+  warning: WarningMockSeed,
+): WarningAiConversationRecord[] {
+  if (!warning.evidenceTypes.includes("ai_chat")) return [];
+  const startedAt = warning.timeline[warning.timeline.length - 1]?.occurredAt ?? warning.activityTime;
+  return [{
+    id: `AI-${warning.id}-1`,
+    startedAt,
+    endedAt: warning.activityTime,
+    triggerMessageId: `AIM-${warning.id}-2`,
+    summary: warning.aiSummary,
+    messages: [
+      { id: `AIM-${warning.id}-1`, role: "assistant", sentAt: startedAt, content: "最近有什么让你感到压力或不舒服的事情吗？" },
+      { id: `AIM-${warning.id}-2`, role: "student", sentAt: startedAt, content: "最近睡不好，也不太想和同学说话。", riskMarker: "持续低落与社交回避" },
+      { id: `AIM-${warning.id}-3`, role: "assistant", sentAt: startedAt, content: "谢谢你愿意说出来。我们可以一起梳理，也可以联系学校心理老师获得支持。" },
+    ],
+  }];
+}
+
 export const warningMockData: WarningItem[] = warningMockSeeds.map((warning, index) => {
   const headTeacherName = warning.feedbackRecords[0]?.authorName ?? ["王老师", "李老师", "赵老师"][index % 3];
   const feedbackDeadline = warning.feedbackDeadline ?? (
@@ -1003,50 +1054,82 @@ export const warningMockData: WarningItem[] = warningMockSeeds.map((warning, ind
   const feedbackRequestNote = warning.feedbackRequestNote ?? (
     feedbackDeadline ? "请持续观察学生到校、课堂参与和情绪变化，并提交事实反馈。" : undefined
   );
-  const requestStatus = warning.feedbackRecords.length > 0
+  const requestStatus: WarningFeedbackRequestStatus = warning.feedbackRecords.length > 0
     ? "completed"
     : warning.feedbackStatus === "feedback_overdue"
       ? "overdue"
       : "pending";
 
-  return {
-    studentId: `STU-${String(index + 1).padStart(4, "0")}`,
-    headTeacherName,
-    headTeacherPhone: `138****${String(1234 + index).slice(-4)}`,
-    feedbackRequests: warning.id === "WRN-20260704-007"
-      ? [
-          {
-            id: "FQ-WRN-20260704-007-2",
-            requestedAt: "2026-07-02 09:00",
-            requestedBy: warning.responsibleTeacher,
-            requestNote: "请补充复测前的课堂参与和作息变化。",
-            deadline: "2026-07-03 17:00",
-            status: "completed",
-          },
-          {
-            id: "FQ-WRN-20260704-007-1",
-            requestedAt: "2026-06-25 14:00",
-            requestedBy: warning.responsibleTeacher,
-            requestNote: "请持续观察学生到校、课堂互动和同伴交往情况。",
-            deadline: "2026-06-27 17:00",
-            status: "completed",
-          },
-        ]
-      : feedbackDeadline && feedbackRequestNote
-        ? [{
+  const feedbackRequests = warning.id === "WRN-20260704-007"
+    ? [
+        {
+          id: "FQ-WRN-20260704-007-2",
+          requestedAt: "2026-07-02 09:00",
+          requestedBy: warning.responsibleTeacher,
+          requestNote: "请补充复测前的课堂参与和作息变化。",
+          deadline: "2026-07-03 17:00",
+          status: "completed" as const,
+        },
+        {
+          id: "FQ-WRN-20260704-007-1",
+          requestedAt: "2026-06-25 14:00",
+          requestedBy: warning.responsibleTeacher,
+          requestNote: "请持续观察学生到校、课堂互动和同伴交往情况。",
+          deadline: "2026-06-27 17:00",
+          status: "completed" as const,
+        },
+      ]
+    : feedbackDeadline && feedbackRequestNote
+      ? [{
           id: `FQ-${warning.id}-1`,
           requestedAt: warning.timeline.find((item) => item.title === "确认正式预警")?.occurredAt ?? warning.activityTime,
           requestedBy: warning.responsibleTeacher,
           requestNote: feedbackRequestNote,
           deadline: feedbackDeadline,
           status: requestStatus,
+        }]
+      : [];
+
+  const feedbackRecords = warning.feedbackRecords.map((record, recordIndex) => {
+    if (warning.id === "WRN-20260707-004") {
+      return { ...record, requestId: recordIndex === 0 ? feedbackRequests[0]?.id : undefined };
+    }
+    if (warning.id === "WRN-20260704-007") {
+      return { ...record, requestId: feedbackRequests[Math.min(recordIndex, feedbackRequests.length - 1)]?.id };
+    }
+    if (warning.id === "WRN-20260705-005") {
+      return { ...record, requestId: "FQ-MISSING-DEMO" };
+    }
+    return { ...record, requestId: feedbackRequests[0]?.id };
+  });
+
+  const referralRecords = (warning.referralRecords ?? []).map((record) => ({
+    ...record,
+    followUpRecords: record.followUpRecords?.length
+      ? [...record.followUpRecords].sort((left, right) => right.occurredAt.localeCompare(left.occurredAt))
+      : record.resultRecordedAt && record.resultSummary
+        ? [{
+            id: `RFF-MIGRATED-${record.id}`,
+            occurredAt: record.resultRecordedAt,
+            authorName: warning.responsibleTeacher,
+            summary: record.resultSummary,
           }]
         : [],
-    feedbackDeadline,
-    feedbackRequestNote,
+  }));
+
+  return {
+    studentId: `STU-${String(index + 1).padStart(4, "0")}`,
     isActive: true,
     disposition: "active",
-    referralRecords: [],
     ...warning,
+    headTeacherName,
+    headTeacherPhone: `138****${String(1234 + index).slice(-4)}`,
+    feedbackRequests,
+    feedbackRecords,
+    deepAssessmentRecords: buildDeepAssessmentRecords(warning, index),
+    aiConversationRecords: buildAiConversationRecords(warning),
+    feedbackDeadline,
+    feedbackRequestNote,
+    referralRecords,
   };
 });

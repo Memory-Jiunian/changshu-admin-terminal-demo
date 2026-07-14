@@ -1,7 +1,6 @@
-import { ExternalLink } from "lucide-react";
-
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { DeepAssessmentRecords } from "@/components/case-records/DeepAssessmentRecords";
+import { AiConversationRecords } from "@/components/case-records/AiConversationRecords";
 import {
   getEffectiveRiskLevel,
   riskLevelLabels,
@@ -11,7 +10,6 @@ import {
 
 type RiskEvidenceProps = {
   warning: WarningItem;
-  onPlaceholderAction: (label: string) => void;
 };
 
 const riskBadgeClass: Record<RiskLevel, string> = {
@@ -21,7 +19,7 @@ const riskBadgeClass: Record<RiskLevel, string> = {
   critical: "border-neutral-900 bg-white text-neutral-950",
 };
 
-export function RiskEvidence({ warning, onPlaceholderAction }: RiskEvidenceProps) {
+export function RiskEvidence({ warning }: RiskEvidenceProps) {
   const effectiveRiskLevel = getEffectiveRiskLevel(warning);
 
   return (
@@ -69,26 +67,8 @@ export function RiskEvidence({ warning, onPlaceholderAction }: RiskEvidenceProps
           <p className="mt-1 text-sm leading-6 text-neutral-800">{warning.aiSummary}</p>
         </div>
 
-        <div className="flex flex-wrap gap-2 pt-1">
-          <Button
-            className="h-8 gap-1 px-0 font-semibold text-neutral-900"
-            onClick={() => onPlaceholderAction("查看深度测评记录")}
-            type="button"
-            variant="link"
-          >
-            查看深度测评记录
-            <ExternalLink className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            className="h-8 gap-1 px-0 font-semibold text-neutral-900"
-            onClick={() => onPlaceholderAction("查看 AI 倾诉记录")}
-            type="button"
-            variant="link"
-          >
-            查看 AI 倾诉记录
-            <ExternalLink className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+        <div><div className="mb-2 text-xs font-semibold text-neutral-500">完整深度测评记录</div><DeepAssessmentRecords records={warning.deepAssessmentRecords} /></div>
+        <div><div className="mb-2 text-xs font-semibold text-neutral-500">AI 倾诉可见会话</div><AiConversationRecords records={warning.aiConversationRecords} /></div>
       </div>
     </section>
   );

@@ -13,12 +13,14 @@ function moduleUrl(code) {
 
 const typesUrl = moduleUrl(compile("src/types/warning.ts"));
 const feedbackUrl = moduleUrl(compile("src/lib/warning-feedback.ts"));
+const recordsUrl = moduleUrl(compile("src/lib/warning-records.ts").replaceAll('"@/types/warning"', `"${typesUrl}"`));
 const actionsCode = compile("src/lib/warning-actions.ts")
   .replaceAll('"@/types/warning"', `"${typesUrl}"`)
   .replaceAll('"@/lib/warning-feedback"', `"${feedbackUrl}"`);
-const [types, feedback, actions, mock] = await Promise.all([
+const [types, feedback, records, actions, mock] = await Promise.all([
   import(typesUrl),
   import(feedbackUrl),
+  import(recordsUrl),
   import(moduleUrl(actionsCode)),
   import(moduleUrl(compile("src/data/warningMock.ts"))),
 ]);
@@ -37,6 +39,8 @@ assert(mock.warningMockData.length >= 12, "mock covers Phase 4.6 cases");
 assert(new Set(mock.warningMockData.filter((item) => item.isActive).map((item) => item.currentStatus)).size === 7, "seven statuses remain covered");
 assert(mock.warningMockData.every((item) => item.studentId && item.headTeacherName && item.headTeacherPhone.includes("****")), "teacher contact is present and masked");
 assert(mock.warningMockData.flatMap((item) => item.retestRecords).every((record) => record.scaleIds.length > 0 && record.scaleNames.length > 0), "all retests identify scales");
+assert(mock.warningMockData.some((item) => item.deepAssessmentRecords.some((record) => record.responses.length > 0)), "deep assessments include complete responses");
+assert(mock.warningMockData.some((item) => item.aiConversationRecords.some((record) => record.messages.length > 0)), "AI evidence includes visible messages");
 
 const pendingFeedback = findWarning("WRN-20260708-003");
 const overdueFeedback = findWarning("WRN-20260708-012");
@@ -86,9 +90,20 @@ assert(scheduled.warning.timeline[0].description.includes("PHQ-9"), "retest time
 
 const referred = actions.applyWarningAction(interventionItem, { type: "start_referral", values: { referralType: "medical", organization: "hospital", reason: "support" } }, currentTime);
 assert(referred.success && referred.warning.currentStatus === "referral", "referral transition works");
-const referralResult = actions.applyWarningAction(referred.warning, { type: "record_referral_result", values: { resultRecordedAt: "2026-07-08 13:00", resultSummary: "received" } }, currentTime);
-assert(referralResult.success && referralResult.warning.currentStatus === "referral", "referral result keeps referral status");
-assert(referralResult.warning.retestRecords.length === referred.warning.retestRecords.length, "referral result does not create retest");
+const referralFollowUp = actions.applyWarningAction(referred.warning, { type: "add_referral_follow_up", values: { occurredAt: "2026-07-08 13:00", authorName: "陈老师", summary: "received" } }, currentTime);
+assert(referralFollowUp.success && referralFollowUp.warning.currentStatus === "referral", "referral follow-up keeps referral status");
+assert(referralFollowUp.warning.referralRecords[0].followUpRecords.length === 1, "referral follow-up appends a record");
+assert(referralFollowUp.warning.retestRecords.length === referred.warning.retestRecords.length, "referral follow-up does not create retest");
+const secondFollowUp = actions.applyWarningAction(referralFollowUp.warning, { type: "add_referral_follow_up", values: { occurredAt: "2026-07-08 14:00", authorName: "陈老师", summary: "second" } }, currentTime);
+assert(secondFollowUp.success && secondFollowUp.warning.referralRecords[0].followUpRecords.length === 2, "referral supports multiple follow-ups");
+const duplicateFollowUp = actions.applyWarningAction(secondFollowUp.warning, { type: "add_referral_follow_up", values: { occurredAt: "2026-07-08 14:00", authorName: "陈老师", summary: "second" } }, currentTime);
+assert(!duplicateFollowUp.success, "duplicate referral follow-up is rejected");
+
+const collaboration = records.buildWarningFeedbackCollaboration(unreadFeedback.feedbackRequests, unreadFeedback.feedbackRecords);
+assert(collaboration.rounds.length > 0 && collaboration.proactiveRecords.length > 0, "feedback collaboration separates linked rounds and proactive feedback");
+const effectiveTimeline = records.buildEffectiveWarningTimeline(unreadFeedback);
+assert(effectiveTimeline.filter((item) => item.id.startsWith("TL-FEEDBACK-")).length === unreadFeedback.feedbackRecords.length, "every feedback record appears once in effective timeline");
+assert(effectiveTimeline.every((item, index) => index === 0 || effectiveTimeline[index - 1].occurredAt >= item.occurredAt), "effective timeline is newest first");
 
 const completedRetest = findWarning("WRN-20260708-009");
 const closed = actions.applyWarningAction(completedRetest, { type: "update_retest_status", values: { outcome: "close" } }, currentTime);

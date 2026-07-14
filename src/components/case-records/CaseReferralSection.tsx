@@ -22,8 +22,15 @@ export function CaseReferralSection({ detail }: { detail: StudentProfileCaseDeta
                 <CaseRecordValue label="转介类型" value={record.referralType} />
                 <CaseRecordValue label="转介机构" value={record.organization} />
                 <CaseRecordValue label="转介原因" value={record.reason} />
-                <CaseRecordValue label="结果记录时间" value={record.resultRecordedAt} />
-                <CaseRecordValue label="结果摘要" value={record.resultSummary || (record.resultRecordedAt ? "暂无结果摘要" : "尚未记录转介结果")} />
+                <div className="sm:col-span-2">
+                  <div className="mb-2 text-xs font-semibold text-neutral-500">转介跟进</div>
+                  {record.followUpRecords.length ? <div className="space-y-2">{record.followUpRecords.map((item) => (
+                    <div className="rounded border border-neutral-200 bg-white p-2" key={item.id}>
+                      <div className="flex justify-between gap-3 text-xs text-neutral-500"><strong className="text-neutral-900">{item.authorName}</strong><span>{item.occurredAt}</span></div>
+                      <p className="mt-1 text-sm leading-6 text-neutral-700">{item.summary}</p>
+                    </div>
+                  ))}</div> : <CaseRecordEmptyState text="尚无转介跟进" />}
+                </div>
               </dl>
             ))}
           </div>

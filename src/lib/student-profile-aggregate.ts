@@ -6,6 +6,11 @@ import type {
   StudentProfileSummary,
 } from "@/types/studentProfile";
 import { getEffectiveRiskLevel, type WarningItem } from "@/types/warning";
+import {
+  buildEffectiveWarningTimeline,
+  buildWarningFeedbackCollaboration,
+  migrateWarningReferralRecord,
+} from "@/lib/warning-records";
 
 export function isActiveProfileWarning(warning: WarningItem) {
   return warning.isActive && warning.currentStatus !== "closed";
@@ -92,6 +97,12 @@ export function buildStudentProfileCaseDetail(
       riskLevelAdjustmentReason: warning.riskLevelAdjustmentReason,
       assessmentSummary: warning.assessmentSummary,
       aiSummary: warning.aiSummary,
+      deepAssessmentRecords: [...warning.deepAssessmentRecords].sort((left, right) =>
+        right.completedAt.localeCompare(left.completedAt),
+      ),
+      aiConversationRecords: [...warning.aiConversationRecords].sort((left, right) =>
+        right.startedAt.localeCompare(left.startedAt),
+      ),
     },
     headTeacher: {
       name: warning.headTeacherName,
@@ -103,18 +114,20 @@ export function buildStudentProfileCaseDetail(
     feedbackRecords: [...warning.feedbackRecords].sort((left, right) =>
       right.submittedAt.localeCompare(left.submittedAt),
     ),
+    feedbackCollaboration: buildWarningFeedbackCollaboration(
+      warning.feedbackRequests,
+      warning.feedbackRecords,
+    ),
     interventionRecords: [...warning.interventionRecords].sort((left, right) =>
       right.occurredAt.localeCompare(left.occurredAt),
     ),
     retestRecords: [...warning.retestRecords].sort((left, right) =>
       right.arrangedAt.localeCompare(left.arrangedAt),
     ),
-    referralRecords: [...warning.referralRecords].sort((left, right) =>
-      right.referredAt.localeCompare(left.referredAt),
-    ),
-    timeline: [...warning.timeline].sort((left, right) =>
-      right.occurredAt.localeCompare(left.occurredAt),
-    ),
+    referralRecords: warning.referralRecords
+      .map((record) => migrateWarningReferralRecord(record).record)
+      .sort((left, right) => right.referredAt.localeCompare(left.referredAt)),
+    timeline: buildEffectiveWarningTimeline(warning),
   };
 }
 

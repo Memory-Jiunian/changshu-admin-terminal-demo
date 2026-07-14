@@ -1,9 +1,10 @@
-import { ArrowLeft } from "lucide-react";
-import { useLayoutEffect, useRef } from "react";
+import { ArrowLeft, Printer } from "lucide-react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import { CaseRecordContent } from "@/components/case-records/CaseRecordContent";
 import { DETAIL_DRAWER_CLASS } from "@/components/layout/detail-view-config";
 import { StudentProfileDetailContent } from "@/components/student-profile/StudentProfileDetailContent";
+import { StudentProfileExportDialog } from "@/components/student-profile/StudentProfileExportDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -47,6 +48,7 @@ export function StudentProfileDrawer({
   onViewWarning,
 }: StudentProfileDrawerProps) {
   const bodyRef = useRef<HTMLDivElement>(null);
+  const [exportOpen, setExportOpen] = useState(false);
   const isCaseDetail = view.type === "case_detail" && Boolean(caseDetail);
   const targetScrollTop = isCaseDetail ? caseDetailScrollTop : profileScrollTop;
 
@@ -69,6 +71,7 @@ export function StudentProfileDrawer({
         : undefined;
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className={cn("flex h-full flex-col gap-0 overflow-hidden p-0", DETAIL_DRAWER_CLASS)}>
         <SheetHeader className="shrink-0 border-b border-neutral-200 px-6 py-5 pr-12">
@@ -84,12 +87,11 @@ export function StudentProfileDrawer({
                 </div>
                 {caseResultLabel ? <Badge variant="outline">{caseResultLabel}</Badge> : null}
               </div>
-              <Button className="w-fit" onClick={() => caseDetail && onViewWarning(caseDetail.summary.warningId)} size="sm" type="button" variant="outline">查看预警详情</Button>
+              <div className="flex flex-wrap gap-2"><Button className="w-fit" onClick={() => caseDetail && onViewWarning(caseDetail.summary.warningId)} size="sm" type="button" variant="outline">查看预警详情</Button><Button className="w-fit gap-1" onClick={() => setExportOpen(true)} size="sm" type="button" variant="outline"><Printer className="h-3.5 w-3.5" />导出档案</Button></div>
             </div>
           ) : (
             <>
-              <SheetTitle>学生档案</SheetTitle>
-              <SheetDescription>{detail.student.studentName} · 学号 {detail.student.studentNumber}</SheetDescription>
+              <div className="flex items-start justify-between gap-3 pr-2"><div><SheetTitle>学生档案</SheetTitle><SheetDescription>{detail.student.studentName} · 学号 {detail.student.studentNumber}</SheetDescription></div><Button className="gap-1" onClick={() => setExportOpen(true)} size="sm" type="button" variant="outline"><Printer className="h-3.5 w-3.5" />导出档案</Button></div>
             </>
           )}
         </SheetHeader>
@@ -128,5 +130,7 @@ export function StudentProfileDrawer({
         </div>
       </SheetContent>
     </Sheet>
+    <StudentProfileExportDialog detail={detail} onOpenChange={setExportOpen} open={exportOpen} selectedCase={isCaseDetail ? caseDetail : undefined} />
+    </>
   );
 }

@@ -2,6 +2,9 @@ import type {
   FeedbackStatus,
   RiskLevel,
   WarningEvidenceType,
+  WarningDeepAssessmentRecord,
+  WarningAiConversationRecord,
+  WarningFeedbackCollaboration,
   WarningFeedbackRecord,
   WarningFeedbackRequest,
   WarningInterventionRecord,
@@ -91,6 +94,8 @@ export type StudentProfileCaseDetail = {
     riskLevelAdjustmentReason?: string;
     assessmentSummary: string;
     aiSummary: string;
+    deepAssessmentRecords: WarningDeepAssessmentRecord[];
+    aiConversationRecords: WarningAiConversationRecord[];
   };
   headTeacher: {
     name: string;
@@ -98,10 +103,21 @@ export type StudentProfileCaseDetail = {
   };
   feedbackRequests: WarningFeedbackRequest[];
   feedbackRecords: WarningFeedbackRecord[];
+  feedbackCollaboration: WarningFeedbackCollaboration;
   interventionRecords: WarningInterventionRecord[];
   retestRecords: WarningRetestRecord[];
   referralRecords: WarningReferralRecord[];
   timeline: WarningTimelineItem[];
+};
+
+export type StudentProfileExportScope = "all_cases" | "current_case";
+
+export type StudentProfileExportViewModel = {
+  student: StudentProfileRecord;
+  cases: StudentProfileCaseDetail[];
+  generatedAt: string;
+  generatedBy: string;
+  includeSensitiveSourceRecords: boolean;
 };
 
 export type StudentProfileDetail = {

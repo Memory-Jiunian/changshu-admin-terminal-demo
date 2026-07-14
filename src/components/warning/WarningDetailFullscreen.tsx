@@ -7,6 +7,7 @@ type WarningDetailFullscreenProps = {
   warning: WarningItem | null;
   open: boolean;
   actionMessage: string;
+  currentTime: string;
   onOpenChange: (open: boolean) => void;
   onCloseDetail: () => void;
   onPlaceholderAction: (label: string) => void;
@@ -17,6 +18,7 @@ export function WarningDetailFullscreen({
   warning,
   open,
   actionMessage,
+  currentTime,
   onOpenChange,
   onCloseDetail,
   onPlaceholderAction,
@@ -32,6 +34,7 @@ export function WarningDetailFullscreen({
           </DialogDescription>
           <WarningDetailContent
             actionMessage={actionMessage}
+            currentTime={currentTime}
             mode="fullscreen"
             onCloseDetail={onCloseDetail}
             onAction={onAction}

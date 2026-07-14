@@ -21,6 +21,7 @@ type WarningDetailContentProps = {
   warning: WarningItem;
   mode: "drawer" | "fullscreen";
   actionMessage: string;
+  currentTime: string;
   onPlaceholderAction: (label: string) => void;
   onAction: (action: WarningActionType) => void;
   onOpenFullscreen?: () => void;
@@ -87,6 +88,7 @@ export function WarningDetailContent({
   warning,
   mode,
   actionMessage,
+  currentTime,
   onPlaceholderAction,
   onAction,
   onOpenFullscreen,
@@ -95,7 +97,7 @@ export function WarningDetailContent({
 }: WarningDetailContentProps) {
   const isFullscreen = mode === "fullscreen";
   const feedback = shouldShowFeedback(warning.currentStatus) ? (
-    <FeedbackPanel onPlaceholderAction={onPlaceholderAction} warning={warning} />
+    <FeedbackPanel currentTime={currentTime} onPlaceholderAction={onPlaceholderAction} warning={warning} />
   ) : null;
   const interventions = shouldShowInterventionRecords(warning) ? (
     <InterventionRecords records={warning.interventionRecords} />
@@ -170,8 +172,9 @@ export function WarningDetailContent({
 
       <DrawerActionBar
         actionMessage={actionMessage}
+        currentTime={currentTime}
         onAction={onAction}
-        status={warning.currentStatus}
+        warning={warning}
       />
     </div>
   );

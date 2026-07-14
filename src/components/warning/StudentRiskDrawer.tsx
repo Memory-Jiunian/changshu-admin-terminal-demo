@@ -4,6 +4,7 @@ import { DETAIL_DRAWER_CLASS } from "@/components/layout/detail-view-config";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { ArchiveRecordDialog } from "@/components/warning/ArchiveRecordDialog";
 import { ConfirmFormalWarningDialog } from "@/components/warning/ConfirmFormalWarningDialog";
+import { FullRetestRecordDialog } from "@/components/warning/FullRetestRecordDialog";
 import { RetestResultDialog } from "@/components/warning/RetestResultDialog";
 import {
   WarningActionDialog,
@@ -32,6 +33,9 @@ type StudentRiskDrawerProps = {
     warningId: string,
     submission: WarningActionSubmission,
   ) => WarningActionResponse;
+  currentTime: string;
+  onViewFullRetest?: (warningId: string, retestRecordId: string) => void;
+  onOpenStudentProfileArchive?: (studentId: string, warningId: string) => void;
 };
 
 export function StudentRiskDrawer({
@@ -40,6 +44,8 @@ export function StudentRiskDrawer({
   onOpenChange,
   onConfirmFormalWarning,
   onAction,
+  currentTime,
+  onViewFullRetest,
 }: StudentRiskDrawerProps) {
   const [actionMessage, setActionMessage] = useState("");
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -47,6 +53,7 @@ export function StudentRiskDrawer({
   const [activeAction, setActiveAction] = useState<WarningFormActionType | null>(null);
   const [retestResultOpen, setRetestResultOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [fullRetestRecordId, setFullRetestRecordId] = useState<string | null>(null);
 
   useEffect(() => {
     setActionMessage("");
@@ -55,6 +62,7 @@ export function StudentRiskDrawer({
     setActiveAction(null);
     setRetestResultOpen(false);
     setArchiveOpen(false);
+    setFullRetestRecordId(null);
   }, [warning?.id, open]);
 
   function handlePlaceholderAction(label: string) {
@@ -114,6 +122,15 @@ export function StudentRiskDrawer({
     return result;
   }
 
+  function handleViewFullRetest(warningId: string, retestRecordId: string) {
+    setRetestResultOpen(false);
+    if (onViewFullRetest) {
+      onViewFullRetest(warningId, retestRecordId);
+      return;
+    }
+    setFullRetestRecordId(retestRecordId);
+  }
+
   return (
     <>
       <Sheet onOpenChange={onOpenChange} open={open && Boolean(warning)}>
@@ -130,6 +147,7 @@ export function StudentRiskDrawer({
             </SheetDescription>
             <WarningDetailContent
               actionMessage={actionMessage}
+              currentTime={currentTime}
               mode="drawer"
               onAction={handleAction}
               onOpenFullscreen={() => setFullscreenOpen(true)}
@@ -142,6 +160,7 @@ export function StudentRiskDrawer({
 
       <WarningDetailFullscreen
         actionMessage={actionMessage}
+        currentTime={currentTime}
         onCloseDetail={handleCloseDetail}
         onAction={handleAction}
         onOpenChange={setFullscreenOpen}
@@ -171,7 +190,19 @@ export function StudentRiskDrawer({
 
       <RetestResultDialog
         onOpenChange={setRetestResultOpen}
+        onViewFullRetest={handleViewFullRetest}
         open={retestResultOpen}
+        warning={warning}
+      />
+
+      <FullRetestRecordDialog
+        onOpenChange={(dialogOpen) => {
+          if (!dialogOpen) {
+            setFullRetestRecordId(null);
+          }
+        }}
+        open={fullRetestRecordId !== null}
+        recordId={fullRetestRecordId}
         warning={warning}
       />
 

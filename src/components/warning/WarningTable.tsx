@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { getEffectiveFeedbackStatus } from "@/lib/warning-feedback";
 import {
   feedbackStatusLabels,
   getEffectiveRiskLevel,
@@ -31,6 +32,7 @@ type WarningTableProps = {
   items: WarningItem[];
   selectedId: string | null;
   onViewDetail: (item: WarningItem) => void;
+  currentTime: string;
 };
 
 const riskBadgeClass: Record<RiskLevel, string> = {
@@ -47,7 +49,7 @@ const feedbackBadgeClass: Record<FeedbackStatus, string> = {
   new_feedback: "border-neutral-300 bg-neutral-100 text-neutral-950",
 };
 
-export function WarningTable({ items, selectedId, onViewDetail }: WarningTableProps) {
+export function WarningTable({ items, selectedId, onViewDetail, currentTime }: WarningTableProps) {
   return (
     <Card className="rounded-lg border-0 bg-neutral-200/70 shadow-none">
       <CardHeader className="flex-row items-center justify-between px-5 py-4">
@@ -78,6 +80,7 @@ export function WarningTable({ items, selectedId, onViewDetail }: WarningTablePr
               {items.length > 0 ? (
                 items.map((item) => {
                   const riskLevel = getEffectiveRiskLevel(item);
+                  const feedbackStatus = getEffectiveFeedbackStatus(item, currentTime);
 
                   return (
                     <TableRow
@@ -106,8 +109,8 @@ export function WarningTable({ items, selectedId, onViewDetail }: WarningTablePr
                         {item.activityTime}
                       </TableCell>
                       <TableCell>
-                        <Badge className={feedbackBadgeClass[item.feedbackStatus]} variant="outline">
-                          {feedbackStatusLabels[item.feedbackStatus]}
+                        <Badge className={feedbackBadgeClass[feedbackStatus]} variant="outline">
+                          {feedbackStatusLabels[feedbackStatus]}
                         </Badge>
                       </TableCell>
                       <TableCell className="pr-6 text-right">

@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { formatDateTimeInput, getMockDateTimeInput } from "@/lib/warning-time";
 import {
   riskLevelLabels,
   type ConfirmFormalWarningValues,
@@ -36,6 +37,8 @@ export function ConfirmFormalWarningDialog({
   const [confirmedRiskLevel, setConfirmedRiskLevel] = useState<RiskLevel | null>(null);
   const [judgmentNote, setJudgmentNote] = useState("");
   const [adjustmentReason, setAdjustmentReason] = useState("");
+  const [feedbackRequestNote, setFeedbackRequestNote] = useState("");
+  const [feedbackDeadline, setFeedbackDeadline] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const submitLockedRef = useRef(false);
 
@@ -44,6 +47,8 @@ export function ConfirmFormalWarningDialog({
       setConfirmedRiskLevel(null);
       setJudgmentNote("");
       setAdjustmentReason("");
+      setFeedbackRequestNote("");
+      setFeedbackDeadline("");
       setErrorMessage("");
       submitLockedRef.current = false;
     }
@@ -70,11 +75,27 @@ export function ConfirmFormalWarningDialog({
       return;
     }
 
+    if (!feedbackRequestNote.trim()) {
+      setErrorMessage("请填写补充反馈要求。");
+      return;
+    }
+    if (!feedbackDeadline) {
+      setErrorMessage("请选择反馈截止时间。");
+      return;
+    }
+    const formattedDeadline = formatDateTimeInput(feedbackDeadline);
+    if (formattedDeadline <= formatDateTimeInput(getMockDateTimeInput())) {
+      setErrorMessage("反馈截止时间必须晚于当前确认时间。");
+      return;
+    }
+
     submitLockedRef.current = true;
     onConfirm({
       confirmedRiskLevel,
       judgmentNote: judgmentNote.trim(),
       riskLevelAdjustmentReason: riskLevelChanged ? adjustmentReason.trim() : "",
+      feedbackRequestNote: feedbackRequestNote.trim(),
+      feedbackDeadline: formattedDeadline,
     });
     onOpenChange(false);
   }
@@ -156,6 +177,45 @@ export function ConfirmFormalWarningDialog({
               />
             </label>
           ) : null}
+
+          <div className="border-t border-neutral-200 pt-4">
+            <div className="text-sm font-semibold text-neutral-950">班主任协作任务</div>
+            <div className="mt-2 grid grid-cols-2 gap-3 rounded-md bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+              <div>协作对象：{warning.headTeacherName}</div>
+              <div>联系电话：{warning.headTeacherPhone}</div>
+            </div>
+          </div>
+
+          <label className="block">
+            <span className="text-sm font-semibold text-neutral-900">
+              补充反馈要求 <span className="text-red-600">*</span>
+            </span>
+            <textarea
+              className="mt-2 min-h-20 w-full resize-none rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+              onChange={(event) => {
+                setFeedbackRequestNote(event.target.value);
+                setErrorMessage("");
+              }}
+              placeholder="说明需要班主任持续观察和反馈的事实内容"
+              value={feedbackRequestNote}
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-semibold text-neutral-900">
+              反馈截止时间 <span className="text-red-600">*</span>
+            </span>
+            <input
+              className="mt-2 h-10 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+              min={getMockDateTimeInput()}
+              onChange={(event) => {
+                setFeedbackDeadline(event.target.value);
+                setErrorMessage("");
+              }}
+              type="datetime-local"
+              value={feedbackDeadline}
+            />
+          </label>
 
           {errorMessage ? (
             <div className="rounded-md bg-red-50 px-3 py-2 text-sm font-medium text-red-700">

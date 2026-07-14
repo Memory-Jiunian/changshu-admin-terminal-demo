@@ -5,6 +5,7 @@ import { WarningFilterBar } from "@/components/warning/WarningFilterBar";
 import { WarningTable } from "@/components/warning/WarningTable";
 import { warningMockData } from "@/data/warningMock";
 import { applyConfirmFormalWarning, applyWarningAction } from "@/lib/warning-actions";
+import { getEffectiveFeedbackStatus } from "@/lib/warning-feedback";
 import { formatMockDateTime, WARNING_MOCK_TODAY } from "@/lib/warning-time";
 import {
   emptyAdvancedFilters,
@@ -66,7 +67,7 @@ function matchesTimeRange(activityTime: string, ranges: TimeRangeFilter[]) {
   });
 }
 
-function matchesAdvancedFilters(item: WarningItem, filters: AdvancedFilterValues) {
+function matchesAdvancedFilters(item: WarningItem, filters: AdvancedFilterValues, currentTime: string) {
   const matchesGradeClass =
     filters.gradeClass.length === 0 || filters.gradeClass.includes(item.gradeClass);
   const matchesRiskLevel =
@@ -81,7 +82,8 @@ function matchesAdvancedFilters(item: WarningItem, filters: AdvancedFilterValues
     filters.responsibleTeacher.length === 0 ||
     filters.responsibleTeacher.includes(item.responsibleTeacher);
   const matchesFeedbackStatus =
-    filters.feedbackStatus.length === 0 || filters.feedbackStatus.includes(item.feedbackStatus);
+    filters.feedbackStatus.length === 0 ||
+    filters.feedbackStatus.includes(getEffectiveFeedbackStatus(item, currentTime));
 
   return (
     matchesGradeClass &&
@@ -95,6 +97,7 @@ function matchesAdvancedFilters(item: WarningItem, filters: AdvancedFilterValues
 }
 
 export function WarningManagementPage() {
+  const currentTime = formatMockDateTime();
   const [warnings, setWarnings] = useState<WarningItem[]>(() => warningMockData);
   const [activeStatus, setActiveStatus] = useState<StatusTabValue>("all");
   const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilterValue | null>(null);
@@ -170,19 +173,19 @@ export function WarningManagementPage() {
           case "today_new":
             return item.activityTime.startsWith(WARNING_MOCK_TODAY);
           case "feedback_overdue":
-            return item.feedbackStatus === "feedback_overdue";
+            return getEffectiveFeedbackStatus(item, currentTime) === "feedback_overdue";
           case "mine":
             return item.responsibleTeacher === currentTeacher;
           case "new_feedback":
-            return item.feedbackStatus === "new_feedback";
+            return getEffectiveFeedbackStatus(item, currentTime) === "new_feedback";
           default:
             return true;
         }
       })();
 
-      return matchesQuickFilter && matchesAdvancedFilters(item, advancedFilters);
+      return matchesQuickFilter && matchesAdvancedFilters(item, advancedFilters, currentTime);
     });
-  }, [activeQuickFilter, activeStatus, activeWarnings, advancedFilters, searchValue]);
+  }, [activeQuickFilter, activeStatus, activeWarnings, advancedFilters, currentTime, searchValue]);
 
   function handleQuickFilterChange(value: QuickFilterValue) {
     setActiveQuickFilter((current) => (current === value ? null : value));
@@ -243,12 +246,14 @@ export function WarningManagementPage() {
       />
 
       <WarningTable
+        currentTime={currentTime}
         items={filteredWarnings}
         onViewDetail={handleViewDetail}
         selectedId={selectedWarningId}
       />
 
       <StudentRiskDrawer
+        currentTime={currentTime}
         onAction={handleWarningAction}
         onConfirmFormalWarning={handleConfirmFormalWarning}
         onOpenChange={(drawerOpen) => {

@@ -26,6 +26,12 @@ function RetestRecordItem({ record }: { record: WarningRetestRecord }) {
             {displayValue(record.completedAt)}
           </div>
         </div>
+        <div className="col-span-2">
+          <div className="text-xs font-semibold text-neutral-500">复测量表</div>
+          <div className="mt-1 font-medium text-neutral-800">
+            {record.scaleNames.join("、") || "-"}
+          </div>
+        </div>
       </div>
 
       <dl className="mt-3 space-y-2 text-sm leading-6">

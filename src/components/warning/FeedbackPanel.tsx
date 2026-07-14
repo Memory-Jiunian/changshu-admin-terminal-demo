@@ -1,7 +1,8 @@
-import { Bell, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getEffectiveFeedbackStatus } from "@/lib/warning-feedback";
 import {
   feedbackStatusLabels,
   type FeedbackStatus,
@@ -11,6 +12,7 @@ import {
 
 type FeedbackPanelProps = {
   warning: WarningItem;
+  currentTime: string;
   onPlaceholderAction: (label: string) => void;
 };
 
@@ -22,12 +24,12 @@ const feedbackBadgeClass: Record<FeedbackStatus, string> = {
   new_feedback: "border-neutral-300 bg-neutral-100 text-neutral-950",
 };
 
-function getEmptyFeedbackText(warning: WarningItem) {
-  if (warning.feedbackStatus === "pending_feedback") {
+function getEmptyFeedbackText(status: FeedbackStatus) {
+  if (status === "pending_feedback") {
     return "已请求，暂未收到反馈";
   }
 
-  if (warning.feedbackStatus === "feedback_overdue") {
+  if (status === "feedback_overdue") {
     return "反馈已超时，暂未收到班主任反馈";
   }
 
@@ -36,18 +38,6 @@ function getEmptyFeedbackText(warning: WarningItem) {
 
 function getSortedFeedbackRecords(records: WarningFeedbackRecord[]) {
   return [...records].sort((left, right) => right.submittedAt.localeCompare(left.submittedAt));
-}
-
-function getEffectiveFeedbackStatus(warning: WarningItem): FeedbackStatus {
-  if (warning.feedbackStatus === "pending_feedback" || warning.feedbackStatus === "feedback_overdue") {
-    return warning.feedbackStatus;
-  }
-
-  if (warning.feedbackRecords.length === 0) {
-    return "not_requested";
-  }
-
-  return warning.hasUnreadFeedback ? "new_feedback" : "feedback_received";
 }
 
 function FeedbackRecordItem({ record }: { record: WarningFeedbackRecord }) {
@@ -64,8 +54,8 @@ function FeedbackRecordItem({ record }: { record: WarningFeedbackRecord }) {
   );
 }
 
-export function FeedbackPanel({ warning, onPlaceholderAction }: FeedbackPanelProps) {
-  const effectiveFeedbackStatus = getEffectiveFeedbackStatus(warning);
+export function FeedbackPanel({ warning, currentTime, onPlaceholderAction }: FeedbackPanelProps) {
+  const effectiveFeedbackStatus = getEffectiveFeedbackStatus(warning, currentTime);
   const feedbackRecords = getSortedFeedbackRecords(warning.feedbackRecords);
   const hasFeedback = feedbackRecords.length > 0;
   const hasMultipleFeedback = feedbackRecords.length > 1;
@@ -80,6 +70,12 @@ export function FeedbackPanel({ warning, onPlaceholderAction }: FeedbackPanelPro
         </Badge>
       </div>
 
+      <div className="mb-3 grid grid-cols-2 gap-3 rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
+        <span>班主任：{warning.headTeacherName}</span>
+        <span>联系电话：{warning.headTeacherPhone}</span>
+        <span className="col-span-2">反馈截止：{warning.feedbackDeadline || "-"}</span>
+      </div>
+
       {hasFeedback ? (
         <div className="space-y-2">
           {feedbackRecords.map((record) => (
@@ -88,7 +84,7 @@ export function FeedbackPanel({ warning, onPlaceholderAction }: FeedbackPanelPro
         </div>
       ) : (
         <div className="rounded-md border border-dashed border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-500">
-          {getEmptyFeedbackText(warning)}
+          {getEmptyFeedbackText(effectiveFeedbackStatus)}
         </div>
       )}
 
@@ -102,19 +98,6 @@ export function FeedbackPanel({ warning, onPlaceholderAction }: FeedbackPanelPro
           >
             {linkLabel}
             <ExternalLink className="h-3.5 w-3.5" />
-          </Button>
-        ) : null}
-
-        {effectiveFeedbackStatus === "feedback_overdue" ? (
-          <Button
-            className="h-8 gap-1 border-neutral-300"
-            onClick={() => onPlaceholderAction("提醒班主任反馈")}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            <Bell className="h-3.5 w-3.5" />
-            提醒班主任反馈
           </Button>
         ) : null}
       </div>

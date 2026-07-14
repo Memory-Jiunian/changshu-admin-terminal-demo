@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
-import type { WarningActionType, WarningStatus } from "@/types/warning";
+import { getFeedbackActionAvailability } from "@/lib/warning-feedback";
+import type { WarningActionType, WarningItem, WarningStatus } from "@/types/warning";
 
 type DrawerActionBarProps = {
-  status: WarningStatus;
+  warning: WarningItem;
+  currentTime: string;
   actionMessage: string;
   onAction: (action: WarningActionType) => void;
 };
@@ -11,6 +13,7 @@ type DrawerAction = {
   type: WarningActionType;
   label: string;
   emphasis?: "primary" | "secondary";
+  disabled?: boolean;
 };
 
 const actionsByStatus: Record<WarningStatus, DrawerAction[]> = {
@@ -44,7 +47,22 @@ const actionsByStatus: Record<WarningStatus, DrawerAction[]> = {
   closed: [{ type: "view_archive", label: "查看归档记录", emphasis: "primary" }],
 };
 
-export function DrawerActionBar({ status, actionMessage, onAction }: DrawerActionBarProps) {
+export function DrawerActionBar({ warning, currentTime, actionMessage, onAction }: DrawerActionBarProps) {
+  let actions = actionsByStatus[warning.currentStatus];
+  if (warning.currentStatus === "formal_warning") {
+    const availability = getFeedbackActionAvailability(warning, currentTime);
+    const feedbackAction: DrawerAction[] = availability.kind === "hidden"
+      ? []
+      : [{
+          type: "request_feedback",
+          label: availability.label,
+          disabled: availability.disabled,
+        }];
+    actions = [
+      ...feedbackAction,
+      { type: "record_intervention", label: "记录干预", emphasis: "primary" },
+    ];
+  }
   return (
     <footer className="shrink-0 border-t border-neutral-200 bg-white p-4">
       {actionMessage ? (
@@ -54,7 +72,7 @@ export function DrawerActionBar({ status, actionMessage, onAction }: DrawerActio
       ) : null}
 
       <div className="flex gap-2">
-        {actionsByStatus[status].map((action) => (
+        {actions.map((action) => (
           <Button
             className={
               action.emphasis === "primary"
@@ -62,6 +80,7 @@ export function DrawerActionBar({ status, actionMessage, onAction }: DrawerActio
                 : "flex-1"
             }
             key={action.type}
+            disabled={action.disabled}
             onClick={() => onAction(action.type)}
             type="button"
             variant={action.emphasis === "secondary" ? "secondary" : "outline"}

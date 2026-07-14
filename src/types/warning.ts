@@ -42,6 +42,17 @@ export type WarningFeedbackRecord = {
   submittedAt: string;
 };
 
+export type WarningFeedbackRequestStatus = "pending" | "overdue" | "completed";
+
+export type WarningFeedbackRequest = {
+  id: string;
+  requestedAt: string;
+  requestedBy: string;
+  requestNote: string;
+  deadline: string;
+  status: WarningFeedbackRequestStatus;
+};
+
 export type WarningInterventionRecord = {
   id: string;
   occurredAt: string;
@@ -56,6 +67,8 @@ export type WarningRetestRecord = {
   id: string;
   arrangedAt: string;
   plannedAt: string;
+  scaleIds: string[];
+  scaleNames: string[];
   completedAt?: string;
   resultSummary?: string;
   comparison?: string;
@@ -77,6 +90,7 @@ export type WarningReferralRecord = {
 
 export type WarningItem = {
   id: string;
+  studentId: string;
   studentName: string;
   gradeClass: string;
   sourceType: WarningSourceType;
@@ -89,10 +103,13 @@ export type WarningItem = {
   activityTime: string;
   feedbackStatus: FeedbackStatus;
   responsibleTeacher: string;
+  headTeacherName: string;
+  headTeacherPhone: string;
   assessmentSummary: string;
   aiSummary: string;
   teacherFeedbackSummary: string;
   feedbackRecords: WarningFeedbackRecord[];
+  feedbackRequests: WarningFeedbackRequest[];
   hasUnreadFeedback: boolean;
   interventionRecords: WarningInterventionRecord[];
   retestRecords: WarningRetestRecord[];
@@ -112,6 +129,8 @@ export type ConfirmFormalWarningValues = {
   confirmedRiskLevel: RiskLevel;
   judgmentNote: string;
   riskLevelAdjustmentReason: string;
+  feedbackRequestNote: string;
+  feedbackDeadline: string;
 };
 
 export type WarningActionType =
@@ -152,7 +171,13 @@ export type WarningActionSubmission =
     }
   | {
       type: "schedule_retest";
-      values: { arrangedAt: string; plannedAt: string; note: string };
+      values: {
+        arrangedAt: string;
+        plannedAt: string;
+        scaleIds: string[];
+        scaleNames: string[];
+        note: string;
+      };
     }
   | {
       type: "start_referral";

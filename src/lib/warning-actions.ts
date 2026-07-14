@@ -6,6 +6,7 @@ import {
   type WarningReferralRecord,
   type WarningTimelineItem,
 } from "@/types/warning";
+import { getFeedbackActionAvailability } from "@/lib/warning-feedback";
 
 type ApplyWarningActionResult =
   | { success: true; warning: WarningItem; message: string }
@@ -102,20 +103,45 @@ export function applyWarningAction(
     }
     case "request_feedback": {
       const { feedbackRequestNote, feedbackDeadline } = submission.values;
+      const availability = getFeedbackActionAvailability(warning, occurredAt);
+      if (availability.kind === "waiting") {
+        return { success: false, message: availability.message };
+      }
+      if (availability.kind === "hidden") {
+        return { success: false, message: "当前事项已有班主任反馈，无需再次请求。" };
+      }
+      if (feedbackDeadline <= occurredAt) {
+        return { success: false, message: "反馈截止时间必须晚于当前时间。" };
+      }
+      const isRerequest = availability.kind === "rerequest";
+      const feedbackRequests = warning.feedbackRequests.map((request) =>
+        request.status === "pending" ? { ...request, status: "overdue" as const } : request,
+      );
       return {
         success: true,
-        message: "已向对应班主任请求补充反馈。",
-        warning: withActivity(warning, occurredAt, "已请求班主任补充反馈", {
+        message: isRerequest ? "已重新向班主任请求反馈。" : "已向班主任请求补充反馈。",
+        warning: withActivity(warning, occurredAt, isRerequest ? "已重新请求班主任反馈" : "已请求班主任补充反馈", {
           feedbackStatus: "pending_feedback",
           hasUnreadFeedback: false,
           feedbackRequestNote: feedbackRequestNote.trim(),
           feedbackDeadline,
+          feedbackRequests: [
+            {
+              id: makeId("FQ", warning, occurredAt, warning.feedbackRequests.length),
+              requestedAt: occurredAt,
+              requestedBy: warning.responsibleTeacher,
+              requestNote: feedbackRequestNote.trim(),
+              deadline: feedbackDeadline,
+              status: "pending",
+            },
+            ...feedbackRequests,
+          ],
           timeline: [
             timelineItem(
               warning,
               occurredAt,
-              "请求补充反馈",
-              `心理老师向对应班主任请求补充事实观察。要求：${feedbackRequestNote.trim()}；截止时间：${feedbackDeadline}。`,
+              isRerequest ? "重新请求反馈" : "请求补充反馈",
+              `心理老师向班主任${warning.headTeacherName}请求补充事实观察。要求：${feedbackRequestNote.trim()}；截止时间：${feedbackDeadline}。`,
             ),
             ...warning.timeline,
           ],
@@ -154,10 +180,18 @@ export function applyWarningAction(
     }
     case "schedule_retest": {
       const values = submission.values;
+      if (values.plannedAt <= values.arrangedAt) {
+        return { success: false, message: "计划复测时间必须晚于安排时间。" };
+      }
+      if (values.scaleIds.length === 0 || values.scaleNames.length === 0) {
+        return { success: false, message: "请至少选择一项复测量表。" };
+      }
       const record = {
         id: makeId("RR", warning, values.arrangedAt, warning.retestRecords.length),
         arrangedAt: values.arrangedAt,
         plannedAt: values.plannedAt,
+        scaleIds: values.scaleIds,
+        scaleNames: values.scaleNames,
         note: values.note.trim() || undefined,
       };
       return {
@@ -171,7 +205,7 @@ export function applyWarningAction(
               warning,
               values.arrangedAt,
               "安排复测",
-              `心理老师安排复测，计划时间：${record.plannedAt}。系统已生成班主任待复测提醒，并已同步通知对应班主任。`,
+              `心理老师安排复测，量表：${record.scaleNames.join("、")}；计划时间：${record.plannedAt}。系统已生成班主任待复测提醒，并已同步通知对应班主任。`,
             ),
             ...warning.timeline,
           ],
@@ -333,11 +367,14 @@ export function applyConfirmFormalWarning(
   const confirmedLabel = riskLevelLabels[values.confirmedRiskLevel];
   const adjustmentReason = values.riskLevelAdjustmentReason.trim();
   const judgmentNote = values.judgmentNote.trim();
+  const feedbackRequestNote = values.feedbackRequestNote.trim();
   const descriptionParts = [
     `心理老师完成复核，正式确认风险等级为${confirmedLabel}`,
     adjustmentReason ? `调整理由：${adjustmentReason}` : "",
     judgmentNote ? `判断说明：${judgmentNote}` : "",
-    "系统已同步生成班主任协作任务并通知对应班主任",
+    `补充反馈要求：${feedbackRequestNote}`,
+    `反馈截止时间：${values.feedbackDeadline}`,
+    `系统已同步生成班主任${warning.headTeacherName}协作任务并通知对应班主任`,
   ].filter(Boolean);
 
   return withActivity(warning, occurredAt, "已确认正式预警", {
@@ -346,6 +383,19 @@ export function applyConfirmFormalWarning(
     riskLevelAdjustmentReason: adjustmentReason || undefined,
     feedbackStatus: "pending_feedback",
     hasUnreadFeedback: false,
+    feedbackRequestNote,
+    feedbackDeadline: values.feedbackDeadline,
+    feedbackRequests: [
+      {
+        id: makeId("FQ", warning, occurredAt, warning.feedbackRequests.length),
+        requestedAt: occurredAt,
+        requestedBy: warning.responsibleTeacher,
+        requestNote: feedbackRequestNote,
+        deadline: values.feedbackDeadline,
+        status: "pending",
+      },
+      ...warning.feedbackRequests,
+    ],
     timeline: [
       timelineItem(
         warning,

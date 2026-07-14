@@ -88,14 +88,14 @@
 - [x] Define homeroom-teacher collaboration information
 - [x] Define re-test scale and objective result boundaries
 - [x] Define complete read-only archive contents
-- [ ] Implement shared effective feedback status
-- [ ] Extend confirmation and feedback request data
-- [ ] Add centralized re-test scale catalog
-- [ ] Implement full re-test record viewing
-- [ ] Expand read-only archive dialog
-- [ ] Run regression / build / commit / push
+- [x] Implement shared effective feedback status
+- [x] Extend confirmation and feedback request data
+- [x] Add centralized re-test scale catalog
+- [x] Implement full re-test record viewing
+- [x] Expand read-only archive dialog
+- [x] Run regression / build / commit / push
 
-Active scope: Warning management will be frozen after Phase 4.6.
+Active scope: Warning management is frozen after Phase 4.6.
 Next planned module: student profile.
 Do not implement student profile until its acceptance matrix and Codex task are approved.
 Clue pool remains documented as an upstream future slice and is not the next implementation task.

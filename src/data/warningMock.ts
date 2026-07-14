@@ -2,7 +2,13 @@ import type { WarningItem } from "@/types/warning";
 
 type WarningMockSeed = Omit<
   WarningItem,
-  "isActive" | "disposition" | "referralRecords"
+  | "studentId"
+  | "headTeacherName"
+  | "headTeacherPhone"
+  | "feedbackRequests"
+  | "isActive"
+  | "disposition"
+  | "referralRecords"
 > &
   Partial<Pick<WarningItem, "isActive" | "disposition" | "referralRecords">>;
 
@@ -114,6 +120,8 @@ const warningMockSeeds: WarningMockSeed[] = [
     latestActivity: "已确认正式预警",
     activityTime: "2026-07-08 11:05",
     feedbackStatus: "pending_feedback",
+    feedbackRequestNote: "请持续观察学生到校、课堂参与、睡眠和同伴互动情况，并反馈事实变化。",
+    feedbackDeadline: "2026-07-09 17:00",
     responsibleTeacher: "周老师",
     assessmentSummary: "深度测评显示高压状态持续，需要线下支持和持续观察。",
     aiSummary: "学生多次提及失眠、无助感和退缩行为。",
@@ -128,7 +136,7 @@ const warningMockSeeds: WarningMockSeed[] = [
         title: "确认正式预警",
         operator: "周老师",
         occurredAt: "2026-07-08 11:05",
-        description: "心理老师完成复核，正式确认风险等级为危险；系统已同步生成班主任协作任务并通知对应班主任。",
+        description: "心理老师完成复核，正式确认风险等级为危险；补充反馈要求：持续观察到校、课堂参与、睡眠和同伴互动情况；反馈截止时间：2026-07-09 17:00；系统已同步生成班主任协作任务并通知对应班主任。",
       },
       {
         id: "TL-003-3",
@@ -302,11 +310,15 @@ const warningMockSeeds: WarningMockSeed[] = [
         id: "RR-005-2",
         arrangedAt: "2026-06-22 14:00",
         plannedAt: "2026-07-07 10:00",
+        scaleIds: ["phq-9", "gad-7"],
+        scaleNames: ["PHQ-9 抑郁症筛查量表", "GAD-7 广泛性焦虑量表"],
       },
       {
         id: "RR-005-1",
         arrangedAt: "2026-06-10 09:00",
         plannedAt: "2026-06-17 10:00",
+        scaleIds: ["phq-9"],
+        scaleNames: ["PHQ-9 抑郁症筛查量表"],
         completedAt: "2026-06-17 10:20",
         resultSummary: "压力自评较初次评估下降。",
         comparison: "睡眠和到校情况改善，考试焦虑仍存在。",
@@ -463,11 +475,20 @@ const warningMockSeeds: WarningMockSeed[] = [
     latestActivity: "心理老师完成闭环归档",
     activityTime: "2026-07-04 16:10",
     feedbackStatus: "feedback_received",
+    feedbackRequestNote: "请补充复测前的课堂参与和作息变化。",
+    feedbackDeadline: "2026-07-03 17:00",
     responsibleTeacher: "陈老师",
     assessmentSummary: "多轮干预和复测显示学生状态逐步回稳。",
     aiSummary: "近期未出现新增风险表达。",
     teacherFeedbackSummary: "班主任反馈学生课堂互动和作息恢复稳定。",
     feedbackRecords: [
+      {
+        id: "FB-007-2",
+        authorRole: "班主任",
+        authorName: "钱老师",
+        content: "学生按时到校，能主动与同伴交流，未观察到新的异常表现。",
+        submittedAt: "2026-07-04 10:20",
+      },
       {
         id: "FB-007-1",
         authorRole: "班主任",
@@ -502,6 +523,8 @@ const warningMockSeeds: WarningMockSeed[] = [
         id: "RR-007-2",
         arrangedAt: "2026-07-01 09:30",
         plannedAt: "2026-07-04 14:00",
+        scaleIds: ["phq-9", "gad-7"],
+        scaleNames: ["PHQ-9 抑郁症筛查量表", "GAD-7 广泛性焦虑量表"],
         completedAt: "2026-07-04 14:30",
         resultSummary: "风险指标回落至稳定区间。",
         comparison: "相较上次复测，睡眠、社交和到校表现继续改善。",
@@ -511,10 +534,23 @@ const warningMockSeeds: WarningMockSeed[] = [
         id: "RR-007-1",
         arrangedAt: "2026-06-27 11:00",
         plannedAt: "2026-06-30 14:00",
+        scaleIds: ["phq-9"],
+        scaleNames: ["PHQ-9 抑郁症筛查量表"],
         completedAt: "2026-06-30 14:20",
         resultSummary: "风险表达减少，但仍存在压力波动。",
         comparison: "较初次评估有所改善。",
         conclusion: "继续干预并安排下一次复测。",
+      },
+    ],
+    referralRecords: [
+      {
+        id: "RF-007-1",
+        referredAt: "2026-06-28 09:20",
+        referralType: "校外心理咨询转介",
+        organization: "常熟市青少年心理支持中心",
+        reason: "结合阶段干预情况，补充校外专业支持。",
+        resultRecordedAt: "2026-06-29 16:00",
+        resultSummary: "已完成一次外部咨询，建议继续校内支持并按计划复测。",
       },
     ],
     timeline: [
@@ -552,6 +588,20 @@ const warningMockSeeds: WarningMockSeed[] = [
         operator: "陈老师",
         occurredAt: "2026-07-01 09:30",
         description: "心理老师安排第二次复测，系统已生成班主任待复测提醒并通知对应班主任。",
+      },
+      {
+        id: "TL-007-R2",
+        title: "记录转介结果",
+        operator: "陈老师",
+        occurredAt: "2026-06-29 16:00",
+        description: "心理老师记录外部咨询结果，后续另行安排复测。",
+      },
+      {
+        id: "TL-007-R1",
+        title: "发起转介",
+        operator: "陈老师",
+        occurredAt: "2026-06-28 09:20",
+        description: "心理老师发起校外心理咨询转介，系统已同步通知对应班主任。",
       },
       {
         id: "TL-007-4",
@@ -701,6 +751,8 @@ const warningMockSeeds: WarningMockSeed[] = [
         id: "RR-009-1",
         arrangedAt: "2026-07-05 10:00",
         plannedAt: "2026-07-08 11:00",
+        scaleIds: ["phq-9", "psqi"],
+        scaleNames: ["PHQ-9 抑郁症筛查量表", "PSQI 匹兹堡睡眠质量指数"],
         completedAt: "2026-07-08 11:20",
         resultSummary: "风险指标下降至稳定区间。",
         comparison: "较初次评估，睡眠和社交回避明显改善。",
@@ -768,7 +820,15 @@ const warningMockSeeds: WarningMockSeed[] = [
     assessmentSummary: "补充评估提示需要外部专业资源继续支持。",
     aiSummary: "AI倾诉显示持续焦虑和睡眠困难。",
     teacherFeedbackSummary: "班主任已补充近期在校表现。",
-    feedbackRecords: [],
+    feedbackRecords: [
+      {
+        id: "FB-010-1",
+        authorRole: "班主任",
+        authorName: "孙老师",
+        content: "学生近期到校稳定，但课堂参与仍较少，家长已配合外部转介安排。",
+        submittedAt: "2026-07-08 09:30",
+      },
+    ],
     hasUnreadFeedback: false,
     interventionRecords: [
       {
@@ -883,11 +943,110 @@ const warningMockSeeds: WarningMockSeed[] = [
       },
     ],
   },
+  {
+    id: "WRN-20260708-012",
+    studentName: "沈知夏",
+    gradeClass: "高二（3）班",
+    sourceType: "teacher_report",
+    evidenceTypes: ["teacher_report", "deep_assessment", "ai_chat"],
+    suggestedRiskLevel: "high",
+    confirmedRiskLevel: "high",
+    currentStatus: "formal_warning",
+    latestActivity: "班主任反馈任务已超时",
+    activityTime: "2026-07-08 09:00",
+    feedbackStatus: "feedback_overdue",
+    feedbackRequestNote: "请反馈学生近期到校、课堂参与和同伴互动的事实变化。",
+    feedbackDeadline: "2026-07-07 17:00",
+    responsibleTeacher: "陈老师",
+    assessmentSummary: "补充评估提示持续压力和回避表现，需要进一步事实观察。",
+    aiSummary: "AI倾诉显示近期睡眠受影响，未出现即时危机表达。",
+    teacherFeedbackSummary: "首次班主任协作任务已超时，尚未收到反馈。",
+    feedbackRecords: [],
+    hasUnreadFeedback: false,
+    interventionRecords: [],
+    retestRecords: [],
+    timeline: [
+      {
+        id: "TL-012-3",
+        title: "确认正式预警",
+        operator: "陈老师",
+        occurredAt: "2026-07-06 15:00",
+        description: "心理老师确认高风险；补充反馈要求：反馈近期到校、课堂参与和同伴互动；截止时间：2026-07-07 17:00；系统已生成班主任协作任务。",
+      },
+      {
+        id: "TL-012-2",
+        title: "补充评估完成",
+        operator: "学生",
+        occurredAt: "2026-07-06 14:00",
+        description: "学生完成深度测评和 AI倾诉补充评估，形成待复核依据。",
+      },
+      {
+        id: "TL-012-1",
+        title: "班主任上报异常线索",
+        operator: "孙老师",
+        occurredAt: "2026-07-05 09:00",
+        description: "班主任提交异常观察，系统已纳入线索池。",
+      },
+    ],
+  },
 ];
 
-export const warningMockData: WarningItem[] = warningMockSeeds.map((warning) => ({
-  isActive: true,
-  disposition: "active",
-  referralRecords: [],
-  ...warning,
-}));
+export const warningMockData: WarningItem[] = warningMockSeeds.map((warning, index) => {
+  const headTeacherName = warning.feedbackRecords[0]?.authorName ?? ["王老师", "李老师", "赵老师"][index % 3];
+  const feedbackDeadline = warning.feedbackDeadline ?? (
+    warning.feedbackStatus === "feedback_overdue"
+      ? "2026-07-07 17:00"
+      : warning.feedbackStatus === "not_requested"
+        ? undefined
+        : "2026-07-09 17:00"
+  );
+  const feedbackRequestNote = warning.feedbackRequestNote ?? (
+    feedbackDeadline ? "请持续观察学生到校、课堂参与和情绪变化，并提交事实反馈。" : undefined
+  );
+  const requestStatus = warning.feedbackRecords.length > 0
+    ? "completed"
+    : warning.feedbackStatus === "feedback_overdue"
+      ? "overdue"
+      : "pending";
+
+  return {
+    studentId: `STU-${String(index + 1).padStart(4, "0")}`,
+    headTeacherName,
+    headTeacherPhone: `138****${String(1234 + index).slice(-4)}`,
+    feedbackRequests: warning.id === "WRN-20260704-007"
+      ? [
+          {
+            id: "FQ-WRN-20260704-007-2",
+            requestedAt: "2026-07-02 09:00",
+            requestedBy: warning.responsibleTeacher,
+            requestNote: "请补充复测前的课堂参与和作息变化。",
+            deadline: "2026-07-03 17:00",
+            status: "completed",
+          },
+          {
+            id: "FQ-WRN-20260704-007-1",
+            requestedAt: "2026-06-25 14:00",
+            requestedBy: warning.responsibleTeacher,
+            requestNote: "请持续观察学生到校、课堂互动和同伴交往情况。",
+            deadline: "2026-06-27 17:00",
+            status: "completed",
+          },
+        ]
+      : feedbackDeadline && feedbackRequestNote
+        ? [{
+          id: `FQ-${warning.id}-1`,
+          requestedAt: warning.timeline.find((item) => item.title === "确认正式预警")?.occurredAt ?? warning.activityTime,
+          requestedBy: warning.responsibleTeacher,
+          requestNote: feedbackRequestNote,
+          deadline: feedbackDeadline,
+          status: requestStatus,
+          }]
+        : [],
+    feedbackDeadline,
+    feedbackRequestNote,
+    isActive: true,
+    disposition: "active",
+    referralRecords: [],
+    ...warning,
+  };
+});

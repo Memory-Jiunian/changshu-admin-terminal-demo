@@ -10,7 +10,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { assessmentScaleOptions } from "@/data/assessmentScaleMock";
 import { cn } from "@/lib/utils";
+import { getFeedbackActionAvailability } from "@/lib/warning-feedback";
 import { formatDateTimeInput, getMockDateTimeInput } from "@/lib/warning-time";
 import type {
   RetestStatusOutcome,
@@ -48,6 +50,7 @@ type FormState = {
   followUpPlan: string;
   arrangedAt: string;
   plannedAt: string;
+  scaleIds: string[];
   note: string;
   referralType: string;
   organization: string;
@@ -75,8 +78,13 @@ const outcomeOptions: Array<{ value: RetestStatusOutcome; label: string }> = [
   { value: "referral", label: "转介" },
 ];
 
-function getInitialForm(): FormState {
+function getInitialForm(warning?: WarningItem | null): FormState {
   const now = getMockDateTimeInput();
+  const latestRetest = warning
+    ? [...warning.retestRecords].sort((left, right) =>
+        right.arrangedAt.localeCompare(left.arrangedAt),
+      )[0]
+    : undefined;
   return {
     endReason: "",
     observationNote: "",
@@ -90,6 +98,7 @@ function getInitialForm(): FormState {
     followUpPlan: "",
     arrangedAt: now,
     plannedAt: "",
+    scaleIds: latestRetest?.scaleIds ?? [assessmentScaleOptions[0].id],
     note: "",
     referralType: "",
     organization: "",
@@ -148,14 +157,14 @@ export function WarningActionDialog({
   onOpenChange,
   onSubmit,
 }: WarningActionDialogProps) {
-  const [form, setForm] = useState<FormState>(getInitialForm);
+  const [form, setForm] = useState<FormState>(() => getInitialForm(warning));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState("");
   const submitLockedRef = useRef(false);
 
   useEffect(() => {
     if (open) {
-      setForm(getInitialForm());
+      setForm(getInitialForm(warning));
       setErrors({});
       setFormError("");
       submitLockedRef.current = false;
@@ -171,6 +180,10 @@ export function WarningActionDialog({
   )[0];
   const canUpdateRetest = Boolean(latestRetest?.completedAt);
   const hasPendingReferral = warning.referralRecords.some((record) => !record.resultRecordedAt);
+  const dialogTitle = action === "request_feedback" &&
+    getFeedbackActionAvailability(warning, formatDateTimeInput(getMockDateTimeInput())).kind === "rerequest"
+      ? "重新请求反馈"
+      : dialogTitles[action];
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -206,15 +219,20 @@ export function WarningActionDialog({
             }
           : null;
       case "request_feedback":
-        return requireFields(["feedbackRequestNote", "feedbackDeadline"])
-          ? {
+        if (!requireFields(["feedbackRequestNote", "feedbackDeadline"])) {
+          return null;
+        }
+        if (formatDateTimeInput(form.feedbackDeadline) <= formatDateTimeInput(getMockDateTimeInput())) {
+          setErrors({ feedbackDeadline: "反馈截止时间必须晚于当前时间。" });
+          return null;
+        }
+        return {
               type: action,
               values: {
                 feedbackRequestNote: form.feedbackRequestNote.trim(),
                 feedbackDeadline: formatDateTimeInput(form.feedbackDeadline),
               },
-            }
-          : null;
+            };
       case "record_intervention":
       case "add_intervention":
         return requireFields(["occurredAt", "method", "summary", "judgment", "followUpPlan"])
@@ -230,16 +248,29 @@ export function WarningActionDialog({
             }
           : null;
       case "schedule_retest":
-        return requireFields(["arrangedAt", "plannedAt"])
-          ? {
+        if (!requireFields(["arrangedAt", "plannedAt"])) {
+          return null;
+        }
+        if (form.scaleIds.length === 0) {
+          setErrors({ scaleIds: "请至少选择一项复测量表。" });
+          return null;
+        }
+        if (formatDateTimeInput(form.plannedAt) <= formatDateTimeInput(form.arrangedAt)) {
+          setErrors({ plannedAt: "计划复测时间必须晚于安排时间。" });
+          return null;
+        }
+        return {
               type: action,
               values: {
                 arrangedAt: formatDateTimeInput(form.arrangedAt),
                 plannedAt: formatDateTimeInput(form.plannedAt),
+                scaleIds: form.scaleIds,
+                scaleNames: assessmentScaleOptions
+                  .filter((scale) => form.scaleIds.includes(scale.id))
+                  .map((scale) => scale.name),
                 note: form.note.trim(),
               },
-            }
-          : null;
+            };
       case "start_referral":
         return requireFields(["referralType", "reason"])
           ? {
@@ -301,7 +332,7 @@ export function WarningActionDialog({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="max-h-[82vh] max-w-[560px] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{dialogTitles[action]}</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>
             {warning.studentName} · {warning.gradeClass}。提交后将同步更新列表与详情。
           </DialogDescription>
@@ -331,7 +362,10 @@ export function WarningActionDialog({
 
           {action === "request_feedback" ? (
             <>
-              <div className="rounded-md bg-neutral-50 px-3 py-2 text-sm text-neutral-600">协作对象：对应班主任</div>
+              <div className="grid grid-cols-2 gap-3 rounded-md bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+                <span>协作对象：{warning.headTeacherName}</span>
+                <span>联系电话：{warning.headTeacherPhone}</span>
+              </div>
               <Field error={errors.feedbackRequestNote} label="补充反馈要求" required>
                 <TextArea onChange={(value) => updateField("feedbackRequestNote", value)} placeholder="说明需要班主任补充的事实观察" value={form.feedbackRequestNote} />
               </Field>
@@ -364,7 +398,34 @@ export function WarningActionDialog({
           {action === "schedule_retest" ? (
             <>
               <Field error={errors.arrangedAt} label="安排时间" required>
-                <Input onChange={(event) => updateField("arrangedAt", event.target.value)} type="datetime-local" value={form.arrangedAt} />
+                <Input readOnly type="datetime-local" value={form.arrangedAt} />
+                <span className="mt-1 block text-xs text-neutral-500">由系统自动记录</span>
+              </Field>
+              <Field error={errors.scaleIds} label="复测量表" required>
+                <div className="grid gap-2">
+                  {assessmentScaleOptions.map((scale) => {
+                    const selected = form.scaleIds.includes(scale.id);
+                    return (
+                      <Button
+                        aria-pressed={selected}
+                        className={cn("justify-start", selected && "bg-neutral-900 text-white hover:bg-neutral-800")}
+                        key={scale.id}
+                        onClick={() =>
+                          updateField(
+                            "scaleIds",
+                            selected
+                              ? form.scaleIds.filter((id) => id !== scale.id)
+                              : [...form.scaleIds, scale.id],
+                          )
+                        }
+                        type="button"
+                        variant="outline"
+                      >
+                        {scale.name}
+                      </Button>
+                    );
+                  })}
+                </div>
               </Field>
               <Field error={errors.plannedAt} label="计划复测时间" required>
                 <Input onChange={(event) => updateField("plannedAt", event.target.value)} type="datetime-local" value={form.plannedAt} />

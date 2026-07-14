@@ -178,6 +178,25 @@ Only profile-to-warning-detail-and-back navigation is approved. Detailed records
 Active scope: Student profile Phase 5.2B read-only complete records grouped by warning case.
 Fullscreen, PDF export, raw assessment/AI records, cross-case record indexes, workbench, and clue pool remain out of scope. Warning business rules remain frozen.
 
+## Phase 5.2B.1: Complete evidence, collaboration, referral follow-up, and export
+
+- [x] Add complete deep assessment records
+- [x] Add visible AI conversation records
+- [x] Add complete evidence UI
+- [x] Add feedback request linkage
+- [x] Build collaboration rounds
+- [x] Derive feedback timeline events
+- [x] Migrate referral result to follow-up history
+- [x] Add multiple referral follow-up actions
+- [x] Synchronize warning, profile, and archive
+- [x] Add student profile export dialog
+- [x] Add printable report view
+- [x] Add sensitive-content export boundary
+- [x] Run regression / build / commit / push
+
+Active scope: Student profile Phase 5.2B.1 complete evidence, feedback collaboration, multiple referral follow-ups, and privacy-aware profile export.
+Workbench W0/W1 remains paused until this phase is accepted. Warning business rules remain frozen except the approved referral follow-up history extension.
+
 ## Phase 6: Polish and validation
 
 - [ ] Match prototype layout

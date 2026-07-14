@@ -319,6 +319,17 @@ AdminDataProvider 初始化 warningMockData
 
 事项记录排序：反馈请求按 `requestedAt`、反馈按 `submittedAt`、干预按 `occurredAt`、复测按 `arrangedAt`、转介按 `referredAt`、时间线按 `occurredAt` 倒序。排序只作用于派生副本。
 
+## 8.7 Phase 5.2B.1 记录与导出流程
+
+```text
+结构化测评 / AI 可见会话 → WarningItem 完整证据数组 → 预警、档案、归档、导出共享展示
+反馈请求 + requestId 回复 → 协作轮次 → 派生反馈时间线
+转介中 → 新增转介跟进（可重复）→ 仍为转介中
+学生档案 → 导出设置 → 结构化打印报告 → 浏览器打印 / 保存 PDF → 恢复原上下文
+```
+
+导出当前事项仅在 `case_detail` 可选；敏感完整记录默认关闭。浏览、切换、打印和取消打印均不写时间线。
+
 ### 9.1 单个事项展示顺序
 按业务含义展示：
 

@@ -394,11 +394,10 @@ When action fails:
 
 ## Current active scope
 
-Student profile Phase 5.2B is approved. Implement read-only complete records
-grouped by `WarningItem.id`, internal profile/case-detail drawer navigation,
-shared read-only case-record components, and the extended typed return context.
-Fullscreen, PDF export, raw assessment/AI records, and cross-case record indexes
-remain out of scope.
+Student profile Phase 5.2B.1 is approved. Implement complete structured deep
+assessment records, product-visible AI conversations, feedback collaboration
+rounds, derived feedback timeline events, multiple referral follow-ups, and a
+privacy-aware printable profile export. Workbench W0/W1 remains paused.
 
 The only approved cross-module route in this slice is:
 
@@ -434,11 +433,20 @@ the warning-management ownership rules. Homeroom teachers, grade directors,
 and school leaders do not enter individual student profiles.
 
 The clue-pool page, workbench, detailed student profile record modules,
-fullscreen profile mode, PDF export, all cross-module navigation except the
+fullscreen profile mode, cross-case record indexes, all cross-module navigation except the
 single approved profile-to-warning-detail round trip, organization CRUD, real
 permissions, real backend, and school-system synchronization remain out of scope.
 
 When a new page PRD is completed, update this section before implementation.
+
+Complete evidence must remain separate from `assessmentSummary` and `aiSummary`.
+AI records may contain only student/assistant messages visible in the product;
+never expose system prompts, hidden reasoning, internal logs, or debug data.
+Feedback responses link to request rounds through `requestId`; unlinked or
+invalid responses remain visible and are never assigned by time inference.
+Referral follow-ups may be appended repeatedly while the main status remains
+`referral`. Profile export defaults to excluding complete assessment responses
+and AI conversations and must use structured printable content, not screenshots.
 
 ---
 

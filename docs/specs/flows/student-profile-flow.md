@@ -5,6 +5,8 @@
 
 本模块只负责查询与聚合，不负责产生或修改测评、预警、干预、复测、转介和闭环记录。
 
+Phase 5.2A 只实现共享 warning 数据源和核心详情摘要；全屏、完整专业记录及跨模块跳转留待后续阶段。
+
 ## 2. 领域对象
 
 ### 2.1 StudentProfile
@@ -31,7 +33,7 @@
 
 ### 2.3 MentalHealthCase
 一次连续的心理健康处置事项：
-- caseId
+- caseId（当前 Demo 对应 `WarningItem.id`）
 - studentId
 - sourceType
 - startedAt
@@ -72,6 +74,9 @@
 10. 所有心理老师在当前 MVP 中均可查看完整学生档案。
 11. 标准抽屉和全屏模式读取同一数据源。
 12. 查看档案、展开模块和切换全屏不写入业务时间线。
+13. 学生基础数据不保存当前风险、当前状态、负责心理老师或干预历史；这些字段从共享 warning 数据派生。
+14. 页面切换不得重置共享 warning 数据。
+15. `warningCaseIds` 必须匹配真实 `WarningItem.id`。
 
 ## 4. 查询与筛选流程
 
@@ -230,8 +235,10 @@ closed
 
 ### 8.1 当前活动事项
 满足以下条件的事项视为活动事项：
-- 未完成闭环
-- 未结束处理
+- `isActive=true`
+- `currentStatus!=closed`
+
+当前假设每名学生最多一条活动事项。若聚合发现多条，返回数据异常并临时按 `activityTime` 最新项展示；正式 mock 不得包含该冲突。
 - 状态属于当前业务定义中的活动状态
 
 一个学生如果存在活动事项，详情概况展示该事项的：
@@ -248,7 +255,7 @@ closed
 - 不使用最近一次闭环风险和状态代替当前值
 
 ### 8.3 历史事项
-已结束或闭环事项进入历史事项列表。
+`currentStatus=closed` 或 `isActive=false` 的事项进入历史事项列表。
 
 每条历史事项展示：
 - 起止时间
@@ -260,6 +267,18 @@ closed
 ## 9. 业务事项关联流程
 
 所有记录通过 `caseId` 聚合。
+
+当前 Demo 不新增独立 `caseId` 字段，直接使用 `WarningItem.id`。
+
+## 8.4 共享状态流程
+
+```text
+AdminDataProvider 初始化 warningMockData
+→ 预警管理读取并更新共享 warnings
+→ 页面切换不卸载 Provider
+→ 学生档案从同一 warnings 派生摘要和详情
+→ 返回预警管理时保留更新后的数据
+```
 
 ### 9.1 单个事项展示顺序
 按业务含义展示：

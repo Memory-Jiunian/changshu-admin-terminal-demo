@@ -118,10 +118,27 @@ Clue pool remains documented as an upstream future slice and is not the next imp
 - [x] Add the minimum identity-only drawer
 - [x] Run acceptance regression, build, commit, and push
 
-Active scope: Student profile Phase 5.1: list, search, filters, types and mock only.
-Do not implement the full profile drawer until Phase 5.2 is approved.
+Phase 5.1 is complete: list, search, filters, types, mock, and the identity drawer baseline.
 Warning management remains frozen after Phase 4.6.
 The clue pool remains an upstream future slice and is not the next implementation task.
+
+## Phase 5.2A: Shared data foundation and core student profile detail
+
+- [ ] Add shared warning data provider
+- [ ] Preserve warning data across navigation
+- [ ] Normalize student base data and derived summaries
+- [ ] Align warning case identifiers
+- [ ] Add aggregation selectors
+- [ ] Replace identity-only drawer
+- [ ] Add current overview
+- [ ] Add active case
+- [ ] Add enrollment history
+- [ ] Add historical case summaries
+- [ ] Run regression / build / commit / push
+
+Active scope: Student profile Phase 5.2A: shared data foundation and core detail drawer.
+Do not implement detailed record modules, fullscreen, or cross-module navigation until Phase 5.2B / 5.3 is approved.
+Warning business rules remain frozen.
 
 ## Phase 6: Polish and validation
 

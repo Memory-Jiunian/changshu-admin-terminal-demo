@@ -16,11 +16,11 @@ The current implemented modules are:
   - Pending re-test
   - Referral
   - Closed
-- Student profile Phase 5.1:
+- Student profile Phase 5.2A:
   - List
   - Search and filters
-  - Types and mock data
-  - Minimum identity-only drawer
+  - Shared warning-derived summaries
+  - Core read-only detail drawer
 
 Do not implement unrelated pages unless the task explicitly asks for them.
 
@@ -116,8 +116,8 @@ Do not expose full student risk detail to school leaders in this version.
 
 ## Current implementation scope
 
-Warning management is frozen. The active implementation slice is the student
-profile Phase 5.1 list and its minimum identity drawer.
+Warning management is frozen. The active implementation slice is student
+profile Phase 5.2A: shared warning data and the core read-only detail drawer.
 
 Required UI:
 
@@ -167,13 +167,16 @@ Required UI:
    - Closed:
      - View archive record
 
-5. Student profile Phase 5.1
+5. Student profile Phase 5.2A
    - Student profile list
    - Name and student-number search
    - Linked grade and class filters
    - Advanced filters
-   - Student profile types and mock data
-   - Minimum identity-only drawer using the shared detail width
+   - Stable student identity and enrollment data
+   - Warning-derived list summaries
+   - Core drawer sections: student information, current overview, active case,
+     enrollment history, and historical case summaries
+   - Shared detail width
 
 Do not implement:
 
@@ -185,7 +188,7 @@ Do not implement:
 - School overview page
 - Mini-program notification integration
 - Full AI conversation page
-- Full student profile detail
+- Detailed student profile record modules
 - Student profile fullscreen mode
 - Complete caseId aggregation UI
 - Clue-pool page
@@ -385,10 +388,25 @@ When action fails:
 
 ## Current active scope
 
-Student profile Phase 5.1 is approved. Only implement its list, search, linked
-grade/class filters, advanced filters, types, mock data, and a minimum
-identity-only drawer. Do not implement the full profile detail or fullscreen
-mode until Phase 5.2 is approved.
+Student profile Phase 5.2A is approved. Implement shared warning state,
+warning-derived profile summaries, and the core read-only drawer sections for
+student information, current overview, active case, enrollment history, and
+historical case summaries. Do not implement detailed professional record
+modules, fullscreen mode, or cross-module navigation until Phase 5.2B / 5.3 is
+approved.
+
+Student identity and enrollment history are stable student data. Current risk,
+current warning status, responsible psychological teacher, intervention-history
+flags, and case counts must be derived from the shared warning source. Do not
+store these values as independent truths in the student mock. In the current
+Demo, a `WarningItem` is one continuous case and `WarningItem.id` is its stable
+case identifier; profile associations must use real `WRN-*` identifiers.
+
+An active profile case satisfies `isActive === true` and
+`currentStatus !== "closed"`. Closed cases and inactive ended-without-warning
+cases are historical. Current mock data must contain at most one active case per
+student. Selectors must report, rather than silently ignore, multiple active
+cases if inconsistent data is supplied.
 
 Warning management remains frozen after Phase 4.6. Do not change its state
 transitions, action dialogs, seven-column list, advanced filters, or mock
@@ -401,9 +419,9 @@ the current MVP. This does not grant cross-owner warning operations or alter
 the warning-management ownership rules. Homeroom teachers, grade directors,
 and school leaders do not enter individual student profiles.
 
-The clue-pool page, workbench, full student profile detail, organization CRUD,
-real permissions, real backend, and school-system synchronization remain out of
-scope.
+The clue-pool page, workbench, detailed student profile record modules,
+fullscreen profile mode, cross-module navigation, organization CRUD, real
+permissions, real backend, and school-system synchronization remain out of scope.
 
 When a new page PRD is completed, update this section before implementation.
 

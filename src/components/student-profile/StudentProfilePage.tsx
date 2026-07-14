@@ -7,17 +7,31 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { studentProfileMockData } from "@/data/studentProfileMock";
+import { buildStudentProfileDetail, buildStudentProfileSummaries } from "@/lib/student-profile-aggregate";
 import { createDefaultStudentProfileFilterQuery, filterStudentProfiles, getStudentProfileFilterOptions } from "@/lib/student-profile-filters";
-import type { StudentProfile } from "@/types/studentProfile";
+import { useAdminData } from "@/state/AdminDataProvider";
 
 type LoadState = "ready" | "loading" | "error";
 
 export function StudentProfilePage({ initialLoadState = "ready" }: { initialLoadState?: LoadState }) {
+  const { warnings } = useAdminData();
   const [query, setQuery] = useState(createDefaultStudentProfileFilterQuery);
-  const [selectedProfile, setSelectedProfile] = useState<StudentProfile | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<LoadState>(initialLoadState);
-  const options = useMemo(() => getStudentProfileFilterOptions(studentProfileMockData), []);
-  const profiles = useMemo(() => filterStudentProfiles(studentProfileMockData, query), [query]);
+  const summaries = useMemo(
+    () => buildStudentProfileSummaries(studentProfileMockData, warnings),
+    [warnings],
+  );
+  const options = useMemo(() => getStudentProfileFilterOptions(summaries), [summaries]);
+  const profiles = useMemo(() => filterStudentProfiles(summaries, query), [query, summaries]);
+  const selectedStudent = useMemo(
+    () => studentProfileMockData.find((student) => student.studentId === selectedStudentId),
+    [selectedStudentId],
+  );
+  const selectedDetail = useMemo(
+    () => selectedStudent ? buildStudentProfileDetail(selectedStudent, warnings) : null,
+    [selectedStudent, warnings],
+  );
   const hasFilters = Boolean(query.keyword || query.grade || query.className ||
     query.advanced.riskLevel.length || query.advanced.warningStatus.length ||
     query.advanced.hasActiveWarning.length || query.advanced.hasInterventionHistory.length ||
@@ -61,14 +75,14 @@ export function StudentProfilePage({ initialLoadState = "ready" }: { initialLoad
           <StudentProfileTable
             hasFilters={hasFilters}
             onReset={resetAll}
-            onView={setSelectedProfile}
+            onView={(profile) => setSelectedStudentId(profile.studentId)}
             profiles={profiles}
-            selectedStudentId={selectedProfile?.studentId}
+            selectedStudentId={selectedStudentId ?? undefined}
           />
         </>
       ) : null}
 
-      <StudentProfileDrawer open={Boolean(selectedProfile)} onOpenChange={(open) => { if (!open) setSelectedProfile(null); }} profile={selectedProfile} />
+      <StudentProfileDrawer detail={selectedDetail} open={Boolean(selectedDetail)} onOpenChange={(open) => { if (!open) setSelectedStudentId(null); }} />
     </section>
   );
 }

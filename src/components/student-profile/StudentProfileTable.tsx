@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import type { StudentProfile } from "@/types/studentProfile";
+import type { StudentProfileSummary } from "@/types/studentProfile";
 
 type StudentProfileTableProps = {
-  profiles: StudentProfile[];
+  profiles: StudentProfileSummary[];
   selectedStudentId?: string;
   hasFilters: boolean;
-  onView: (profile: StudentProfile) => void;
+  onView: (profile: StudentProfileSummary) => void;
   onReset: () => void;
 };
 

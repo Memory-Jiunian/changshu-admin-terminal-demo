@@ -1,7 +1,7 @@
 import {
   createDefaultStudentProfileAdvancedFilters,
   type BooleanFilterValue,
-  type StudentProfile,
+  type StudentProfileSummary,
   type StudentProfileAdvancedFilters,
   type StudentProfileFilterOptions,
   type StudentProfileFilterQuery,
@@ -34,7 +34,7 @@ export function createDefaultStudentProfileFilterQuery(): StudentProfileFilterQu
 }
 
 export function filterStudentProfiles(
-  profiles: StudentProfile[],
+  profiles: StudentProfileSummary[],
   query: StudentProfileFilterQuery,
 ) {
   const keyword = query.keyword.trim().toLocaleLowerCase("zh-Hans-CN");
@@ -93,7 +93,7 @@ export function filterStudentProfiles(
 }
 
 export function getStudentProfileFilterOptions(
-  profiles: StudentProfile[],
+  profiles: StudentProfileSummary[],
 ): StudentProfileFilterOptions {
   const grades = Array.from(new Set(profiles.map((profile) => profile.currentGrade))).sort(
     (left, right) => left.localeCompare(right, "zh-Hans-CN"),

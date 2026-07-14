@@ -124,17 +124,17 @@ The clue pool remains an upstream future slice and is not the next implementatio
 
 ## Phase 5.2A: Shared data foundation and core student profile detail
 
-- [ ] Add shared warning data provider
-- [ ] Preserve warning data across navigation
-- [ ] Normalize student base data and derived summaries
-- [ ] Align warning case identifiers
-- [ ] Add aggregation selectors
-- [ ] Replace identity-only drawer
-- [ ] Add current overview
-- [ ] Add active case
-- [ ] Add enrollment history
-- [ ] Add historical case summaries
-- [ ] Run regression / build / commit / push
+- [x] Add shared warning data provider
+- [x] Preserve warning data across navigation
+- [x] Normalize student base data and derived summaries
+- [x] Align warning case identifiers
+- [x] Add aggregation selectors
+- [x] Replace identity-only drawer
+- [x] Add current overview
+- [x] Add active case
+- [x] Add enrollment history
+- [x] Add historical case summaries
+- [x] Run regression / build / commit / push
 
 Active scope: Student profile Phase 5.2A: shared data foundation and core detail drawer.
 Do not implement detailed record modules, fullscreen, or cross-module navigation until Phase 5.2B / 5.3 is approved.

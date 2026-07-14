@@ -4,7 +4,7 @@ This project is a portfolio demo for a campus mental-health risk management term
 
 The current implementation scope is the admin terminal, not the mobile mini-program.
 
-The first version focuses only on:
+The current implemented modules are:
 
 - Warning management default list
 - Student risk detail drawer
@@ -16,6 +16,11 @@ The first version focuses only on:
   - Pending re-test
   - Referral
   - Closed
+- Student profile Phase 5.1:
+  - List
+  - Search and filters
+  - Types and mock data
+  - Minimum identity-only drawer
 
 Do not implement unrelated pages unless the task explicitly asks for them.
 
@@ -111,7 +116,8 @@ Do not expose full student risk detail to school leaders in this version.
 
 ## Current implementation scope
 
-Only implement the warning management page.
+Warning management is frozen. The active implementation slice is the student
+profile Phase 5.1 list and its minimum identity drawer.
 
 Required UI:
 
@@ -161,6 +167,14 @@ Required UI:
    - Closed:
      - View archive record
 
+5. Student profile Phase 5.1
+   - Student profile list
+   - Name and student-number search
+   - Linked grade and class filters
+   - Advanced filters
+   - Student profile types and mock data
+   - Minimum identity-only drawer using the shared detail width
+
 Do not implement:
 
 - Real backend API
@@ -171,6 +185,11 @@ Do not implement:
 - School overview page
 - Mini-program notification integration
 - Full AI conversation page
+- Full student profile detail
+- Student profile fullscreen mode
+- Complete caseId aggregation UI
+- Clue-pool page
+- Organization and account CRUD
 
 Use mock data only.
 
@@ -366,28 +385,25 @@ When action fails:
 
 ## Current active scope
 
-Warning management is frozen after Phase 4.5 regression. The next planned
-module is student profile, but it must not be implemented until its acceptance
-matrix and Codex task are approved.
+Student profile Phase 5.1 is approved. Only implement its list, search, linked
+grade/class filters, advanced filters, types, mock data, and a minimum
+identity-only drawer. Do not implement the full profile detail or fullscreen
+mode until Phase 5.2 is approved.
 
-Only implement:
+Warning management remains frozen after Phase 4.6. Do not change its state
+transitions, action dialogs, seven-column list, advanced filters, or mock
+workflow. Intervention records remain business records used by warning detail,
+archive, and future student profile detail; they are not an independent primary
+navigation page.
 
-- Warning management default list
-- Student risk detail drawer
-- Seven drawer states:
-  - Pending review
-  - Observing
-  - Formal warning
-  - In intervention
-  - Pending re-test
-  - Referral
-  - Closed
+All psychological teachers may access the read-only student profile module in
+the current MVP. This does not grant cross-owner warning operations or alter
+the warning-management ownership rules. Homeroom teachers, grade directors,
+and school leaders do not enter individual student profiles.
 
-The clue-pool page and student-profile page are not in scope. Approved warning
-actions use local mock state only; real APIs, permissions, and mini-program
-notifications remain out of scope.
-
-Do not implement other pages until their PRD is confirmed.
+The clue-pool page, workbench, full student profile detail, organization CRUD,
+real permissions, real backend, and school-system synchronization remain out of
+scope.
 
 When a new page PRD is completed, update this section before implementation.
 
@@ -428,12 +444,13 @@ When documents conflict, follow this order:
 
 1. AGENTS.md for long-term rules, role boundaries, and development gates
 2. docs/specs/DOMAIN_SPEC.md for canonical domain terms and permissions
-3. docs/specs/flows/warning-management-flow.md for state transitions and side effects
-4. PRD.md for page behavior and current product requirements
-5. docs/tests/warning-drawer-acceptance.md for executable acceptance baselines
-6. DESIGN.md for visual and component rules
-7. TASKS.md for current implementation sequence
-8. README.md for running and project overview
+3. Current module specifications under docs/specs for module behavior
+4. Current module flow specifications under docs/specs/flows
+5. PRD.md for page behavior and current product requirements
+6. Current module acceptance documents under docs/tests
+7. DESIGN.md for visual and component rules
+8. TASKS.md for current implementation sequence
+9. README.md for running and project overview
 
 The acceptance document verifies the higher-priority specifications; it must not
 silently redefine them. For the current task, the documents updated by the

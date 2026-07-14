@@ -100,7 +100,30 @@ Next planned module: student profile.
 Do not implement student profile until its acceptance matrix and Codex task are approved.
 Clue pool remains documented as an upstream future slice and is not the next implementation task.
 
-## Phase 5: Polish and validation
+## Phase 5.0: Student profile specification baseline
+
+- [x] Import student profile slice, scenarios, PRD, flow, and acceptance matrix
+- [x] Normalize the five-item primary navigation definition
+- [x] Remove the independent intervention-record page definition
+- [x] Synchronize AGENTS, PRD, DOMAIN_SPEC, and active scope
+
+## Phase 5.1: Student profile list
+
+- [ ] Add student profile types
+- [ ] Add student profile mock coverage
+- [ ] Implement name and student-number search
+- [ ] Implement linked grade and class filters
+- [ ] Implement advanced filters
+- [ ] Implement the three-column-group student list
+- [ ] Add the minimum identity-only drawer
+- [ ] Run acceptance regression, build, commit, and push
+
+Active scope: Student profile Phase 5.1: list, search, filters, types and mock only.
+Do not implement the full profile drawer until Phase 5.2 is approved.
+Warning management remains frozen after Phase 4.6.
+The clue pool remains an upstream future slice and is not the next implementation task.
+
+## Phase 6: Polish and validation
 
 - [ ] Match prototype layout
 - [ ] Check 11–13 inch tablet width

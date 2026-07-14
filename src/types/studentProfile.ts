@@ -38,10 +38,12 @@ export type StudentProfileRecord = {
 };
 
 export type StudentProfileSummary = StudentProfileRecord & {
-  hasActiveWarning: boolean;
+  hasCurrentWarning: boolean;
   activeRiskLevel?: RiskLevel;
   activeWarningStatus?: WarningStatus;
-  hasInterventionHistory: boolean;
+  sourceTypes: WarningSourceType[];
+  hasFormalWarning: boolean;
+  hasInterventionRecords: boolean;
   currentResponsiblePsychologist?: string;
   activeWarningId?: string;
   warningCount: number;
@@ -53,6 +55,9 @@ export type StudentProfileCaseSummary = {
   isActive: boolean;
   sourceType: WarningSourceType;
   riskLevel: RiskLevel;
+  suggestedRiskLevel: RiskLevel;
+  confirmedRiskLevel?: RiskLevel;
+  riskLevelAdjustmentReason?: string;
   currentStatus: WarningStatus;
   feedbackStatus: FeedbackStatus;
   responsibleTeacher: string;
@@ -81,8 +86,10 @@ export type BooleanFilterValue = "yes" | "no";
 export type StudentProfileAdvancedFilters = {
   riskLevel: RiskLevel[];
   warningStatus: WarningStatus[];
-  hasActiveWarning: BooleanFilterValue[];
-  hasInterventionHistory: BooleanFilterValue[];
+  hasCurrentWarning: BooleanFilterValue[];
+  sourceType: WarningSourceType[];
+  hasFormalWarning: BooleanFilterValue[];
+  hasInterventionRecords: BooleanFilterValue[];
   responsiblePsychologist: string[];
   enrollmentStatus: EnrollmentStatus[];
 };
@@ -125,8 +132,10 @@ export function createDefaultStudentProfileAdvancedFilters(): StudentProfileAdva
   return {
     riskLevel: [],
     warningStatus: [],
-    hasActiveWarning: [],
-    hasInterventionHistory: [],
+    hasCurrentWarning: [],
+    sourceType: [],
+    hasFormalWarning: [],
+    hasInterventionRecords: [],
     responsiblePsychologist: [],
     enrollmentStatus: ["enrolled"],
   };

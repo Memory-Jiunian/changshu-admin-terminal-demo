@@ -36,6 +36,7 @@ type WarningTableProps = {
 };
 
 const riskBadgeClass: Record<RiskLevel, string> = {
+  low: "border-emerald-200 bg-emerald-50 text-emerald-700",
   medium: "border-neutral-200 bg-neutral-100 text-neutral-700",
   high: "border-neutral-300 bg-neutral-900 text-white",
   critical: "border-neutral-900 bg-white text-neutral-950",

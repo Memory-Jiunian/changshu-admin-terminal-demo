@@ -6,7 +6,7 @@ import { StudentCaseSummaryList } from "@/components/student-profile/StudentCase
 import { StudentProfileOverview } from "@/components/student-profile/StudentProfileOverview";
 import type { StudentProfileDetail } from "@/types/studentProfile";
 
-export function StudentProfileDetailContent({ detail }: { detail: StudentProfileDetail }) {
+export function StudentProfileDetailContent({ detail, onViewWarning }: { detail: StudentProfileDetail; onViewWarning: (warningId: string) => void }) {
   return (
     <div className="pb-6">
       {detail.dataIssues.length > 0 ? (
@@ -16,9 +16,9 @@ export function StudentProfileDetailContent({ detail }: { detail: StudentProfile
         </div>
       ) : null}
       <StudentProfileOverview detail={detail} />
-      <StudentActiveCase activeCase={detail.activeCase} />
+      <StudentActiveCase activeCase={detail.activeCase} onViewWarning={onViewWarning} />
       <EnrollmentHistory items={detail.student.enrollmentHistory} />
-      <StudentCaseSummaryList cases={detail.historicalCases} />
+      <StudentCaseSummaryList cases={detail.historicalCases} onViewWarning={onViewWarning} />
     </div>
   );
 }

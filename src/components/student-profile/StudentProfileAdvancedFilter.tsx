@@ -24,7 +24,7 @@ import {
   type StudentProfileAdvancedFilters,
   type StudentProfileFilterOptions,
 } from "@/types/studentProfile";
-import { riskLevelLabels, statusLabels } from "@/types/warning";
+import { riskLevelLabels, statusLabels, warningSourceTypeLabels } from "@/types/warning";
 
 type FilterOption = { label: string; value: string };
 type FilterCategory = {
@@ -42,8 +42,10 @@ type StudentProfileAdvancedFilterProps = {
 const categoryOrder: StudentProfileAdvancedFilterKey[] = [
   "riskLevel",
   "warningStatus",
-  "hasActiveWarning",
-  "hasInterventionHistory",
+  "hasCurrentWarning",
+  "sourceType",
+  "hasFormalWarning",
+  "hasInterventionRecords",
   "responsiblePsychologist",
   "enrollmentStatus",
 ];
@@ -57,8 +59,10 @@ function countNonDefaultFilters(filters: StudentProfileAdvancedFilters) {
   return (
     filters.riskLevel.length +
     filters.warningStatus.length +
-    filters.hasActiveWarning.length +
-    filters.hasInterventionHistory.length +
+    filters.hasCurrentWarning.length +
+    filters.sourceType.length +
+    filters.hasFormalWarning.length +
+    filters.hasInterventionRecords.length +
     filters.responsiblePsychologist.length +
     enrollmentCount
   );
@@ -88,6 +92,7 @@ export function StudentProfileAdvancedFilter({
         key: "riskLevel",
         label: "当前风险",
         options: [
+          { label: riskLevelLabels.low, value: "low" },
           { label: riskLevelLabels.medium, value: "medium" },
           { label: riskLevelLabels.high, value: "high" },
           { label: riskLevelLabels.critical, value: "critical" },
@@ -95,7 +100,7 @@ export function StudentProfileAdvancedFilter({
       },
       {
         key: "warningStatus",
-        label: "当前状态",
+        label: "预警状态",
         options: [
           { label: statusLabels.pending_review, value: "pending_review" },
           { label: statusLabels.observing, value: "observing" },
@@ -107,16 +112,33 @@ export function StudentProfileAdvancedFilter({
         ],
       },
       {
-        key: "hasActiveWarning",
-        label: "活动预警",
+        key: "hasCurrentWarning",
+        label: "当前预警事项",
         options: [
           { label: booleanFilterLabels.yes, value: "yes" },
           { label: booleanFilterLabels.no, value: "no" },
         ],
       },
       {
-        key: "hasInterventionHistory",
-        label: "历史干预",
+        key: "sourceType",
+        label: "事项来源",
+        options: [
+          { label: warningSourceTypeLabels.screening_abnormal, value: "screening_abnormal" },
+          { label: "AI 倾诉触发", value: "ai_chat_trigger" },
+          { label: warningSourceTypeLabels.teacher_report, value: "teacher_report" },
+        ],
+      },
+      {
+        key: "hasFormalWarning",
+        label: "是否形成正式预警",
+        options: [
+          { label: booleanFilterLabels.yes, value: "yes" },
+          { label: booleanFilterLabels.no, value: "no" },
+        ],
+      },
+      {
+        key: "hasInterventionRecords",
+        label: "是否有干预记录",
         options: [
           { label: booleanFilterLabels.yes, value: "yes" },
           { label: booleanFilterLabels.no, value: "no" },

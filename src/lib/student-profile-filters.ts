@@ -17,8 +17,10 @@ export function cloneStudentProfileAdvancedFilters(
   return {
     riskLevel: [...filters.riskLevel],
     warningStatus: [...filters.warningStatus],
-    hasActiveWarning: [...filters.hasActiveWarning],
-    hasInterventionHistory: [...filters.hasInterventionHistory],
+    hasCurrentWarning: [...filters.hasCurrentWarning],
+    sourceType: [...filters.sourceType],
+    hasFormalWarning: [...filters.hasFormalWarning],
+    hasInterventionRecords: [...filters.hasInterventionRecords],
     responsiblePsychologist: [...filters.responsiblePsychologist],
     enrollmentStatus: [...filters.enrollmentStatus],
   };
@@ -33,11 +35,21 @@ export function createDefaultStudentProfileFilterQuery(): StudentProfileFilterQu
   };
 }
 
+export function cloneStudentProfileFilterQuery(
+  query: StudentProfileFilterQuery,
+): StudentProfileFilterQuery {
+  return {
+    ...query,
+    advanced: cloneStudentProfileAdvancedFilters(query.advanced),
+  };
+}
+
 export function filterStudentProfiles(
   profiles: StudentProfileSummary[],
   query: StudentProfileFilterQuery,
 ) {
   const keyword = query.keyword.trim().toLocaleLowerCase("zh-Hans-CN");
+  const isSchoolWideSearch = keyword.length > 0;
 
   return profiles
     .filter((profile) => {
@@ -45,8 +57,10 @@ export function filterStudentProfiles(
         keyword.length === 0 ||
         profile.studentName.toLocaleLowerCase("zh-Hans-CN").includes(keyword) ||
         profile.studentNumber.toLocaleLowerCase("zh-Hans-CN").startsWith(keyword);
-      const matchesGrade = !query.grade || profile.currentGrade === query.grade;
-      const matchesClass = !query.className || profile.currentClass === query.className;
+      const matchesGrade =
+        isSchoolWideSearch || !query.grade || profile.currentGrade === query.grade;
+      const matchesClass =
+        isSchoolWideSearch || !query.className || profile.currentClass === query.className;
       const matchesRisk =
         query.advanced.riskLevel.length === 0 ||
         Boolean(
@@ -70,6 +84,11 @@ export function filterStudentProfiles(
       const matchesEnrollment =
         query.advanced.enrollmentStatus.length === 0 ||
         query.advanced.enrollmentStatus.includes(profile.enrollmentStatus);
+      const matchesSource =
+        query.advanced.sourceType.length === 0 ||
+        query.advanced.sourceType.some((sourceType) =>
+          profile.sourceTypes.includes(sourceType),
+        );
 
       return (
         matchesKeyword &&
@@ -77,13 +96,18 @@ export function filterStudentProfiles(
         matchesClass &&
         matchesRisk &&
         matchesStatus &&
+        matchesSource &&
         matchesBooleanFilter(
-          profile.hasActiveWarning,
-          query.advanced.hasActiveWarning,
+          profile.hasCurrentWarning,
+          query.advanced.hasCurrentWarning,
         ) &&
         matchesBooleanFilter(
-          profile.hasInterventionHistory,
-          query.advanced.hasInterventionHistory,
+          profile.hasFormalWarning,
+          query.advanced.hasFormalWarning,
+        ) &&
+        matchesBooleanFilter(
+          profile.hasInterventionRecords,
+          query.advanced.hasInterventionRecords,
         ) &&
         matchesResponsible &&
         matchesEnrollment
@@ -92,10 +116,31 @@ export function filterStudentProfiles(
     .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
 }
 
+export const STUDENT_PROFILE_PAGE_SIZE = 30;
+
+export function paginateStudentProfiles(
+  profiles: StudentProfileSummary[],
+  page: number,
+  pageSize = STUDENT_PROFILE_PAGE_SIZE,
+) {
+  const totalPages = Math.max(1, Math.ceil(profiles.length / pageSize));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const start = (currentPage - 1) * pageSize;
+
+  return {
+    currentPage,
+    totalPages,
+    items: profiles.slice(start, start + pageSize),
+  };
+}
+
 export function getStudentProfileFilterOptions(
   profiles: StudentProfileSummary[],
 ): StudentProfileFilterOptions {
-  const grades = Array.from(new Set(profiles.map((profile) => profile.currentGrade))).sort(
+  const browsableProfiles = profiles.filter(
+    (profile) => profile.enrollmentStatus === "enrolled",
+  );
+  const grades = Array.from(new Set(browsableProfiles.map((profile) => profile.currentGrade))).sort(
     (left, right) => left.localeCompare(right, "zh-Hans-CN"),
   );
   const classesByGrade = Object.fromEntries(
@@ -103,7 +148,7 @@ export function getStudentProfileFilterOptions(
       grade,
       Array.from(
         new Set(
-          profiles
+          browsableProfiles
             .filter((profile) => profile.currentGrade === grade)
             .map((profile) => profile.currentClass),
         ),

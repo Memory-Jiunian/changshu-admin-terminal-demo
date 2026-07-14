@@ -30,12 +30,17 @@ const filtersUrl = moduleUrl(
     `"${studentTypesUrl}"`,
   ),
 );
+const classPreferenceUrl = moduleUrl(
+  compile("src/lib/student-profile-class-preference.ts")
+    .replaceAll('"@/types/studentProfile"', `"${studentTypesUrl}"`),
+);
 
-const [studentTypes, actions, aggregate, filters, studentMock, warningMock] = await Promise.all([
+const [studentTypes, actions, aggregate, filters, classPreference, studentMock, warningMock] = await Promise.all([
   import(studentTypesUrl),
   import(actionsUrl),
   import(aggregateUrl),
   import(filtersUrl),
+  import(classPreferenceUrl),
   import(moduleUrl(compile("src/data/studentProfileMock.ts"))),
   import(moduleUrl(compile("src/data/warningMock.ts"))),
 ]);
@@ -81,14 +86,19 @@ assert(options.classesByGrade[grade].every((item) => students.some((student) => 
 
 const activeResults = filters.filterStudentProfiles(summaries, {
   ...defaultQuery,
-  advanced: { ...defaultQuery.advanced, hasActiveWarning: ["yes"] },
+  advanced: { ...defaultQuery.advanced, hasCurrentWarning: ["yes"] },
 });
-assert(activeResults.length > 0 && activeResults.every((item) => item.hasActiveWarning), "active-warning filter works");
+assert(activeResults.length > 0 && activeResults.every((item) => item.hasCurrentWarning), "current-warning filter works");
 const interventionResults = filters.filterStudentProfiles(summaries, {
   ...defaultQuery,
-  advanced: { ...defaultQuery.advanced, hasInterventionHistory: ["yes"] },
+  advanced: { ...defaultQuery.advanced, hasInterventionRecords: ["yes"] },
 });
-assert(interventionResults.length > 0 && interventionResults.every((item) => item.hasInterventionHistory), "intervention-history filter works");
+assert(interventionResults.length > 0 && interventionResults.every((item) => item.hasInterventionRecords), "intervention-record filter works");
+const lowRiskResults = filters.filterStudentProfiles(summaries, {
+  ...defaultQuery,
+  advanced: { ...defaultQuery.advanced, riskLevel: ["low"] },
+});
+assert(lowRiskResults.length > 0 && lowRiskResults.every((item) => item.activeRiskLevel === "low"), "low risk is available for profile filtering");
 
 const riskValues = [...new Set(defaultResults.flatMap((item) => item.activeRiskLevel ? [item.activeRiskLevel] : []))];
 const riskResults = filters.filterStudentProfiles(summaries, {
@@ -102,11 +112,11 @@ const combinedResults = filters.filterStudentProfiles(summaries, {
   ...defaultQuery,
   advanced: {
     ...defaultQuery.advanced,
-    hasActiveWarning: ["yes"],
+    hasCurrentWarning: ["yes"],
     responsiblePsychologist: [psychologist],
   },
 });
-assert(combinedResults.every((item) => item.hasActiveWarning && item.currentResponsiblePsychologist === psychologist), "different advanced categories use AND");
+assert(combinedResults.every((item) => item.hasCurrentWarning && item.currentResponsiblePsychologist === psychologist), "different advanced categories use AND");
 
 const historicalEnrollmentResults = filters.filterStudentProfiles(summaries, {
   ...defaultQuery,
@@ -125,6 +135,10 @@ const duplicateBusinessFields = [
   "activeWarningStatus",
   "hasInterventionHistory",
   "currentResponsiblePsychologist",
+  "hasCurrentWarning",
+  "sourceTypes",
+  "hasFormalWarning",
+  "hasInterventionRecords",
 ];
 assert(students.every((student) => duplicateBusinessFields.every((field) => !(field in student))), "base student mock has no duplicated warning state");
 
@@ -155,7 +169,7 @@ assert(!noCaseDetail.activeCase && noCaseDetail.historicalCases.length === 0, "s
 assert(!noCaseDetail.summary.activeRiskLevel && !noCaseDetail.summary.activeWarningStatus, "student without active case has no current risk or status");
 
 const interventionSummary = summaries.find((summary) => summary.studentId === "STU-0004");
-assert(interventionSummary.hasInterventionHistory, "intervention history is derived from warning records");
+assert(interventionSummary.hasInterventionRecords, "intervention records are derived from all warning records");
 
 const missingStudent = { ...noCaseStudent, studentId: "STU-MISSING", warningCaseIds: ["WRN-MISSING"] };
 const missingDetail = aggregate.buildStudentProfileDetail(missingStudent, warnings);
@@ -183,6 +197,49 @@ const mixedStudent = { ...pendingStudent, warningCaseIds: [...pendingStudent.war
 const mixedDetail = aggregate.buildStudentProfileDetail(mixedStudent, [...warnings, syntheticHistorical]);
 assert(mixedDetail.activeCase?.warningId === "WRN-20260708-001" && mixedDetail.historicalCases[0]?.warningId === syntheticHistorical.id, "active and historical cases remain separate");
 
+const mixedSummary = aggregate.buildStudentProfileSummary(mixedStudent, [...warnings, syntheticHistorical]);
+assert(mixedSummary.sourceTypes.includes(syntheticHistorical.sourceType), "source types include historical cases");
+assert(mixedSummary.hasFormalWarning === Boolean(syntheticHistorical.confirmedRiskLevel), "formal-warning flag reads confirmed levels across all cases");
+const sourceResults = filters.filterStudentProfiles([mixedSummary], {
+  ...defaultQuery,
+  advanced: { ...defaultQuery.advanced, sourceType: [syntheticHistorical.sourceType] },
+});
+assert(sourceResults.length === 1, "source filtering reads all associated cases");
+
+const schoolSearch = filters.filterStudentProfiles(summaries, {
+  ...defaultQuery,
+  grade,
+  className,
+  keyword: duplicateName,
+});
+assert(schoolSearch.length === 2, "keyword search ignores grade and class tabs");
+const pageResult = filters.paginateStudentProfiles(Array.from({ length: 65 }, (_, index) => ({ studentId: String(index) })), 2);
+assert(pageResult.items.length === 30 && pageResult.currentPage === 2 && pageResult.totalPages === 3, "pagination uses 30 items per page");
+
+const storageValues = new Map();
+const storage = {
+  getItem: (key) => storageValues.get(key) ?? null,
+  setItem: (key, value) => storageValues.set(key, value),
+};
+const firstClass = classPreference.getFirstAvailableClass(options);
+classPreference.saveStudentClassPreference(storage, firstClass);
+const storedValue = JSON.parse(storageValues.get(classPreference.getStudentClassPreferenceKey()));
+assert(Object.keys(storedValue).sort().join(",") === "className,grade", "localStorage stores grade and class only");
+assert(classPreference.getStudentClassPreferenceKey().includes("changshu-demo-school.psychologist-chen"), "class preference key is isolated by school and psychologist");
+assert(classPreference.loadStudentClassPreference(storage, options, summaries).className === firstClass.className, "valid class preference is restored");
+storageValues.set(classPreference.getStudentClassPreferenceKey(), JSON.stringify({ grade: "失效年级", className: "失效班级" }));
+assert(classPreference.loadStudentClassPreference(storage, options, summaries).className === firstClass.className, "invalid class preference falls back to first available class");
+
+const formalWithoutConfirmation = {
+  ...warnings.find((warning) => warning.currentStatus === "formal_warning"),
+  id: "WRN-MISSING-CONFIRMATION",
+  studentId: noCaseStudent.studentId,
+  studentName: noCaseStudent.studentName,
+  confirmedRiskLevel: undefined,
+};
+const inconsistentStudent = { ...noCaseStudent, warningCaseIds: [formalWithoutConfirmation.id] };
+assert(aggregate.buildStudentProfileDetail(inconsistentStudent, [...warnings, formalWithoutConfirmation]).dataIssues.some((issue) => issue.includes("缺少心理老师确认风险等级")), "missing confirmed level in formal stage is reported");
+
 const updatedWarning = actions.applyWarningAction(
   warnings.find((warning) => warning.id === "WRN-20260708-001"),
   { type: "continue_observation", values: { observationNote: "共享状态回归", nextReviewAt: "2026-07-16 10:00" } },
@@ -198,7 +255,12 @@ assert(sharedWarnings.find((warning) => warning.id === updatedWarning.warning.id
 
 const appSource = readFileSync("src/App.tsx", "utf8");
 const warningPageSource = readFileSync("src/components/warning/WarningManagementPage.tsx", "utf8");
+const confirmDialogSource = readFileSync("src/components/warning/ConfirmFormalWarningDialog.tsx", "utf8");
+const navigationSource = readFileSync("src/types/navigation.ts", "utf8");
 assert(appSource.includes("<AdminDataProvider>"), "provider is mounted above page switching");
+assert(appSource.includes("StudentProfileWarningReturnContext") && appSource.includes("profileState"), "app owns a typed profile return context");
+assert(["query", "page", "selectedStudentId", "drawerOpen", "drawerScrollTop"].every((field) => navigationSource.includes(`${field}:`)), "return context covers profile filters, page, selection, drawer, and scroll");
 assert(warningPageSource.includes("useAdminData()") && !warningPageSource.includes("warningMockData"), "warning page consumes shared state instead of a local mock copy");
+assert(confirmDialogSource.includes('["medium", "high", "critical"]') && !confirmDialogSource.includes('["low"'), "formal-warning confirmation excludes low risk");
 
 console.log(`student profile regression assertions: ${assertionCount} passed`);

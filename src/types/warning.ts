@@ -14,7 +14,7 @@ export type FeedbackStatus =
   | "feedback_overdue"
   | "new_feedback";
 
-export type RiskLevel = "medium" | "high" | "critical";
+export type RiskLevel = "low" | "medium" | "high" | "critical";
 
 export type WarningSourceType =
   | "screening_abnormal"
@@ -244,6 +244,7 @@ export const statusLabels: Record<StatusTabValue, string> = {
 };
 
 export const riskLevelLabels: Record<RiskLevel, string> = {
+  low: "低风险",
   medium: "中风险",
   high: "高风险",
   critical: "危险",

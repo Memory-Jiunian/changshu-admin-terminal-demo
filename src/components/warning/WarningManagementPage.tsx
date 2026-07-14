@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import { StudentRiskDrawer } from "@/components/warning/StudentRiskDrawer";
 import { WarningFilterBar } from "@/components/warning/WarningFilterBar";
 import { WarningTable } from "@/components/warning/WarningTable";
+import { Button } from "@/components/ui/button";
 import { applyConfirmFormalWarning, applyWarningAction } from "@/lib/warning-actions";
 import { getEffectiveFeedbackStatus } from "@/lib/warning-feedback";
 import { formatMockDateTime, WARNING_MOCK_TODAY } from "@/lib/warning-time";
@@ -96,7 +98,12 @@ function matchesAdvancedFilters(item: WarningItem, filters: AdvancedFilterValues
   );
 }
 
-export function WarningManagementPage() {
+type WarningManagementPageProps = {
+  initialSelectedWarningId?: string;
+  onReturnToStudentProfile?: () => void;
+};
+
+export function WarningManagementPage({ initialSelectedWarningId, onReturnToStudentProfile }: WarningManagementPageProps = {}) {
   const currentTime = formatMockDateTime();
   const { warnings, setWarnings } = useAdminData();
   const [activeStatus, setActiveStatus] = useState<StatusTabValue>("all");
@@ -105,7 +112,13 @@ export function WarningManagementPage() {
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterValues>(() =>
     getEmptyAdvancedFilters(),
   );
-  const [selectedWarningId, setSelectedWarningId] = useState<string | null>(null);
+  const [selectedWarningId, setSelectedWarningId] = useState<string | null>(initialSelectedWarningId ?? null);
+
+  useEffect(() => {
+    if (initialSelectedWarningId) {
+      setSelectedWarningId(initialSelectedWarningId);
+    }
+  }, [initialSelectedWarningId]);
 
   const selectedWarning = useMemo(
     () => warnings.find((warning) => warning.id === selectedWarningId) ?? null,
@@ -232,6 +245,14 @@ export function WarningManagementPage() {
 
   return (
     <div className="space-y-5">
+      {onReturnToStudentProfile ? (
+        <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-sm">
+          <div className="text-sm text-neutral-600">正在查看学生档案关联的预警事项</div>
+          <Button className="gap-2" onClick={onReturnToStudentProfile} type="button" variant="outline">
+            <ArrowLeft className="h-4 w-4" />返回学生档案
+          </Button>
+        </div>
+      ) : null}
       <WarningFilterBar
         advancedFilters={advancedFilters}
         advancedOptions={advancedOptions}

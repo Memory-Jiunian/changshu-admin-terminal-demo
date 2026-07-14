@@ -1,6 +1,7 @@
+import { useLayoutEffect, useRef } from "react";
+
 import { DETAIL_DRAWER_CLASS } from "@/components/layout/detail-view-config";
 import { StudentProfileDetailContent } from "@/components/student-profile/StudentProfileDetailContent";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import type { StudentProfileDetail } from "@/types/studentProfile";
@@ -9,9 +10,20 @@ type StudentProfileDrawerProps = {
   detail: StudentProfileDetail | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialScrollTop: number;
+  onScrollTopChange: (scrollTop: number) => void;
+  onViewWarning: (warningId: string) => void;
 };
 
-export function StudentProfileDrawer({ detail, open, onOpenChange }: StudentProfileDrawerProps) {
+export function StudentProfileDrawer({ detail, open, onOpenChange, initialScrollTop, onScrollTopChange, onViewWarning }: StudentProfileDrawerProps) {
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (open && bodyRef.current) {
+      bodyRef.current.scrollTop = initialScrollTop;
+    }
+  }, [detail?.student.studentId, initialScrollTop, open]);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       {detail ? (
@@ -22,9 +34,13 @@ export function StudentProfileDrawer({ detail, open, onOpenChange }: StudentProf
               {detail.student.studentName} · 学号 {detail.student.studentNumber}
             </SheetDescription>
           </SheetHeader>
-          <ScrollArea className="min-h-0 flex-1">
-            <StudentProfileDetailContent detail={detail} />
-          </ScrollArea>
+          <div
+            className="min-h-0 flex-1 overflow-y-auto"
+            onScroll={(event) => onScrollTopChange(event.currentTarget.scrollTop)}
+            ref={bodyRef}
+          >
+            <StudentProfileDetailContent detail={detail} onViewWarning={onViewWarning} />
+          </div>
         </SheetContent>
       ) : null}
     </Sheet>

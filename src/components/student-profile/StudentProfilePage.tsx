@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { StudentProfileDrawer } from "@/components/student-profile/StudentProfileDrawer";
 import { StudentProfileFilterBar } from "@/components/student-profile/StudentProfileFilterBar";
@@ -8,22 +8,52 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { studentProfileMockData } from "@/data/studentProfileMock";
 import { buildStudentProfileDetail, buildStudentProfileSummaries } from "@/lib/student-profile-aggregate";
-import { createDefaultStudentProfileFilterQuery, filterStudentProfiles, getStudentProfileFilterOptions } from "@/lib/student-profile-filters";
+import { getFirstAvailableClass, loadStudentClassPreference, saveStudentClassPreference } from "@/lib/student-profile-class-preference";
+import { cloneStudentProfileFilterQuery, createDefaultStudentProfileFilterQuery, filterStudentProfiles, getStudentProfileFilterOptions, paginateStudentProfiles } from "@/lib/student-profile-filters";
 import { useAdminData } from "@/state/AdminDataProvider";
+import type { StudentProfileReturnState } from "@/types/navigation";
+import { createDefaultStudentProfileAdvancedFilters } from "@/types/studentProfile";
 
 type LoadState = "ready" | "loading" | "error";
 
-export function StudentProfilePage({ initialLoadState = "ready" }: { initialLoadState?: LoadState }) {
+type StudentProfilePageProps = {
+  initialLoadState?: LoadState;
+  initialReturnState?: StudentProfileReturnState;
+  onOpenWarningDetail: (warningId: string, returnState: StudentProfileReturnState) => void;
+};
+
+export function StudentProfilePage({ initialLoadState = "ready", initialReturnState, onOpenWarningDetail }: StudentProfilePageProps) {
   const { warnings } = useAdminData();
-  const [query, setQuery] = useState(createDefaultStudentProfileFilterQuery);
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-  const [loadState, setLoadState] = useState<LoadState>(initialLoadState);
   const summaries = useMemo(
     () => buildStudentProfileSummaries(studentProfileMockData, warnings),
     [warnings],
   );
   const options = useMemo(() => getStudentProfileFilterOptions(summaries), [summaries]);
-  const profiles = useMemo(() => filterStudentProfiles(summaries, query), [query, summaries]);
+  const [query, setQuery] = useState(() => {
+    if (initialReturnState) {
+      return cloneStudentProfileFilterQuery(initialReturnState.query);
+    }
+
+    const initialClass = typeof window === "undefined"
+      ? getFirstAvailableClass(options)
+      : loadStudentClassPreference(window.localStorage, options, summaries);
+
+    return { ...createDefaultStudentProfileFilterQuery(), ...initialClass };
+  });
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
+    initialReturnState?.drawerOpen ? initialReturnState.selectedStudentId : null,
+  );
+  const [currentPage, setCurrentPage] = useState(initialReturnState?.page ?? 1);
+  const browsePageBeforeSearchRef = useRef(
+    initialReturnState?.browsePageBeforeSearch ?? initialReturnState?.page ?? 1,
+  );
+  const [drawerScrollTop, setDrawerScrollTop] = useState(initialReturnState?.drawerScrollTop ?? 0);
+  const [loadState, setLoadState] = useState<LoadState>(initialLoadState);
+  const filteredProfiles = useMemo(() => filterStudentProfiles(summaries, query), [query, summaries]);
+  const pagination = useMemo(
+    () => paginateStudentProfiles(filteredProfiles, currentPage),
+    [currentPage, filteredProfiles],
+  );
   const selectedStudent = useMemo(
     () => studentProfileMockData.find((student) => student.studentId === selectedStudentId),
     [selectedStudentId],
@@ -32,14 +62,70 @@ export function StudentProfilePage({ initialLoadState = "ready" }: { initialLoad
     () => selectedStudent ? buildStudentProfileDetail(selectedStudent, warnings) : null,
     [selectedStudent, warnings],
   );
-  const hasFilters = Boolean(query.keyword || query.grade || query.className ||
+  const hasFilters = Boolean(query.keyword ||
     query.advanced.riskLevel.length || query.advanced.warningStatus.length ||
-    query.advanced.hasActiveWarning.length || query.advanced.hasInterventionHistory.length ||
+    query.advanced.hasCurrentWarning.length || query.advanced.sourceType.length ||
+    query.advanced.hasFormalWarning.length || query.advanced.hasInterventionRecords.length ||
     query.advanced.responsiblePsychologist.length ||
     query.advanced.enrollmentStatus.length !== 1 || query.advanced.enrollmentStatus[0] !== "enrolled");
 
+  useEffect(() => {
+    if (pagination.currentPage !== currentPage) {
+      setCurrentPage(pagination.currentPage);
+    }
+  }, [currentPage, pagination.currentPage]);
+
   function resetAll() {
-    setQuery(createDefaultStudentProfileFilterQuery());
+    setQuery((current) => ({
+      ...current,
+      keyword: "",
+      advanced: createDefaultStudentProfileAdvancedFilters(),
+    }));
+    setCurrentPage(1);
+  }
+
+  function persistClass(grade: string, className: string) {
+    if (typeof window !== "undefined" && grade && className) {
+      saveStudentClassPreference(window.localStorage, { grade, className });
+    }
+  }
+
+  function handleGradeChange(grade: string) {
+    const className = options.classesByGrade[grade]?.[0] ?? "";
+    setQuery((current) => ({ ...current, grade, className }));
+    setCurrentPage(1);
+    persistClass(grade, className);
+  }
+
+  function handleClassChange(className: string) {
+    setQuery((current) => {
+      persistClass(current.grade, className);
+      return { ...current, className };
+    });
+    setCurrentPage(1);
+  }
+
+  function handleOpenWarningDetail(warningId: string) {
+    onOpenWarningDetail(warningId, {
+      query: cloneStudentProfileFilterQuery(query),
+      page: pagination.currentPage,
+      selectedStudentId,
+      drawerOpen: Boolean(selectedDetail),
+      drawerScrollTop,
+      browsePageBeforeSearch: browsePageBeforeSearchRef.current,
+    });
+  }
+
+  function handleKeywordChange(keyword: string) {
+    const hadKeyword = Boolean(query.keyword.trim());
+    const hasKeyword = Boolean(keyword.trim());
+
+    if (!hadKeyword && hasKeyword) {
+      browsePageBeforeSearchRef.current = pagination.currentPage;
+    }
+
+    setQuery((current) => ({ ...current, keyword }));
+    setCurrentPage(hadKeyword && !hasKeyword ? browsePageBeforeSearchRef.current : 1);
   }
 
   return (
@@ -63,10 +149,10 @@ export function StudentProfilePage({ initialLoadState = "ready" }: { initialLoad
         <>
           <Card className="overflow-hidden rounded-lg border-neutral-200 shadow-sm">
             <StudentProfileFilterBar
-              onAdvancedApply={(advanced) => setQuery((current) => ({ ...current, advanced }))}
-              onClassChange={(className) => setQuery((current) => ({ ...current, className }))}
-              onGradeChange={(grade) => setQuery((current) => ({ ...current, grade, className: "" }))}
-              onKeywordChange={(keyword) => setQuery((current) => ({ ...current, keyword }))}
+              onAdvancedApply={(advanced) => { setQuery((current) => ({ ...current, advanced })); setCurrentPage(1); }}
+              onClassChange={handleClassChange}
+              onGradeChange={handleGradeChange}
+              onKeywordChange={handleKeywordChange}
               onResetAll={resetAll}
               options={options}
               query={query}
@@ -74,15 +160,26 @@ export function StudentProfilePage({ initialLoadState = "ready" }: { initialLoad
           </Card>
           <StudentProfileTable
             hasFilters={hasFilters}
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalProfiles={filteredProfiles.length}
+            onPageChange={setCurrentPage}
             onReset={resetAll}
             onView={(profile) => setSelectedStudentId(profile.studentId)}
-            profiles={profiles}
+            profiles={pagination.items}
             selectedStudentId={selectedStudentId ?? undefined}
           />
         </>
       ) : null}
 
-      <StudentProfileDrawer detail={selectedDetail} open={Boolean(selectedDetail)} onOpenChange={(open) => { if (!open) setSelectedStudentId(null); }} />
+      <StudentProfileDrawer
+        detail={selectedDetail}
+        initialScrollTop={drawerScrollTop}
+        onOpenChange={(open) => { if (!open) { setSelectedStudentId(null); setDrawerScrollTop(0); } }}
+        onScrollTopChange={setDrawerScrollTop}
+        onViewWarning={handleOpenWarningDetail}
+        open={Boolean(selectedDetail)}
+      />
     </section>
   );
 }

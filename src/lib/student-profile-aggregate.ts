@@ -54,6 +54,9 @@ function buildCaseSummary(warning: WarningItem): StudentProfileCaseSummary {
     isActive,
     sourceType: warning.sourceType,
     riskLevel: getEffectiveRiskLevel(warning),
+    suggestedRiskLevel: warning.suggestedRiskLevel,
+    confirmedRiskLevel: warning.confirmedRiskLevel,
+    riskLevelAdjustmentReason: warning.riskLevelAdjustmentReason,
     currentStatus: warning.currentStatus,
     feedbackStatus: warning.feedbackStatus,
     responsibleTeacher: warning.responsibleTeacher,
@@ -111,6 +114,25 @@ function selectWarningsForStudent(
   }
 
   const activeWarnings = relatedWarnings.filter(isActiveProfileWarning);
+
+  const statusesRequiringConfirmedRisk = new Set([
+    "formal_warning",
+    "in_intervention",
+    "pending_retest",
+    "referral",
+    "closed",
+  ]);
+
+  for (const warning of relatedWarnings) {
+    if (
+      statusesRequiringConfirmedRisk.has(warning.currentStatus) &&
+      !warning.confirmedRiskLevel
+    ) {
+      dataIssues.push(
+        `事项 ${warning.id} 已进入正式预警或后续阶段，但缺少心理老师确认风险等级。`,
+      );
+    }
+  }
   if (activeWarnings.length > 1) {
     dataIssues.push(
       `检测到 ${activeWarnings.length} 条活动事项，当前临时展示最近更新的 ${activeWarnings[0].id}。`,
@@ -135,10 +157,14 @@ export function buildStudentProfileSummary(
 
   return {
     ...student,
-    hasActiveWarning: Boolean(activeWarning),
+    hasCurrentWarning: Boolean(activeWarning),
     activeRiskLevel: activeWarning ? getEffectiveRiskLevel(activeWarning) : undefined,
     activeWarningStatus: activeWarning?.currentStatus,
-    hasInterventionHistory: relatedWarnings.some(
+    sourceTypes: Array.from(new Set(relatedWarnings.map((warning) => warning.sourceType))),
+    hasFormalWarning: relatedWarnings.some(
+      (warning) => Boolean(warning.confirmedRiskLevel),
+    ),
+    hasInterventionRecords: relatedWarnings.some(
       (warning) => warning.interventionRecords.length > 0,
     ),
     currentResponsiblePsychologist: activeWarning?.responsibleTeacher,

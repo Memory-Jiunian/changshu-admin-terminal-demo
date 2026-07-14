@@ -62,7 +62,7 @@ const warningMockSeeds: WarningMockSeed[] = [
     gradeClass: "初一（5）班",
     sourceType: "screening_abnormal",
     evidenceTypes: ["deep_assessment", "ai_chat"],
-    suggestedRiskLevel: "medium",
+    suggestedRiskLevel: "low",
     currentStatus: "observing",
     observationNote: "补充评估未见即时危机表现，继续观察睡眠和到校变化。",
     nextReviewAt: "2026-07-10 10:00",

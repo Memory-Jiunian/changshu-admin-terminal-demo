@@ -388,12 +388,20 @@ When action fails:
 
 ## Current active scope
 
-Student profile Phase 5.2A is approved. Implement shared warning state,
-warning-derived profile summaries, and the core read-only drawer sections for
-student information, current overview, active case, enrollment history, and
-historical case summaries. Do not implement detailed professional record
-modules, fullscreen mode, or cross-module navigation until Phase 5.2B / 5.3 is
-approved.
+Student profile Phase 5.2A.1 is approved. Implement the five-column student
+list, grade/class browsing tabs, school-wide keyword search, pagination,
+refined profile filters, and the read-only core drawer information
+architecture. Detailed professional record modules and fullscreen remain out
+of scope.
+
+The only approved cross-module route in this slice is:
+
+`Student profile -> matching warning detail -> original student profile context`.
+
+App-level typed return context must restore the keyword, grade tab, class tab,
+advanced filters, page, selected student, drawer open state, and drawer scroll
+position. Do not add workbench/profile, warning/profile, archive/profile,
+re-test/profile, or other cross-module entry points.
 
 Student identity and enrollment history are stable student data. Current risk,
 current warning status, responsible psychological teacher, intervention-history
@@ -420,7 +428,8 @@ the warning-management ownership rules. Homeroom teachers, grade directors,
 and school leaders do not enter individual student profiles.
 
 The clue-pool page, workbench, detailed student profile record modules,
-fullscreen profile mode, cross-module navigation, organization CRUD, real
+fullscreen profile mode, PDF export, all cross-module navigation except the
+single approved profile-to-warning-detail round trip, organization CRUD, real
 permissions, real backend, and school-system synchronization remain out of scope.
 
 When a new page PRD is completed, update this section before implementation.

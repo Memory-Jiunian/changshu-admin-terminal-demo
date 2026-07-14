@@ -136,9 +136,27 @@ The clue pool remains an upstream future slice and is not the next implementatio
 - [x] Add historical case summaries
 - [x] Run regression / build / commit / push
 
-Active scope: Student profile Phase 5.2A: shared data foundation and core detail drawer.
-Do not implement detailed record modules, fullscreen, or cross-module navigation until Phase 5.2B / 5.3 is approved.
+Phase 5.2A shared data foundation and core detail drawer is complete. Detailed
+record modules and fullscreen remain deferred. Phase 5.2A.1 separately permits
+only the profile-to-warning-detail round trip described below.
 Warning business rules remain frozen.
+
+## Phase 5.2A.1: Student profile information architecture and filter semantics
+
+- [x] Split the table into name, number, grade, class, and action
+- [x] Replace grade/class selects with two-level tabs
+- [x] Persist the last valid class preference
+- [x] Add class browsing and school-wide keyword search
+- [x] Add 30-item pagination
+- [x] Add low risk without changing formal-warning confirmation
+- [x] Refine advanced filter semantics
+- [x] Merge the current overview into the active case
+- [x] Complete active and historical case summaries
+- [x] Add typed profile-to-warning return context
+- [x] Run warning regression / test / build / commit / push
+
+Active scope: Student profile Phase 5.2A.1 information architecture and filter semantics.
+Only profile-to-warning-detail-and-back navigation is approved. Detailed records, fullscreen, PDF export, and all other cross-module routes remain out of scope.
 
 ## Phase 6: Polish and validation
 

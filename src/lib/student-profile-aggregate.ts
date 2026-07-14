@@ -1,5 +1,6 @@
 import type {
   StudentProfileCaseSummary,
+  StudentProfileCaseDetail,
   StudentProfileDetail,
   StudentProfileRecord,
   StudentProfileSummary,
@@ -48,6 +49,9 @@ function buildCaseSummary(warning: WarningItem): StudentProfileCaseSummary {
     : warning.currentStatus === "closed"
       ? "closed"
       : "ended_without_warning";
+  const latestRetestConclusion = [...warning.retestRecords]
+    .sort((left, right) => right.arrangedAt.localeCompare(left.arrangedAt))
+    .find((record) => record.conclusion)?.conclusion;
 
   return {
     warningId: warning.id,
@@ -66,12 +70,59 @@ function buildCaseSummary(warning: WarningItem): StudentProfileCaseSummary {
     endedAt: getClosedAt(warning),
     outcome,
     outcomeDescription:
-      warning.endReason ?? closedEvent?.description ?? warning.latestActivity,
+      warning.endReason ?? latestRetestConclusion ?? closedEvent?.description ?? warning.latestActivity,
     feedbackCount: warning.feedbackRecords.length,
     interventionCount: warning.interventionRecords.length,
     retestCount: warning.retestRecords.length,
     referralCount: warning.referralRecords.length,
   };
+}
+
+export function buildStudentProfileCaseDetail(
+  warning: WarningItem,
+): StudentProfileCaseDetail {
+  return {
+    summary: buildCaseSummary(warning),
+    riskEvidence: {
+      sourceType: warning.sourceType,
+      evidenceTypes: [...warning.evidenceTypes],
+      suggestedRiskLevel: warning.suggestedRiskLevel,
+      confirmedRiskLevel: warning.confirmedRiskLevel,
+      effectiveRiskLevel: getEffectiveRiskLevel(warning),
+      riskLevelAdjustmentReason: warning.riskLevelAdjustmentReason,
+      assessmentSummary: warning.assessmentSummary,
+      aiSummary: warning.aiSummary,
+    },
+    headTeacher: {
+      name: warning.headTeacherName,
+      phone: warning.headTeacherPhone,
+    },
+    feedbackRequests: [...warning.feedbackRequests].sort((left, right) =>
+      right.requestedAt.localeCompare(left.requestedAt),
+    ),
+    feedbackRecords: [...warning.feedbackRecords].sort((left, right) =>
+      right.submittedAt.localeCompare(left.submittedAt),
+    ),
+    interventionRecords: [...warning.interventionRecords].sort((left, right) =>
+      right.occurredAt.localeCompare(left.occurredAt),
+    ),
+    retestRecords: [...warning.retestRecords].sort((left, right) =>
+      right.arrangedAt.localeCompare(left.arrangedAt),
+    ),
+    referralRecords: [...warning.referralRecords].sort((left, right) =>
+      right.referredAt.localeCompare(left.referredAt),
+    ),
+    timeline: [...warning.timeline].sort((left, right) =>
+      right.occurredAt.localeCompare(left.occurredAt),
+    ),
+  };
+}
+
+export function getStudentProfileCaseDetail(
+  detail: StudentProfileDetail,
+  warningId: string,
+) {
+  return detail.caseDetails[warningId];
 }
 
 function selectWarningsForStudent(
@@ -198,6 +249,12 @@ export function buildStudentProfileDetail(
     historicalCases: relatedWarnings
       .filter((warning) => !isActiveProfileWarning(warning))
       .map(buildCaseSummary),
+    caseDetails: Object.fromEntries(
+      relatedWarnings.map((warning) => [
+        warning.id,
+        buildStudentProfileCaseDetail(warning),
+      ]),
+    ),
     dataIssues,
   };
 }

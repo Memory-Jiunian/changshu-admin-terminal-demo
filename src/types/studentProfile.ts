@@ -1,8 +1,15 @@
 import type {
   FeedbackStatus,
   RiskLevel,
+  WarningEvidenceType,
+  WarningFeedbackRecord,
+  WarningFeedbackRequest,
+  WarningInterventionRecord,
+  WarningReferralRecord,
+  WarningRetestRecord,
   WarningSourceType,
   WarningStatus,
+  WarningTimelineItem,
 } from "@/types/warning";
 
 export type EnrollmentStatus = "enrolled" | "graduated" | "left_school";
@@ -73,13 +80,42 @@ export type StudentProfileCaseSummary = {
   referralCount: number;
 };
 
+export type StudentProfileCaseDetail = {
+  summary: StudentProfileCaseSummary;
+  riskEvidence: {
+    sourceType: WarningSourceType;
+    evidenceTypes: WarningEvidenceType[];
+    suggestedRiskLevel: RiskLevel;
+    confirmedRiskLevel?: RiskLevel;
+    effectiveRiskLevel: RiskLevel;
+    riskLevelAdjustmentReason?: string;
+    assessmentSummary: string;
+    aiSummary: string;
+  };
+  headTeacher: {
+    name: string;
+    phone: string;
+  };
+  feedbackRequests: WarningFeedbackRequest[];
+  feedbackRecords: WarningFeedbackRecord[];
+  interventionRecords: WarningInterventionRecord[];
+  retestRecords: WarningRetestRecord[];
+  referralRecords: WarningReferralRecord[];
+  timeline: WarningTimelineItem[];
+};
+
 export type StudentProfileDetail = {
   student: StudentProfileRecord;
   summary: StudentProfileSummary;
   activeCase?: StudentProfileCaseSummary;
   historicalCases: StudentProfileCaseSummary[];
+  caseDetails: Record<string, StudentProfileCaseDetail>;
   dataIssues: string[];
 };
+
+export type StudentProfileDrawerView =
+  | { type: "profile" }
+  | { type: "case_detail"; warningId: string };
 
 export type BooleanFilterValue = "yes" | "no";
 

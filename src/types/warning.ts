@@ -60,6 +60,19 @@ export type WarningRetestRecord = {
   resultSummary?: string;
   comparison?: string;
   conclusion?: string;
+  note?: string;
+};
+
+export type WarningDisposition = "active" | "ended_without_warning";
+
+export type WarningReferralRecord = {
+  id: string;
+  referredAt: string;
+  referralType: string;
+  organization?: string;
+  reason: string;
+  resultRecordedAt?: string;
+  resultSummary?: string;
 };
 
 export type WarningItem = {
@@ -84,12 +97,76 @@ export type WarningItem = {
   interventionRecords: WarningInterventionRecord[];
   retestRecords: WarningRetestRecord[];
   timeline: WarningTimelineItem[];
+  isActive: boolean;
+  disposition: WarningDisposition;
+  endedAt?: string;
+  endReason?: string;
+  observationNote?: string;
+  nextReviewAt?: string;
+  feedbackDeadline?: string;
+  feedbackRequestNote?: string;
+  referralRecords: WarningReferralRecord[];
 };
 
 export type ConfirmFormalWarningValues = {
   confirmedRiskLevel: RiskLevel;
   judgmentNote: string;
   riskLevelAdjustmentReason: string;
+};
+
+export type WarningActionType =
+  | "end_review"
+  | "continue_observation"
+  | "confirm_formal_warning"
+  | "request_feedback"
+  | "record_intervention"
+  | "add_intervention"
+  | "schedule_retest"
+  | "start_referral"
+  | "view_retest_result"
+  | "update_retest_status"
+  | "record_referral_result"
+  | "view_archive";
+
+export type RetestStatusOutcome = "close" | "continue_intervention" | "referral";
+
+export type WarningActionSubmission =
+  | { type: "end_review"; values: { endReason: string } }
+  | {
+      type: "continue_observation";
+      values: { observationNote: string; nextReviewAt: string };
+    }
+  | {
+      type: "request_feedback";
+      values: { feedbackRequestNote: string; feedbackDeadline: string };
+    }
+  | {
+      type: "record_intervention" | "add_intervention";
+      values: {
+        occurredAt: string;
+        method: string;
+        summary: string;
+        judgment: string;
+        followUpPlan: string;
+      };
+    }
+  | {
+      type: "schedule_retest";
+      values: { arrangedAt: string; plannedAt: string; note: string };
+    }
+  | {
+      type: "start_referral";
+      values: { referralType: string; organization: string; reason: string };
+    }
+  | {
+      type: "record_referral_result";
+      values: { resultRecordedAt: string; resultSummary: string };
+    }
+  | { type: "update_retest_status"; values: { outcome: RetestStatusOutcome } };
+
+export type WarningActionResponse = {
+  success: boolean;
+  message: string;
 };
 
 export type StatusTabValue = WarningStatus | "all";

@@ -1,7 +1,7 @@
 import { DETAIL_FULLSCREEN_CLASS } from "@/components/layout/detail-view-config";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { WarningDetailContent } from "@/components/warning/WarningDetailContent";
-import type { WarningItem } from "@/types/warning";
+import type { WarningActionType, WarningItem } from "@/types/warning";
 
 type WarningDetailFullscreenProps = {
   warning: WarningItem | null;
@@ -10,7 +10,7 @@ type WarningDetailFullscreenProps = {
   onOpenChange: (open: boolean) => void;
   onCloseDetail: () => void;
   onPlaceholderAction: (label: string) => void;
-  onConfirmFormalWarning: () => void;
+  onAction: (action: WarningActionType) => void;
 };
 
 export function WarningDetailFullscreen({
@@ -20,7 +20,7 @@ export function WarningDetailFullscreen({
   onOpenChange,
   onCloseDetail,
   onPlaceholderAction,
-  onConfirmFormalWarning,
+  onAction,
 }: WarningDetailFullscreenProps) {
   return (
     <Dialog onOpenChange={onOpenChange} open={open && Boolean(warning)}>
@@ -34,7 +34,7 @@ export function WarningDetailFullscreen({
             actionMessage={actionMessage}
             mode="fullscreen"
             onCloseDetail={onCloseDetail}
-            onConfirmFormalWarning={onConfirmFormalWarning}
+            onAction={onAction}
             onPlaceholderAction={onPlaceholderAction}
             onReturnToDrawer={() => onOpenChange(false)}
             warning={warning}

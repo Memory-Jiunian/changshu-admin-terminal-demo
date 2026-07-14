@@ -344,9 +344,9 @@ The selected row may be lightly highlighted.
 
 The drawer bottom actions change based on currentStatus.
 
-Action buttons must not call a real API. Phase 3.5 explicitly authorizes only
-the local mock transition for "Confirm formal warning". Other action buttons
-remain placeholders until a later task authorizes their state changes.
+Action buttons must not call a real API. Phase 4 authorizes the approved local
+mock transitions defined in `docs/specs/flows/warning-management-flow.md` and
+verified by `docs/tests/warning-action-acceptance.md`.
 
 When action succeeds:
 
@@ -366,8 +366,9 @@ When action fails:
 
 ## Current active scope
 
-Current active scope is Phase 3.5: warning workflow model calibration and
-student risk drawer correction.
+Warning management is frozen after Phase 4.5 regression. The next planned
+module is student profile, but it must not be implemented until its acceptance
+matrix and Codex task are approved.
 
 Only implement:
 
@@ -382,9 +383,9 @@ Only implement:
   - Referral
   - Closed
 
-The clue-pool page is not in scope. Phase 4 full local mock state changes have
-not started; only the Phase 3.5 formal-warning confirmation transition is
-authorized.
+The clue-pool page and student-profile page are not in scope. Approved warning
+actions use local mock state only; real APIs, permissions, and mini-program
+notifications remain out of scope.
 
 Do not implement other pages until their PRD is confirmed.
 

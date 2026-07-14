@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ export function ConfirmFormalWarningDialog({
   const [judgmentNote, setJudgmentNote] = useState("");
   const [adjustmentReason, setAdjustmentReason] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const submitLockedRef = useRef(false);
 
   useEffect(() => {
     if (open) {
@@ -44,6 +45,7 @@ export function ConfirmFormalWarningDialog({
       setJudgmentNote("");
       setAdjustmentReason("");
       setErrorMessage("");
+      submitLockedRef.current = false;
     }
   }, [open, warning?.id]);
 
@@ -55,6 +57,9 @@ export function ConfirmFormalWarningDialog({
     confirmedRiskLevel !== null && confirmedRiskLevel !== warning.suggestedRiskLevel;
 
   function handleSubmit() {
+    if (submitLockedRef.current) {
+      return;
+    }
     if (!confirmedRiskLevel) {
       setErrorMessage("请选择正式风险等级。");
       return;
@@ -65,6 +70,7 @@ export function ConfirmFormalWarningDialog({
       return;
     }
 
+    submitLockedRef.current = true;
     onConfirm({
       confirmedRiskLevel,
       judgmentNote: judgmentNote.trim(),

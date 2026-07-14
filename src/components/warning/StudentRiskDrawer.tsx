@@ -2,11 +2,23 @@ import { useEffect, useState } from "react";
 
 import { DETAIL_DRAWER_CLASS } from "@/components/layout/detail-view-config";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
+import { ArchiveRecordDialog } from "@/components/warning/ArchiveRecordDialog";
 import { ConfirmFormalWarningDialog } from "@/components/warning/ConfirmFormalWarningDialog";
+import { RetestResultDialog } from "@/components/warning/RetestResultDialog";
+import {
+  WarningActionDialog,
+  type WarningFormActionType,
+} from "@/components/warning/WarningActionDialog";
 import { WarningDetailContent } from "@/components/warning/WarningDetailContent";
 import { WarningDetailFullscreen } from "@/components/warning/WarningDetailFullscreen";
 import { cn } from "@/lib/utils";
-import type { ConfirmFormalWarningValues, WarningItem } from "@/types/warning";
+import type {
+  ConfirmFormalWarningValues,
+  WarningActionResponse,
+  WarningActionSubmission,
+  WarningActionType,
+  WarningItem,
+} from "@/types/warning";
 
 type StudentRiskDrawerProps = {
   warning: WarningItem | null;
@@ -16,6 +28,10 @@ type StudentRiskDrawerProps = {
     warningId: string,
     values: ConfirmFormalWarningValues,
   ) => void;
+  onAction: (
+    warningId: string,
+    submission: WarningActionSubmission,
+  ) => WarningActionResponse;
 };
 
 export function StudentRiskDrawer({
@@ -23,15 +39,22 @@ export function StudentRiskDrawer({
   open,
   onOpenChange,
   onConfirmFormalWarning,
+  onAction,
 }: StudentRiskDrawerProps) {
   const [actionMessage, setActionMessage] = useState("");
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
+  const [activeAction, setActiveAction] = useState<WarningFormActionType | null>(null);
+  const [retestResultOpen, setRetestResultOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
 
   useEffect(() => {
     setActionMessage("");
     setConfirmDialogOpen(false);
     setFullscreenOpen(false);
+    setActiveAction(null);
+    setRetestResultOpen(false);
+    setArchiveOpen(false);
   }, [warning?.id, open]);
 
   function handlePlaceholderAction(label: string) {
@@ -39,8 +62,8 @@ export function StudentRiskDrawer({
       return;
     }
 
-    console.log("Phase 3 drawer placeholder:", warning.id, label);
-    setActionMessage(`${label} 已触发，本阶段仅做占位反馈。`);
+    console.log("Warning detail read action:", warning.id, label);
+    setActionMessage(`${label} 为只读入口，不写入业务时间线。`);
   }
 
   function handleConfirm(values: ConfirmFormalWarningValues) {
@@ -55,6 +78,40 @@ export function StudentRiskDrawer({
   function handleCloseDetail() {
     setFullscreenOpen(false);
     onOpenChange(false);
+  }
+
+  function handleAction(action: WarningActionType) {
+    setActionMessage("");
+    if (action === "confirm_formal_warning") {
+      setConfirmDialogOpen(true);
+      return;
+    }
+    if (action === "view_retest_result") {
+      setRetestResultOpen(true);
+      return;
+    }
+    if (action === "view_archive") {
+      setArchiveOpen(true);
+      return;
+    }
+    setActiveAction(action);
+  }
+
+  function handleActionSubmit(submission: WarningActionSubmission): WarningActionResponse {
+    if (!warning) {
+      return { success: false, message: "未找到当前预警事项。" };
+    }
+    const result = onAction(warning.id, submission);
+    if (result.success) {
+      setActionMessage(result.message);
+      if (submission.type === "end_review") {
+        window.setTimeout(() => {
+          setFullscreenOpen(false);
+          onOpenChange(false);
+        }, 600);
+      }
+    }
+    return result;
   }
 
   return (
@@ -74,7 +131,7 @@ export function StudentRiskDrawer({
             <WarningDetailContent
               actionMessage={actionMessage}
               mode="drawer"
-              onConfirmFormalWarning={() => setConfirmDialogOpen(true)}
+              onAction={handleAction}
               onOpenFullscreen={() => setFullscreenOpen(true)}
               onPlaceholderAction={handlePlaceholderAction}
               warning={warning}
@@ -86,7 +143,7 @@ export function StudentRiskDrawer({
       <WarningDetailFullscreen
         actionMessage={actionMessage}
         onCloseDetail={handleCloseDetail}
-        onConfirmFormalWarning={() => setConfirmDialogOpen(true)}
+        onAction={handleAction}
         onOpenChange={setFullscreenOpen}
         onPlaceholderAction={handlePlaceholderAction}
         open={fullscreenOpen}
@@ -97,6 +154,30 @@ export function StudentRiskDrawer({
         onConfirm={handleConfirm}
         onOpenChange={setConfirmDialogOpen}
         open={confirmDialogOpen}
+        warning={warning}
+      />
+
+      <WarningActionDialog
+        action={activeAction}
+        onOpenChange={(dialogOpen) => {
+          if (!dialogOpen) {
+            setActiveAction(null);
+          }
+        }}
+        onSubmit={handleActionSubmit}
+        open={activeAction !== null}
+        warning={warning}
+      />
+
+      <RetestResultDialog
+        onOpenChange={setRetestResultOpen}
+        open={retestResultOpen}
+        warning={warning}
+      />
+
+      <ArchiveRecordDialog
+        onOpenChange={setArchiveOpen}
+        open={archiveOpen}
         warning={warning}
       />
     </>

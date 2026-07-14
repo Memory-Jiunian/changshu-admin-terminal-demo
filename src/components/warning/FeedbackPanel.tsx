@@ -39,15 +39,11 @@ function getSortedFeedbackRecords(records: WarningFeedbackRecord[]) {
 }
 
 function getEffectiveFeedbackStatus(warning: WarningItem): FeedbackStatus {
+  if (warning.feedbackStatus === "pending_feedback" || warning.feedbackStatus === "feedback_overdue") {
+    return warning.feedbackStatus;
+  }
+
   if (warning.feedbackRecords.length === 0) {
-    if (warning.feedbackStatus === "feedback_overdue") {
-      return "feedback_overdue";
-    }
-
-    if (warning.feedbackStatus === "pending_feedback") {
-      return "pending_feedback";
-    }
-
     return "not_requested";
   }
 

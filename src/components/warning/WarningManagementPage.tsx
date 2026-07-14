@@ -4,20 +4,22 @@ import { StudentRiskDrawer } from "@/components/warning/StudentRiskDrawer";
 import { WarningFilterBar } from "@/components/warning/WarningFilterBar";
 import { WarningTable } from "@/components/warning/WarningTable";
 import { warningMockData } from "@/data/warningMock";
+import { applyConfirmFormalWarning, applyWarningAction } from "@/lib/warning-actions";
+import { formatMockDateTime, WARNING_MOCK_TODAY } from "@/lib/warning-time";
 import {
   emptyAdvancedFilters,
   getEffectiveRiskLevel,
-  riskLevelLabels,
   type AdvancedFilterValues,
   type ConfirmFormalWarningValues,
   type QuickFilterValue,
   type StatusTabValue,
   type TimeRangeFilter,
+  type WarningActionResponse,
+  type WarningActionSubmission,
   type WarningItem,
 } from "@/types/warning";
 
 const currentTeacher = "陈老师";
-const today = "2026-07-08";
 
 function getEmptyAdvancedFilters(): AdvancedFilterValues {
   return {
@@ -37,7 +39,7 @@ function getUniqueValues(values: string[]) {
 
 function getDayDistanceFromToday(activityTime: string) {
   const activityDate = new Date(`${activityTime.slice(0, 10)}T00:00:00`);
-  const todayDate = new Date(`${today}T00:00:00`);
+  const todayDate = new Date(`${WARNING_MOCK_TODAY}T00:00:00`);
   const millisecondsPerDay = 24 * 60 * 60 * 1000;
 
   return Math.round((todayDate.getTime() - activityDate.getTime()) / millisecondsPerDay);
@@ -92,13 +94,6 @@ function matchesAdvancedFilters(item: WarningItem, filters: AdvancedFilterValues
   );
 }
 
-function formatMockDateTime(date: Date) {
-  const hour = String(date.getHours()).padStart(2, "0");
-  const minute = String(date.getMinutes()).padStart(2, "0");
-
-  return `${today} ${hour}:${minute}`;
-}
-
 export function WarningManagementPage() {
   const [warnings, setWarnings] = useState<WarningItem[]>(() => warningMockData);
   const [activeStatus, setActiveStatus] = useState<StatusTabValue>("all");
@@ -114,8 +109,13 @@ export function WarningManagementPage() {
     [selectedWarningId, warnings],
   );
 
+  const activeWarnings = useMemo(
+    () => warnings.filter((warning) => warning.isActive),
+    [warnings],
+  );
+
   const statusCounts = useMemo(() => {
-    return warnings.reduce(
+    return activeWarnings.reduce(
       (accumulator, item) => {
         accumulator[item.currentStatus] += 1;
         accumulator.all += 1;
@@ -132,20 +132,20 @@ export function WarningManagementPage() {
         closed: 0,
       } satisfies Record<StatusTabValue, number>,
     );
-  }, [warnings]);
+  }, [activeWarnings]);
 
   const advancedOptions = useMemo(
     () => ({
-      gradeClass: getUniqueValues(warnings.map((item) => item.gradeClass)),
-      responsibleTeacher: getUniqueValues(warnings.map((item) => item.responsibleTeacher)),
+      gradeClass: getUniqueValues(activeWarnings.map((item) => item.gradeClass)),
+      responsibleTeacher: getUniqueValues(activeWarnings.map((item) => item.responsibleTeacher)),
     }),
-    [warnings],
+    [activeWarnings],
   );
 
   const filteredWarnings = useMemo(() => {
     const keyword = searchValue.trim().toLowerCase();
 
-    return warnings.filter((item) => {
+    return activeWarnings.filter((item) => {
       const matchesStatus = activeStatus === "all" || item.currentStatus === activeStatus;
       const matchesSearch =
         keyword.length === 0 ||
@@ -168,7 +168,7 @@ export function WarningManagementPage() {
             return riskLevel === "high" || riskLevel === "critical";
           }
           case "today_new":
-            return item.activityTime.startsWith(today);
+            return item.activityTime.startsWith(WARNING_MOCK_TODAY);
           case "feedback_overdue":
             return item.feedbackStatus === "feedback_overdue";
           case "mine":
@@ -182,7 +182,7 @@ export function WarningManagementPage() {
 
       return matchesQuickFilter && matchesAdvancedFilters(item, advancedFilters);
     });
-  }, [activeQuickFilter, activeStatus, advancedFilters, searchValue, warnings]);
+  }, [activeQuickFilter, activeStatus, activeWarnings, advancedFilters, searchValue]);
 
   function handleQuickFilterChange(value: QuickFilterValue) {
     setActiveQuickFilter((current) => (current === value ? null : value));
@@ -196,46 +196,35 @@ export function WarningManagementPage() {
     warningId: string,
     values: ConfirmFormalWarningValues,
   ) {
-    const occurredAt = formatMockDateTime(new Date());
+    const occurredAt = formatMockDateTime();
 
     setWarnings((currentWarnings) =>
-      currentWarnings.map((warning) => {
-        if (warning.id !== warningId) {
-          return warning;
-        }
-
-        const confirmedLabel = riskLevelLabels[values.confirmedRiskLevel];
-        const adjustmentReason = values.riskLevelAdjustmentReason.trim();
-        const judgmentNote = values.judgmentNote.trim();
-        const descriptionParts = [
-          `心理老师完成复核，正式确认风险等级为${confirmedLabel}`,
-          adjustmentReason ? `调整理由：${adjustmentReason}` : "",
-          judgmentNote ? `判断说明：${judgmentNote}` : "",
-          "系统已同步生成班主任协作任务",
-        ].filter(Boolean);
-
-        return {
-          ...warning,
-          currentStatus: "formal_warning",
-          confirmedRiskLevel: values.confirmedRiskLevel,
-          riskLevelAdjustmentReason: adjustmentReason || undefined,
-          feedbackStatus: "pending_feedback",
-          hasUnreadFeedback: false,
-          latestActivity: "已确认正式预警",
-          activityTime: occurredAt,
-          timeline: [
-            {
-              id: `TL-${warning.id}-${Date.now()}`,
-              title: "确认正式预警",
-              operator: warning.responsibleTeacher,
-              occurredAt,
-              description: `${descriptionParts.join("；")}。`,
-            },
-            ...warning.timeline,
-          ],
-        };
-      }),
+      currentWarnings.map((warning) =>
+        warning.id === warningId
+          ? applyConfirmFormalWarning(warning, values, occurredAt)
+          : warning,
+      ),
     );
+  }
+
+  function handleWarningAction(
+    warningId: string,
+    submission: WarningActionSubmission,
+  ): WarningActionResponse {
+    const warning = warnings.find((item) => item.id === warningId);
+    if (!warning) {
+      return { success: false, message: "未找到当前预警事项。" };
+    }
+
+    const result = applyWarningAction(warning, submission, formatMockDateTime());
+    if (!result.success) {
+      return { success: false, message: result.message };
+    }
+
+    setWarnings((currentWarnings) =>
+      currentWarnings.map((item) => (item.id === warningId ? result.warning : item)),
+    );
+    return { success: true, message: result.message };
   }
 
   return (
@@ -260,6 +249,7 @@ export function WarningManagementPage() {
       />
 
       <StudentRiskDrawer
+        onAction={handleWarningAction}
         onConfirmFormalWarning={handleConfirmFormalWarning}
         onOpenChange={(drawerOpen) => {
           if (!drawerOpen) {

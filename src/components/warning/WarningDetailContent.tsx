@@ -10,14 +10,19 @@ import { ProcessTimeline } from "@/components/warning/ProcessTimeline";
 import { RetestRecords } from "@/components/warning/RetestRecords";
 import { RiskEvidence } from "@/components/warning/RiskEvidence";
 import { cn } from "@/lib/utils";
-import { statusLabels, type WarningItem, type WarningStatus } from "@/types/warning";
+import {
+  statusLabels,
+  type WarningActionType,
+  type WarningItem,
+  type WarningStatus,
+} from "@/types/warning";
 
 type WarningDetailContentProps = {
   warning: WarningItem;
   mode: "drawer" | "fullscreen";
   actionMessage: string;
   onPlaceholderAction: (label: string) => void;
-  onConfirmFormalWarning: () => void;
+  onAction: (action: WarningActionType) => void;
   onOpenFullscreen?: () => void;
   onReturnToDrawer?: () => void;
   onCloseDetail?: () => void;
@@ -83,7 +88,7 @@ export function WarningDetailContent({
   mode,
   actionMessage,
   onPlaceholderAction,
-  onConfirmFormalWarning,
+  onAction,
   onOpenFullscreen,
   onReturnToDrawer,
   onCloseDetail,
@@ -165,8 +170,7 @@ export function WarningDetailContent({
 
       <DrawerActionBar
         actionMessage={actionMessage}
-        onAction={onPlaceholderAction}
-        onConfirmFormalWarning={onConfirmFormalWarning}
+        onAction={onAction}
         status={warning.currentStatus}
       />
     </div>

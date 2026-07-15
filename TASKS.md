@@ -221,6 +221,20 @@ Phase 5.2B.1 is accepted as the Workbench W0 foundation. Warning business rules 
 
 Active scope: Workbench MVP based on shared warning data and the approved referral follow-up foundation. Do not reimplement referral migration, first-intervention tasks, completed-task history, task transfer, workbench actions, clue pool, or backend.
 
+## Phase W1.1: Workbench walkthrough corrections
+
+- [x] Cover six active task types in shared mock data
+- [x] Cover one same-day re-test reminder in shared mock data
+- [x] Add per-feedback psychologist read timestamps
+- [x] Replace render-time auto-read with explicit confirmation
+- [x] Share feedback read state across workbench and warning entry points
+- [x] Add unread-feedback drawer close protection
+- [x] Preserve feedback records and business timeline when marking read
+- [x] Record deferred intervention-task candidates without implementing them
+- [x] Run regression / build / HTTP smoke / commit / push
+
+Active scope: Workbench Phase W1.1 demo coverage and explicit feedback read confirmation. Do not implement first-intervention, intervention follow-up, intervention re-test, school overview, or new professional workflow rules.
+
 ## Phase 6: Polish and validation
 
 - [ ] Match prototype layout

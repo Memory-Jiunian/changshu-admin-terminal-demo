@@ -410,6 +410,12 @@ workbench derives six active task types and one separate same-day re-test
 reminder from shared warning data. It does not persist independent task state
 or perform professional warning actions.
 
+Phase W1.1 requires explicit feedback read confirmation. Rendering, scrolling
+to, or highlighting the feedback section must not mark feedback read. Both the
+workbench route and ordinary warning-management route use the same shared
+feedback-record read state. A workbench new-feedback drawer must guard closing
+while unread feedback remains, without writing a business timeline event.
+
 The approved cross-module routes are:
 
 `Student profile -> matching warning detail -> original student profile context`.

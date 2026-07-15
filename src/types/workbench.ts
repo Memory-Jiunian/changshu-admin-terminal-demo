@@ -6,14 +6,18 @@ export type WorkbenchTaskType =
   | "new_feedback"
   | "feedback_overdue"
   | "retest_result_pending"
-  | "referral_follow_up";
+  | "referral_follow_up"
+  | "intervention_unscheduled"
+  | "intervention_status_pending"
+  | "retest_status_pending";
 
-export type WorkbenchReminderType = "retest_plan_today";
+export type WorkbenchReminderType = "retest_plan_today" | "intervention_plan_upcoming";
 
 export type WarningDetailSection =
   | "overview"
   | "risk_evidence"
   | "feedback"
+  | "intervention"
   | "retest"
   | "referral"
   | "action_bar";
@@ -48,8 +52,9 @@ export type WorkbenchReminder = {
   responsibleTeacher: string;
   reason: string;
   plannedAt: string;
-  scaleNames: string[];
-  targetSection: "retest";
+  scaleNames?: string[];
+  location?: string;
+  targetSection: "retest" | "intervention";
 };
 
 export type WorkbenchDataIssue = {
@@ -87,6 +92,7 @@ export const warningDetailSections: WarningDetailSection[] = [
   "overview",
   "risk_evidence",
   "feedback",
+  "intervention",
   "retest",
   "referral",
   "action_bar",
@@ -99,6 +105,9 @@ export const workbenchTaskLabels: Record<WorkbenchTaskType, string> = {
   feedback_overdue: "反馈超时",
   retest_result_pending: "复测结果待更新",
   referral_follow_up: "转介跟进中",
+  intervention_unscheduled: "待安排干预",
+  intervention_status_pending: "干预情况待确认",
+  retest_status_pending: "复测情况待确认",
 };
 
 export const workbenchTaskSections: Record<WorkbenchTaskType, WarningDetailSection> = {
@@ -108,8 +117,12 @@ export const workbenchTaskSections: Record<WorkbenchTaskType, WarningDetailSecti
   feedback_overdue: "feedback",
   retest_result_pending: "retest",
   referral_follow_up: "referral",
+  intervention_unscheduled: "action_bar",
+  intervention_status_pending: "intervention",
+  retest_status_pending: "retest",
 };
 
-export const workbenchReminderSections: Record<WorkbenchReminderType, "retest"> = {
+export const workbenchReminderSections: Record<WorkbenchReminderType, "retest" | "intervention"> = {
   retest_plan_today: "retest",
+  intervention_plan_upcoming: "intervention",
 };

@@ -59,6 +59,7 @@ function fixture(id, overrides = {}) {
     feedbackRequests: [],
     hasUnreadFeedback: false,
     feedbackDeadline: undefined,
+    interventionAppointments: [],
     retestRecords: [],
     referralRecords: [],
     ...overrides,
@@ -71,26 +72,31 @@ const fixtures = [
   fixture("WRN-WB-001"),
   fixture("WRN-WB-002", { currentStatus: "observing", nextReviewAt: "2026-07-08 10:00", suggestedRiskLevel: "high" }),
   fixture("WRN-WB-003", { currentStatus: "formal_warning", feedbackRecords: [feedbackRecord], hasUnreadFeedback: true }),
-  fixture("WRN-WB-004", { currentStatus: "formal_warning", feedbackDeadline: "2026-07-07 17:00" }),
+  fixture("WRN-WB-004", { currentStatus: "formal_warning", feedbackDeadline: "2026-07-07 17:00", feedbackRequests: [{ id: "FQ-4", requestedAt: "2026-07-06 10:00", requestedBy: "陈老师", requestNote: "观察", deadline: "2026-07-07 17:00", status: "overdue" }] }),
   fixture("WRN-WB-005", { currentStatus: "pending_retest", retestRecords: [{ id: "RET-1", arrangedAt: "2026-07-01 09:00", plannedAt: "2026-07-08 09:00", completedAt: "2026-07-08 10:00", scaleIds: ["S-1"], scaleNames: ["量表一"], note: "" }] }),
   fixture("WRN-WB-006", { currentStatus: "pending_retest", retestRecords: [{ id: "RET-2", arrangedAt: "2026-07-01 09:00", plannedAt: "2026-07-08 15:00", scaleIds: ["S-1"], scaleNames: ["量表一"], note: "" }] }),
-  fixture("WRN-WB-007", { currentStatus: "referral", referralRecords: [{ ...referralRecord, followUpRecords: [{ id: "RFU-1", occurredAt: "2026-07-07 11:00", recordedBy: "陈老师", summary: "已联系机构" }] }] }),
+  fixture("WRN-WB-007", { currentStatus: "referral", referralRecords: [{ ...referralRecord, followUpRecords: [{ id: "RFU-1", occurredAt: "2026-07-07 11:00", authorName: "陈老师", summary: "已联系机构", conclusion: "继续跟进" }] }] }),
   fixture("WRN-WB-008", { responsibleTeacher: "周老师" }),
   fixture("WRN-WB-009", { isActive: false }),
   fixture("WRN-WB-010", { currentStatus: "closed" }),
+  fixture("WRN-WB-011", { currentStatus: "formal_warning" }),
+  fixture("WRN-WB-012", { currentStatus: "in_intervention", interventionAppointments: [{ id: "IA-12", plannedAt: "2026-07-07 15:00", location: "心理咨询室", responsibleTeacher: "陈老师", status: "planned", createdAt: "2026-07-06 10:00", createdBy: "陈老师", notificationOffsetsMinutes: [1440, 120] }] }),
+  fixture("WRN-WB-013", { currentStatus: "pending_retest", retestRecords: [{ id: "RET-3", arrangedAt: "2026-07-01 09:00", plannedAt: "2026-07-07 15:00", scaleIds: ["S-1"], scaleNames: ["量表一"], note: "" }] }),
+  fixture("WRN-WB-014", { currentStatus: "in_intervention", interventionAppointments: [{ id: "IA-14", plannedAt: "2026-07-09 10:00", location: "心理咨询室", responsibleTeacher: "陈老师", status: "planned", createdAt: "2026-07-08 09:00", createdBy: "陈老师", notificationOffsetsMinutes: [1440, 120] }] }),
 ];
 
 const result = tasks.buildWorkbenchItems({ warnings: fixtures, currentTeacher: "陈老师", currentTime });
-assert(result.tasks.length === 6, "six active task types are derived");
-assert(new Set(result.tasks.map((item) => item.type)).size === 6, "each active task type is covered");
-assert(result.reminders.length === 1 && result.reminders[0].type === "retest_plan_today", "one reminder type is derived separately");
+assert(new Set(result.tasks.map((item) => item.type)).size === 9, "all nine active task types are derived");
+assert(new Set(result.reminders.map((item) => item.type)).size === 2, "retest and intervention reminder types are derived separately");
 assert(result.tasks.every((item) => item.responsibleTeacher === "陈老师"), "other teachers are filtered");
 assert(!result.tasks.some((item) => item.warningId === "WRN-WB-009" || item.warningId === "WRN-WB-010"), "inactive and closed warnings are filtered");
 assert(!result.tasks.some((item) => item.warningId === "WRN-WB-006"), "today incomplete retest is reminder only");
 assert(result.tasks.find((item) => item.warningId === "WRN-WB-003")?.type === "new_feedback", "new feedback wins over overdue status");
 assert(result.tasks.find((item) => item.type === "referral_follow_up")?.isOverdue === false, "referral follow-up is never overdue");
+assert(fixtures.find((item) => item.id === "WRN-WB-012").interventionAppointments[0].status === "planned", "overdue appointment derivation never auto-marks no-show");
+assert(result.reminders.every((reminder) => !result.tasks.some((task) => task.id === reminder.id)), "reminders remain outside active task totals");
 assert(result.tasks.every((item) => item.id === `${item.warningId}:${item.type}`), "task IDs are stable");
-assert(result.reminders[0].id === `${result.reminders[0].warningId}:retest_plan_today`, "reminder ID is stable");
+assert(result.reminders.every((item) => item.id === `${item.warningId}:${item.type}`), "reminder IDs are stable");
 assert(result.tasks[0].isOverdue, "overdue task sorts first");
 assert(workbenchTypes.workbenchTaskSections.pending_review === "risk_evidence", "pending review targets evidence");
 assert(workbenchTypes.workbenchTaskSections.observation_due === "action_bar", "observation due targets action bar");
@@ -98,14 +104,15 @@ assert(workbenchTypes.workbenchTaskSections.new_feedback === "feedback", "new fe
 assert(workbenchTypes.workbenchTaskSections.feedback_overdue === "feedback", "feedback overdue targets feedback");
 assert(workbenchTypes.workbenchTaskSections.retest_result_pending === "retest", "retest result targets retest");
 assert(workbenchTypes.workbenchTaskSections.referral_follow_up === "referral", "referral targets referral");
-assert(workbenchTypes.warningDetailSections.length === 6, "six centralized detail section values exist");
+assert(workbenchTypes.workbenchTaskSections.intervention_status_pending === "intervention", "intervention status targets intervention");
+assert(workbenchTypes.workbenchTaskSections.retest_status_pending === "retest", "overdue retest targets retest");
+assert(workbenchTypes.warningDetailSections.length === 7, "seven centralized detail section values exist");
 
 const sharedMockResult = tasks.buildWorkbenchItems({ warnings: mock.warningMockData, currentTeacher: "陈老师", currentTime });
-assert(new Set(sharedMockResult.tasks.map((task) => task.type)).size === 6, "shared mock visibly covers all six task types");
+assert(new Set(sharedMockResult.tasks.map((task) => task.type)).size === 9, `shared mock visibly covers all Phase I1 task types: ${[...new Set(sharedMockResult.tasks.map((task) => task.type))].join(",")}`);
 assert(sharedMockResult.reminders.some((reminder) => reminder.type === "retest_plan_today"), "shared mock visibly covers today's retest reminder");
-assert(sharedMockResult.tasks.length === 6, "shared mock has one clear demo item for every active task type");
-assert(new Set(sharedMockResult.tasks.map((task) => task.studentId)).size === 6, "shared mock task demos use different students");
-assert(sharedMockResult.reminders.every((reminder) => reminder.targetSection === "retest"), "today reminders target the re-test section");
+assert(sharedMockResult.reminders.some((reminder) => reminder.type === "intervention_plan_upcoming"), "shared mock visibly covers an intervention reminder");
+assert(sharedMockResult.reminders.every((reminder) => ["retest", "intervention"].includes(reminder.targetSection)), "reminders target their real record sections");
 const sharedMockSnapshot = JSON.stringify(mock.warningMockData);
 tasks.buildWorkbenchItems({ warnings: mock.warningMockData, currentTeacher: "陈老师", currentTime });
 assert(JSON.stringify(mock.warningMockData) === sharedMockSnapshot, "viewing and deriving reminders does not mutate shared warnings");
@@ -141,7 +148,7 @@ const feedbackPanelSource = readFileSync("src/components/warning/FeedbackPanel.t
 const warningPageSource = readFileSync("src/components/warning/WarningManagementPage.tsx", "utf8");
 const reminderSource = readFileSync("src/components/workbench/WorkbenchReminderList.tsx", "utf8");
 const closeDialogSource = readFileSync("src/components/warning/UnreadFeedbackCloseDialog.tsx", "utf8");
-assert(workbenchTypes.warningDetailSections.every((section) => detailSource.includes(`data-warning-section=\"${section}\"`)), "all six anchors are attached to real detail DOM");
+assert(workbenchTypes.warningDetailSections.every((section) => detailSource.includes(`data-warning-section=\"${section}\"`)), "all seven anchors are attached to real detail DOM");
 assert(detailSource.includes("requestAnimationFrame") && detailSource.includes("scrollIntoView"), "targeting waits for render frame and scrolls real DOM");
 assert(detailSource.includes("requestedTarget ?? overviewTarget"), "missing target safely falls back to overview");
 assert(detailSource.includes("consumedTargetRef"), "a navigation target is consumed once");

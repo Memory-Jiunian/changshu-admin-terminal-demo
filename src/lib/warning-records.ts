@@ -84,6 +84,7 @@ export function migrateWarningReferralRecord(record: WarningReferralRecord): {
       occurredAt: record.resultRecordedAt,
       authorName: "负责心理老师",
       summary: record.resultSummary,
+      conclusion: "已记录外部转介反馈，事项继续跟进。",
     });
   } else if (Boolean(record.resultRecordedAt) !== Boolean(record.resultSummary)) {
     dataIssues.push(`转介记录 ${record.id} 的旧结果时间与摘要不完整，已保留原字段供核查。`);

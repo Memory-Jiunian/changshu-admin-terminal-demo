@@ -121,6 +121,30 @@ export type WarningInterventionRecord = {
   summary: string;
   judgment: string;
   followUpPlan: string;
+  appointmentId?: string;
+};
+
+export type AppointmentStatus =
+  | "planned"
+  | "completed"
+  | "no_show"
+  | "cancelled"
+  | "rescheduled";
+
+export type WarningInterventionAppointment = {
+  id: string;
+  plannedAt: string;
+  location: string;
+  responsibleTeacher: string;
+  escortTeacher?: string;
+  note?: string;
+  status: AppointmentStatus;
+  createdAt: string;
+  createdBy: string;
+  rescheduledFromId?: string;
+  notificationOffsetsMinutes: number[];
+  cancelledAt?: string;
+  cancellationReason?: string;
 };
 
 export type WarningRetestRecord = {
@@ -134,6 +158,8 @@ export type WarningRetestRecord = {
   comparison?: string;
   conclusion?: string;
   note?: string;
+  assessmentRecordId?: string;
+  appointmentStatus?: AppointmentStatus;
 };
 
 export type WarningDisposition = "active" | "ended_without_warning";
@@ -143,6 +169,7 @@ export type WarningReferralFollowUpRecord = {
   occurredAt: string;
   authorName: string;
   summary: string;
+  conclusion: string;
 };
 
 export type WarningReferralRecord = {
@@ -184,6 +211,7 @@ export type WarningItem = {
   feedbackRequests: WarningFeedbackRequest[];
   hasUnreadFeedback: boolean;
   interventionRecords: WarningInterventionRecord[];
+  interventionAppointments: WarningInterventionAppointment[];
   retestRecords: WarningRetestRecord[];
   timeline: WarningTimelineItem[];
   isActive: boolean;
@@ -212,6 +240,11 @@ export type WarningActionType =
   | "request_feedback"
   | "record_intervention"
   | "add_intervention"
+  | "schedule_intervention"
+  | "record_intervention_result"
+  | "mark_intervention_no_show"
+  | "reschedule_intervention"
+  | "cancel_intervention"
   | "schedule_retest"
   | "start_referral"
   | "view_retest_result"
@@ -220,12 +253,27 @@ export type WarningActionType =
   | "view_archive";
 
 export type RetestStatusOutcome = "close" | "continue_intervention" | "referral";
+export type InterventionNextPlan = "continue_intervention" | "schedule_retest" | "referral";
+
+export type InterventionAppointmentValues = {
+  plannedAt: string;
+  location: string;
+  responsibleTeacher: string;
+  escortTeacher: string;
+  note: string;
+  notificationOffsetsMinutes: number[];
+};
 
 export type WarningActionSubmission =
   | { type: "end_review"; values: { endReason: string } }
   | {
       type: "continue_observation";
-      values: { observationNote: string; nextReviewAt: string };
+      values: {
+        observationNote: string;
+        nextReviewAt: string;
+        feedbackRequestNote: string;
+        feedbackDeadline: string;
+      };
     }
   | {
       type: "request_feedback";
@@ -240,6 +288,37 @@ export type WarningActionSubmission =
         judgment: string;
         followUpPlan: string;
       };
+    }
+  | { type: "schedule_intervention"; values: InterventionAppointmentValues }
+  | {
+      type: "record_intervention_result";
+      values: {
+        appointmentId: string;
+        occurredAt: string;
+        method: string;
+        summary: string;
+        judgment: string;
+        nextPlan: InterventionNextPlan;
+        nextAppointment?: InterventionAppointmentValues;
+        requestFeedback: boolean;
+        feedbackRequestNote?: string;
+        feedbackDeadline?: string;
+        retest?: {
+          plannedAt: string;
+          scaleIds: string[];
+          scaleNames: string[];
+          note: string;
+        };
+        referral?: { referralType: string; organization: string; reason: string };
+      };
+    }
+  | {
+      type: "mark_intervention_no_show" | "reschedule_intervention";
+      values: { appointmentId: string; appointment: InterventionAppointmentValues };
+    }
+  | {
+      type: "cancel_intervention";
+      values: { appointmentId: string; reason: string };
     }
   | {
       type: "schedule_retest";
@@ -257,7 +336,7 @@ export type WarningActionSubmission =
     }
   | {
       type: "add_referral_follow_up";
-      values: { occurredAt: string; authorName: string; summary: string };
+      values: { occurredAt: string; authorName: string; summary: string; conclusion: string };
     }
   | { type: "update_retest_status"; values: { outcome: RetestStatusOutcome } };
 
@@ -309,7 +388,7 @@ export const statusLabels: Record<StatusTabValue, string> = {
   pending_review: "待复核",
   observing: "观察中",
   formal_warning: "正式预警",
-  in_intervention: "干预中",
+  in_intervention: "待干预",
   pending_retest: "待复测",
   referral: "转介中",
   closed: "已闭环",

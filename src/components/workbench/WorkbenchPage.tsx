@@ -13,7 +13,7 @@ import { useAdminData } from "@/state/AdminDataProvider";
 import { type WorkbenchNavigationTarget, type WorkbenchReminder, type WorkbenchReturnContext, type WorkbenchTask, type WorkbenchTaskFilter, type WorkbenchTaskType } from "@/types/workbench";
 
 const CURRENT_TEACHER = "陈老师";
-const taskTypes: WorkbenchTaskType[] = ["pending_review", "observation_due", "new_feedback", "feedback_overdue", "retest_result_pending", "referral_follow_up"];
+const taskTypes: WorkbenchTaskType[] = ["pending_review", "observation_due", "new_feedback", "feedback_overdue", "intervention_unscheduled", "intervention_status_pending", "retest_status_pending", "retest_result_pending", "referral_follow_up"];
 
 export function WorkbenchPage({ initialReturnContext, notice, onOpenWarning, loadState = "ready", onRetry }: { initialReturnContext?: WorkbenchReturnContext; notice?: string; onOpenWarning: (target: WorkbenchNavigationTarget) => void; loadState?: "ready" | "loading" | "error"; onRetry?: () => void }) {
   const { warnings } = useAdminData();

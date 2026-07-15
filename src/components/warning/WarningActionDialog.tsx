@@ -20,6 +20,7 @@ import type {
   WarningActionSubmission,
   WarningActionType,
   WarningItem,
+  InterventionNextPlan,
 } from "@/types/warning";
 
 export type WarningFormActionType = Exclude<
@@ -58,6 +59,14 @@ type FormState = {
   followUpOccurredAt: string;
   followUpAuthorName: string;
   followUpSummary: string;
+  followUpConclusion: string;
+  appointmentId: string;
+  appointmentPlannedAt: string;
+  appointmentLocation: string;
+  appointmentResponsibleTeacher: string;
+  appointmentEscortTeacher: string;
+  nextPlan: InterventionNextPlan | "";
+  requestFeedback: boolean;
   outcome: RetestStatusOutcome | "";
 };
 
@@ -67,6 +76,11 @@ const dialogTitles: Record<WarningFormActionType, string> = {
   request_feedback: "请求补充反馈",
   record_intervention: "记录干预",
   add_intervention: "新增干预记录",
+  schedule_intervention: "预约干预",
+  record_intervention_result: "记录干预结果",
+  mark_intervention_no_show: "未到场并改约",
+  reschedule_intervention: "改约干预",
+  cancel_intervention: "取消干预预约",
   schedule_retest: "安排复测",
   start_referral: "发起转介",
   update_retest_status: "更新复测后状态",
@@ -85,6 +99,11 @@ function getInitialForm(warning?: WarningItem | null): FormState {
     ? [...warning.retestRecords].sort((left, right) =>
         right.arrangedAt.localeCompare(left.arrangedAt),
       )[0]
+    : undefined;
+  const activeAppointment = warning
+    ? [...warning.interventionAppointments]
+        .filter((item) => item.status === "planned")
+        .sort((left, right) => right.plannedAt.localeCompare(left.plannedAt))[0]
     : undefined;
   return {
     endReason: "",
@@ -107,6 +126,14 @@ function getInitialForm(warning?: WarningItem | null): FormState {
     followUpOccurredAt: now,
     followUpAuthorName: warning?.responsibleTeacher ?? "",
     followUpSummary: "",
+    followUpConclusion: "",
+    appointmentId: activeAppointment?.id ?? "",
+    appointmentPlannedAt: "",
+    appointmentLocation: activeAppointment?.location ?? "心理咨询室",
+    appointmentResponsibleTeacher: warning?.responsibleTeacher ?? "",
+    appointmentEscortTeacher: warning?.headTeacherName ?? "",
+    nextPlan: "",
+    requestFeedback: true,
     outcome: "",
   };
 }
@@ -211,15 +238,23 @@ export function WarningActionDialog({
           ? { type: action, values: { endReason: form.endReason.trim() } }
           : null;
       case "continue_observation":
-        return requireFields(["observationNote", "nextReviewAt"])
-          ? {
-              type: action,
-              values: {
-                observationNote: form.observationNote.trim(),
-                nextReviewAt: formatDateTimeInput(form.nextReviewAt),
-              },
-            }
-          : null;
+        if (!requireFields(["observationNote", "nextReviewAt", "feedbackRequestNote", "feedbackDeadline"])) {
+          return null;
+        }
+        if (formatDateTimeInput(form.nextReviewAt) <= formatDateTimeInput(getMockDateTimeInput()) ||
+          formatDateTimeInput(form.feedbackDeadline) <= formatDateTimeInput(getMockDateTimeInput())) {
+          setErrors({ nextReviewAt: "时间必须晚于当前时间。", feedbackDeadline: "时间必须晚于当前时间。" });
+          return null;
+        }
+        return {
+          type: action,
+          values: {
+            observationNote: form.observationNote.trim(),
+            nextReviewAt: formatDateTimeInput(form.nextReviewAt),
+            feedbackRequestNote: form.feedbackRequestNote.trim(),
+            feedbackDeadline: formatDateTimeInput(form.feedbackDeadline),
+          },
+        };
       case "request_feedback":
         if (!requireFields(["feedbackRequestNote", "feedbackDeadline"])) {
           return null;
@@ -249,6 +284,91 @@ export function WarningActionDialog({
               },
             }
           : null;
+      case "schedule_intervention":
+      case "mark_intervention_no_show":
+      case "reschedule_intervention": {
+        const requiredFields: Array<keyof FormState> = [
+          "appointmentPlannedAt", "appointmentLocation", "appointmentResponsibleTeacher",
+        ];
+        if (action !== "schedule_intervention") requiredFields.push("appointmentId");
+        if (!requireFields(requiredFields)) return null;
+        const appointment = {
+          plannedAt: formatDateTimeInput(form.appointmentPlannedAt),
+          location: form.appointmentLocation.trim(),
+          responsibleTeacher: form.appointmentResponsibleTeacher.trim(),
+          escortTeacher: form.appointmentEscortTeacher.trim(),
+          note: form.note.trim(),
+          notificationOffsetsMinutes: [1440, 120],
+        };
+        if (appointment.plannedAt <= formatDateTimeInput(getMockDateTimeInput())) {
+          setErrors({ appointmentPlannedAt: "计划时间必须晚于当前时间。" });
+          return null;
+        }
+        return action === "schedule_intervention"
+          ? { type: action, values: appointment }
+          : { type: action, values: { appointmentId: form.appointmentId, appointment } };
+      }
+      case "cancel_intervention":
+        return requireFields(["appointmentId", "reason"])
+          ? { type: action, values: { appointmentId: form.appointmentId, reason: form.reason.trim() } }
+          : null;
+      case "record_intervention_result": {
+        if (!requireFields(["appointmentId", "occurredAt", "method", "summary", "judgment", "nextPlan"])) return null;
+        const base = {
+          appointmentId: form.appointmentId,
+          occurredAt: formatDateTimeInput(form.occurredAt),
+          method: form.method.trim(),
+          summary: form.summary.trim(),
+          judgment: form.judgment.trim(),
+          nextPlan: form.nextPlan as InterventionNextPlan,
+          requestFeedback: form.requestFeedback,
+        };
+        if (form.nextPlan === "continue_intervention") {
+          if (!requireFields(["appointmentPlannedAt", "appointmentLocation", "appointmentResponsibleTeacher"])) return null;
+          if (form.requestFeedback && !requireFields(["feedbackRequestNote", "feedbackDeadline"])) return null;
+          return {
+            type: action,
+            values: {
+              ...base,
+              nextAppointment: {
+                plannedAt: formatDateTimeInput(form.appointmentPlannedAt),
+                location: form.appointmentLocation.trim(),
+                responsibleTeacher: form.appointmentResponsibleTeacher.trim(),
+                escortTeacher: form.appointmentEscortTeacher.trim(),
+                note: form.note.trim(),
+                notificationOffsetsMinutes: [1440, 120],
+              },
+              feedbackRequestNote: form.feedbackRequestNote.trim(),
+              feedbackDeadline: form.feedbackDeadline ? formatDateTimeInput(form.feedbackDeadline) : undefined,
+            },
+          };
+        }
+        if (form.nextPlan === "schedule_retest") {
+          if (!requireFields(["plannedAt"]) || form.scaleIds.length === 0) return null;
+          return {
+            type: action,
+            values: {
+              ...base,
+              requestFeedback: false,
+              retest: {
+                plannedAt: formatDateTimeInput(form.plannedAt),
+                scaleIds: form.scaleIds,
+                scaleNames: assessmentScaleOptions.filter((item) => form.scaleIds.includes(item.id)).map((item) => item.name),
+                note: form.note.trim(),
+              },
+            },
+          };
+        }
+        if (!requireFields(["referralType", "reason"])) return null;
+        return {
+          type: action,
+          values: {
+            ...base,
+            requestFeedback: false,
+            referral: { referralType: form.referralType.trim(), organization: form.organization.trim(), reason: form.reason.trim() },
+          },
+        };
+      }
       case "schedule_retest":
         if (!requireFields(["arrangedAt", "plannedAt"])) {
           return null;
@@ -289,13 +409,14 @@ export function WarningActionDialog({
           setFormError("当前没有可跟进的转介记录。");
           return null;
         }
-        return requireFields(["followUpOccurredAt", "followUpAuthorName", "followUpSummary"])
+        return requireFields(["followUpOccurredAt", "followUpAuthorName", "followUpSummary", "followUpConclusion"])
           ? {
               type: action,
               values: {
                 occurredAt: formatDateTimeInput(form.followUpOccurredAt),
                 authorName: form.followUpAuthorName.trim(),
                 summary: form.followUpSummary.trim(),
+                conclusion: form.followUpConclusion.trim(),
               },
             }
           : null;
@@ -360,6 +481,16 @@ export function WarningActionDialog({
               <Field error={errors.nextReviewAt} label="下次复核时间" required>
                 <Input onChange={(event) => updateField("nextReviewAt", event.target.value)} type="datetime-local" value={form.nextReviewAt} />
               </Field>
+              <div className="grid grid-cols-2 gap-3 rounded-md bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+                <span>协作对象：{warning.headTeacherName}</span>
+                <span>联系电话：{warning.headTeacherPhone}</span>
+              </div>
+              <Field error={errors.feedbackRequestNote} label="观察反馈要求" required>
+                <TextArea onChange={(value) => updateField("feedbackRequestNote", value)} placeholder="说明需要班主任持续观察的事实内容" value={form.feedbackRequestNote} />
+              </Field>
+              <Field error={errors.feedbackDeadline} label="反馈截止时间" required>
+                <Input onChange={(event) => updateField("feedbackDeadline", event.target.value)} type="datetime-local" value={form.feedbackDeadline} />
+              </Field>
             </>
           ) : null}
 
@@ -395,6 +526,133 @@ export function WarningActionDialog({
               <Field error={errors.followUpPlan} label="后续计划" required>
                 <TextArea onChange={(value) => updateField("followUpPlan", value)} placeholder="记录后续跟进计划" value={form.followUpPlan} />
               </Field>
+            </>
+          ) : null}
+
+          {action === "schedule_intervention" || action === "mark_intervention_no_show" || action === "reschedule_intervention" ? (
+            <>
+              {action !== "schedule_intervention" ? (
+                <div className="rounded-md bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+                  原预约：{warning.interventionAppointments.find((item) => item.id === form.appointmentId)?.plannedAt ?? "未找到"}
+                </div>
+              ) : null}
+              <Field error={errors.appointmentPlannedAt} label={action === "schedule_intervention" ? "计划干预时间" : "新的干预时间"} required>
+                <Input onChange={(event) => updateField("appointmentPlannedAt", event.target.value)} type="datetime-local" value={form.appointmentPlannedAt} />
+              </Field>
+              <Field error={errors.appointmentLocation} label="干预地点" required>
+                <Input onChange={(event) => updateField("appointmentLocation", event.target.value)} value={form.appointmentLocation} />
+              </Field>
+              <Field error={errors.appointmentResponsibleTeacher} label="负责心理老师" required>
+                <Input onChange={(event) => updateField("appointmentResponsibleTeacher", event.target.value)} value={form.appointmentResponsibleTeacher} />
+              </Field>
+              <Field label="陪同老师">
+                <Input onChange={(event) => updateField("appointmentEscortTeacher", event.target.value)} value={form.appointmentEscortTeacher} />
+              </Field>
+              <Field label="补充说明">
+                <TextArea onChange={(value) => updateField("note", value)} placeholder="选填" value={form.note} />
+              </Field>
+              <div className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-800">
+                将生成提前 24 小时和 2 小时的模拟通知计划；当前 Demo 不发送真实通知。
+              </div>
+            </>
+          ) : null}
+
+          {action === "cancel_intervention" ? (
+            <>
+              <div className="rounded-md bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+                预约时间：{warning.interventionAppointments.find((item) => item.id === form.appointmentId)?.plannedAt ?? "未找到"}
+              </div>
+              <Field error={errors.reason} label="取消原因" required>
+                <TextArea onChange={(value) => updateField("reason", value)} placeholder="说明本次取消原因" value={form.reason} />
+              </Field>
+            </>
+          ) : null}
+
+          {action === "record_intervention_result" ? (
+            <>
+              <div className="rounded-md bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+                当前预约：{warning.interventionAppointments.find((item) => item.id === form.appointmentId)?.plannedAt ?? "未找到"}
+              </div>
+              <Field error={errors.occurredAt} label="实际干预时间" required>
+                <Input onChange={(event) => updateField("occurredAt", event.target.value)} type="datetime-local" value={form.occurredAt} />
+              </Field>
+              <Field error={errors.method} label="干预方式" required>
+                <Input onChange={(event) => updateField("method", event.target.value)} placeholder="例如：个体访谈" value={form.method} />
+              </Field>
+              <Field error={errors.summary} label="情况摘要" required>
+                <TextArea onChange={(value) => updateField("summary", value)} placeholder="记录本次干预事实" value={form.summary} />
+              </Field>
+              <Field error={errors.judgment} label="本次判断" required>
+                <TextArea onChange={(value) => updateField("judgment", value)} placeholder="记录心理老师专业结论" value={form.judgment} />
+              </Field>
+              <Field error={errors.nextPlan} label="下一步计划" required>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    ["continue_intervention", "继续干预"],
+                    ["schedule_retest", "安排复测"],
+                    ["referral", "发起转介"],
+                  ] as const).map(([value, label]) => (
+                    <Button className={cn(form.nextPlan === value && "bg-neutral-900 text-white hover:bg-neutral-800")} key={value} onClick={() => updateField("nextPlan", value)} type="button" variant="outline">{label}</Button>
+                  ))}
+                </div>
+              </Field>
+
+              {form.nextPlan === "continue_intervention" ? (
+                <>
+                  <Field error={errors.appointmentPlannedAt} label="下一次干预时间" required>
+                    <Input onChange={(event) => updateField("appointmentPlannedAt", event.target.value)} type="datetime-local" value={form.appointmentPlannedAt} />
+                  </Field>
+                  <Field error={errors.appointmentLocation} label="干预地点" required>
+                    <Input onChange={(event) => updateField("appointmentLocation", event.target.value)} value={form.appointmentLocation} />
+                  </Field>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field error={errors.appointmentResponsibleTeacher} label="负责心理老师" required>
+                      <Input onChange={(event) => updateField("appointmentResponsibleTeacher", event.target.value)} value={form.appointmentResponsibleTeacher} />
+                    </Field>
+                    <Field label="陪同老师">
+                      <Input onChange={(event) => updateField("appointmentEscortTeacher", event.target.value)} value={form.appointmentEscortTeacher} />
+                    </Field>
+                  </div>
+                  <label className="flex items-center gap-2 rounded-md border border-neutral-200 p-3 text-sm">
+                    <input checked={form.requestFeedback} onChange={(event) => updateField("requestFeedback", event.target.checked)} type="checkbox" />
+                    同时请求班主任反馈（默认开启）
+                  </label>
+                  {form.requestFeedback ? (
+                    <>
+                      <Field error={errors.feedbackRequestNote} label="反馈要求" required>
+                        <TextArea onChange={(value) => updateField("feedbackRequestNote", value)} placeholder="说明需要班主任观察的事实内容" value={form.feedbackRequestNote} />
+                      </Field>
+                      <Field error={errors.feedbackDeadline} label="反馈截止时间" required>
+                        <Input onChange={(event) => updateField("feedbackDeadline", event.target.value)} type="datetime-local" value={form.feedbackDeadline} />
+                      </Field>
+                    </>
+                  ) : null}
+                </>
+              ) : null}
+
+              {form.nextPlan === "schedule_retest" ? (
+                <>
+                  <Field error={errors.scaleIds} label="复测量表" required>
+                    <div className="grid gap-2">
+                      {assessmentScaleOptions.map((scale) => {
+                        const selected = form.scaleIds.includes(scale.id);
+                        return <Button className={cn("justify-start", selected && "bg-neutral-900 text-white hover:bg-neutral-800")} key={scale.id} onClick={() => updateField("scaleIds", selected ? form.scaleIds.filter((id) => id !== scale.id) : [...form.scaleIds, scale.id])} type="button" variant="outline">{scale.name}</Button>;
+                      })}
+                    </div>
+                  </Field>
+                  <Field error={errors.plannedAt} label="计划复测时间" required>
+                    <Input onChange={(event) => updateField("plannedAt", event.target.value)} type="datetime-local" value={form.plannedAt} />
+                  </Field>
+                </>
+              ) : null}
+
+              {form.nextPlan === "referral" ? (
+                <>
+                  <Field error={errors.referralType} label="转介类型" required><Input onChange={(event) => updateField("referralType", event.target.value)} value={form.referralType} /></Field>
+                  <Field label="转介机构"><Input onChange={(event) => updateField("organization", event.target.value)} value={form.organization} /></Field>
+                  <Field error={errors.reason} label="转介原因" required><TextArea onChange={(value) => updateField("reason", value)} placeholder="记录专业依据" value={form.reason} /></Field>
+                </>
+              ) : null}
             </>
           ) : null}
 
@@ -464,6 +722,9 @@ export function WarningActionDialog({
               </Field>
               <Field error={errors.followUpSummary} label="跟进摘要" required>
                 <TextArea onChange={(value) => updateField("followUpSummary", value)} placeholder="记录本次外部转介跟进情况" value={form.followUpSummary} />
+              </Field>
+              <Field error={errors.followUpConclusion} label="专业结论" required>
+                <TextArea onChange={(value) => updateField("followUpConclusion", value)} placeholder="记录心理老师对本次跟进的专业结论" value={form.followUpConclusion} />
               </Field>
             </>
           ) : null}

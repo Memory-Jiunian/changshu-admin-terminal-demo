@@ -284,7 +284,7 @@ assert(aggregate.buildStudentProfileDetail(inconsistentStudent, [...warnings, fo
 
 const updatedWarning = actions.applyWarningAction(
   warnings.find((warning) => warning.id === "WRN-20260708-001"),
-  { type: "continue_observation", values: { observationNote: "共享状态回归", nextReviewAt: "2026-07-16 10:00" } },
+  { type: "continue_observation", values: { observationNote: "共享状态回归", nextReviewAt: "2026-07-16 10:00", feedbackRequestNote: "请观察到校和课堂参与", feedbackDeadline: "2026-07-15 17:00" } },
   "2026-07-14 12:00",
 );
 assert(updatedWarning.success, "warning action succeeds in shared-state scenario");
@@ -314,6 +314,7 @@ const archiveSource = readFileSync("src/components/warning/ArchiveRecordDialog.t
 const activeCaseSource = readFileSync("src/components/student-profile/StudentActiveCase.tsx", "utf8");
 const historyCaseSource = readFileSync("src/components/student-profile/StudentCaseSummaryList.tsx", "utf8");
 const retestSectionSource = readFileSync("src/components/case-records/CaseRetestSection.tsx", "utf8");
+const interventionSectionSource = readFileSync("src/components/case-records/CaseInterventionSection.tsx", "utf8");
 const exportDialogSource = readFileSync("src/components/student-profile/StudentProfileExportDialog.tsx", "utf8");
 const exportReportSource = readFileSync("src/components/student-profile/StudentProfilePrintableReport.tsx", "utf8");
 assert(appSource.includes("<AdminDataProvider>"), "provider is mounted above page switching");
@@ -328,6 +329,10 @@ assert(richCase.riskEvidence.deepAssessmentRecords.some((record) => record.respo
 assert(richCase.riskEvidence.aiConversationRecords.some((record) => record.messages.length > 0), "case detail exposes visible AI messages from warning data");
 assert(richCase.feedbackCollaboration.rounds.length > 0 && richCase.timeline.some((item) => item.id.startsWith("TL-FEEDBACK-")), "case detail derives feedback rounds and feedback timeline events");
 assert(referralCase.referralRecords.some((record) => record.followUpRecords.length > 0), "legacy referral results migrate to follow-up records");
+assert(richCase.interventionAppointments.length > 0 && interventionSectionSource.includes("改约来源") && interventionSectionSource.includes("通知计划"), "profile and archive share complete intervention appointment history");
+assert(richCase.retestRecords.filter((record) => record.completedAt).every((record) => record.assessmentRecordId), "profile retests link complete assessment responses");
+assert(referralCase.referralRecords.flatMap((record) => record.followUpRecords).every((record) => record.conclusion), "profile referral follow-ups include professional conclusions");
+assert(exportReportSource.includes("interventionAppointments") && exportReportSource.includes("assessmentRecordId") && exportReportSource.includes("followUp.conclusion"), "export synchronizes appointments, retest links, and referral conclusions");
 assert(exportDialogSource.includes('type="checkbox"') && exportDialogSource.includes("window.print()"), "profile export requires explicit sensitive-record selection and uses browser print");
 assert(exportReportSource.includes("includeSensitiveSourceRecords") && !exportReportSource.includes("html2canvas"), "export report excludes sensitive source records by default and avoids screenshots");
 

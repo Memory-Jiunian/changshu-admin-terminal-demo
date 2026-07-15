@@ -27,7 +27,8 @@ export function CaseReferralSection({ detail }: { detail: StudentProfileCaseDeta
                   {record.followUpRecords.length ? <div className="space-y-2">{record.followUpRecords.map((item) => (
                     <div className="rounded border border-neutral-200 bg-white p-2" key={item.id}>
                       <div className="flex justify-between gap-3 text-xs text-neutral-500"><strong className="text-neutral-900">{item.authorName}</strong><span>{item.occurredAt}</span></div>
-                      <p className="mt-1 text-sm leading-6 text-neutral-700">{item.summary}</p>
+                      <p className="mt-1 text-sm leading-6 text-neutral-700">事实摘要：{item.summary}</p>
+                      <p className="mt-1 text-sm leading-6 text-neutral-700">专业结论：{item.conclusion}</p>
                     </div>
                   ))}</div> : <CaseRecordEmptyState text="尚无转介跟进" />}
                 </div>

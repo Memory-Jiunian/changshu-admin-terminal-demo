@@ -67,7 +67,9 @@ function shouldShowFeedback(status: WarningStatus) {
 
 function shouldShowInterventionRecords(warning: WarningItem) {
   return (
-    interventionStatuses.includes(warning.currentStatus) || warning.interventionRecords.length > 0
+    interventionStatuses.includes(warning.currentStatus) ||
+    warning.interventionRecords.length > 0 ||
+    warning.interventionAppointments.length > 0
   );
 }
 
@@ -117,7 +119,7 @@ export function WarningDetailContent({
     <FeedbackPanel currentTime={currentTime} onMarkFeedbackRead={onMarkFeedbackRead} warning={warning} />
   ) : null;
   const interventions = shouldShowInterventionRecords(warning) ? (
-    <InterventionRecords records={warning.interventionRecords} />
+    <InterventionRecords appointments={warning.interventionAppointments} records={warning.interventionRecords} />
   ) : null;
 
   useLayoutEffect(() => {
@@ -205,7 +207,7 @@ export function WarningDetailContent({
                 {feedback ? <div className={sectionClass("feedback")} data-warning-section="feedback" onAnimationEnd={() => setHighlightedSection(null)}>{feedback}</div> : null}
               </div>
               <div className="space-y-4">
-                {interventions}
+                {interventions ? <div className={sectionClass("intervention")} data-warning-section="intervention" onAnimationEnd={() => setHighlightedSection(null)}>{interventions}</div> : null}
                 <div className={sectionClass("retest")} data-warning-section="retest" onAnimationEnd={() => setHighlightedSection(null)}><RetestRecords records={warning.retestRecords} /></div>
                 {warning.referralRecords.length ? <div className={sectionClass("referral")} data-warning-section="referral" onAnimationEnd={() => setHighlightedSection(null)}><ReferralRecords warning={warning} /></div> : null}
                 <ProcessTimeline items={buildEffectiveWarningTimeline(warning)} />
@@ -216,7 +218,7 @@ export function WarningDetailContent({
               <div className={sectionClass("overview")} data-warning-section="overview" onAnimationEnd={() => setHighlightedSection(null)}><StudentOverview warning={warning} /></div>
               <div className={sectionClass("risk_evidence")} data-warning-section="risk_evidence" onAnimationEnd={() => setHighlightedSection(null)}><RiskEvidence warning={warning} /></div>
               {feedback ? <div className={sectionClass("feedback")} data-warning-section="feedback" onAnimationEnd={() => setHighlightedSection(null)}>{feedback}</div> : null}
-              {interventions}
+              {interventions ? <div className={sectionClass("intervention")} data-warning-section="intervention" onAnimationEnd={() => setHighlightedSection(null)}>{interventions}</div> : null}
               <div className={sectionClass("retest")} data-warning-section="retest" onAnimationEnd={() => setHighlightedSection(null)}><RetestRecords records={warning.retestRecords} /></div>
               {warning.referralRecords.length ? <div className={sectionClass("referral")} data-warning-section="referral" onAnimationEnd={() => setHighlightedSection(null)}><ReferralRecords warning={warning} /></div> : null}
               <ProcessTimeline items={buildEffectiveWarningTimeline(warning)} />

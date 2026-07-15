@@ -21,6 +21,12 @@ function datePart(value: string) {
   return value.slice(0, 10);
 }
 
+function nextDate(value: string) {
+  const date = new Date(`${value}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + 1);
+  return date.toISOString().slice(0, 10);
+}
+
 function isValidDateTime(value?: string) {
   return Boolean(value && /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/.test(value));
 }
@@ -120,7 +126,9 @@ export function buildWorkbenchItems({
         dataIssues.push({ id: `${warning.id}:missing-retest`, warningId: warning.id, message: "待复测事项缺少复测记录。" });
       } else if (latestRetest.completedAt) {
         tasks.push(makeTask(warning, "retest_result_pending", "学生已完成复测，等待心理老师更新状态。", latestRetest.completedAt, currentDate));
-      } else if (datePart(latestRetest.plannedAt) === currentDate) {
+      } else if (latestRetest.plannedAt < currentTime) {
+        tasks.push(makeTask(warning, "retest_status_pending", "计划复测时间已过，等待确认学生完成情况。", latestRetest.plannedAt, currentDate, latestRetest.plannedAt));
+      } else if ([currentDate, nextDate(currentDate)].includes(datePart(latestRetest.plannedAt))) {
         reminders.push({
           id: `${warning.id}:retest_plan_today`, kind: "reminder", type: "retest_plan_today",
           warningId: warning.id, studentId: warning.studentId, studentName: warning.studentName,
@@ -128,6 +136,30 @@ export function buildWorkbenchItems({
           responsibleTeacher: warning.responsibleTeacher, reason: "学生计划今天完成复测。",
           plannedAt: latestRetest.plannedAt, scaleNames: [...latestRetest.scaleNames],
           targetSection: workbenchReminderSections.retest_plan_today,
+        });
+      }
+    }
+
+    const plannedAppointments = warning.interventionAppointments
+      .filter((appointment) => appointment.status === "planned")
+      .sort((left, right) => right.plannedAt.localeCompare(left.plannedAt));
+    const activeAppointment = plannedAppointments[0];
+    if (warning.currentStatus === "formal_warning" && !activeAppointment) {
+      tasks.push(makeTask(warning, "intervention_unscheduled", "事项已形成正式预警，尚未安排首次干预。", warning.activityTime, currentDate));
+    }
+    if (warning.currentStatus === "in_intervention") {
+      if (!activeAppointment) {
+        dataIssues.push({ id: `${warning.id}:missing-intervention-appointment`, warningId: warning.id, message: "待干预事项没有有效预约，请尽快重新安排。" });
+      } else if (activeAppointment.plannedAt < currentTime) {
+        tasks.push(makeTask(warning, "intervention_status_pending", "干预预约时间已过，等待确认完成、未到场或改约。", activeAppointment.plannedAt, currentDate, activeAppointment.plannedAt));
+      } else if ([currentDate, nextDate(currentDate)].includes(datePart(activeAppointment.plannedAt))) {
+        reminders.push({
+          id: `${warning.id}:intervention_plan_upcoming`, kind: "reminder", type: "intervention_plan_upcoming",
+          warningId: warning.id, studentId: warning.studentId, studentName: warning.studentName,
+          gradeClass: warning.gradeClass, riskLevel: getEffectiveRiskLevel(warning),
+          responsibleTeacher: warning.responsibleTeacher, reason: "学生有今日或次日干预预约。",
+          plannedAt: activeAppointment.plannedAt, location: activeAppointment.location,
+          targetSection: workbenchReminderSections.intervention_plan_upcoming,
         });
       }
     }

@@ -50,35 +50,46 @@ export function getEffectiveFeedbackStatus(
   warning: WarningItem,
   currentTime: string,
 ): FeedbackStatus {
-  if (warning.feedbackRecords.length > 0) {
-    return hasUnreadWarningFeedback(warning) ? "new_feedback" : "feedback_received";
-  }
+  if (hasUnreadWarningFeedback(warning)) return "new_feedback";
 
-  if (!warning.feedbackDeadline) {
-    return "not_requested";
+  const activeRequest = [...warning.feedbackRequests]
+    .filter((request) => request.status === "pending")
+    .sort((left, right) => right.requestedAt.localeCompare(left.requestedAt))[0];
+  if (activeRequest) {
+    return currentTime > activeRequest.deadline ? "feedback_overdue" : "pending_feedback";
   }
-
-  return currentTime > warning.feedbackDeadline ? "feedback_overdue" : "pending_feedback";
+  const latestRequest = [...warning.feedbackRequests]
+    .sort((left, right) => right.requestedAt.localeCompare(left.requestedAt))[0];
+  if (latestRequest?.status === "overdue") return "feedback_overdue";
+  if (warning.feedbackRecords.length > 0) return "feedback_received";
+  return "not_requested";
 }
 
 export function getFeedbackActionAvailability(
   warning: WarningItem,
   currentTime: string,
 ): FeedbackActionAvailability {
-  if (warning.currentStatus !== "formal_warning" || warning.feedbackRecords.length > 0) {
+  if (warning.currentStatus !== "formal_warning") {
     return { kind: "hidden", label: "请求补充反馈", disabled: true, message: "" };
   }
 
-  const status = getEffectiveFeedbackStatus(warning, currentTime);
-  if (status === "pending_feedback") {
+  const activeRequest = [...warning.feedbackRequests]
+    .filter((request) => request.status === "pending")
+    .sort((left, right) => right.requestedAt.localeCompare(left.requestedAt))[0];
+  if (activeRequest && currentTime <= activeRequest.deadline) {
     return {
       kind: "waiting",
       label: "等待反馈",
       disabled: true,
-      message: `当前反馈任务正在进行中，请等待班主任在 ${warning.feedbackDeadline} 前提交反馈。`,
+      message: `当前反馈任务正在进行中，请等待班主任在 ${activeRequest.deadline} 前提交反馈。`,
     };
   }
-  if (status === "feedback_overdue") {
+  if (activeRequest) {
+    return { kind: "rerequest", label: "重新请求反馈", disabled: false, message: "" };
+  }
+  const latestRequest = [...warning.feedbackRequests]
+    .sort((left, right) => right.requestedAt.localeCompare(left.requestedAt))[0];
+  if (latestRequest?.status === "overdue") {
     return { kind: "rerequest", label: "重新请求反馈", disabled: false, message: "" };
   }
   return { kind: "request", label: "请求补充反馈", disabled: false, message: "" };

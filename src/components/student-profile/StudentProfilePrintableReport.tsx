@@ -1,5 +1,6 @@
 import { riskLevelLabels, statusLabels, warningSourceTypeLabels } from "@/types/warning";
 import type { StudentProfileExportViewModel } from "@/types/studentProfile";
+import { getInterventionNotificationPlan } from "@/lib/intervention-appointments";
 
 function Rows({ values }: { values: Array<[string, React.ReactNode]> }) {
   return <dl className="print-grid">{values.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || "-"}</dd></div>)}</dl>;
@@ -33,9 +34,10 @@ export function StudentProfilePrintableReport({ report }: { report: StudentProfi
         <h3>AI 倾诉可见会话</h3>{item.riskEvidence.aiConversationRecords.map((record) => <div key={record.id}><strong>{record.startedAt}</strong>{record.messages.map((message) => <p key={message.id}>{message.role === "student" ? "学生" : "AI 助手"}：{message.content}</p>)}</div>)}
       </> : null}
       <h3>班主任协作</h3>{item.feedbackCollaboration.rounds.map((round) => <div key={round.request.id}><p><strong>请求：</strong>{round.request.requestNote}（截止 {round.request.deadline}）</p>{round.records.map((record) => <p key={record.id}>{record.submittedAt} · {record.authorName}：{record.content}</p>)}</div>)}{[...item.feedbackCollaboration.proactiveRecords, ...item.feedbackCollaboration.unmatchedRecords].map((record) => <p key={record.id}>{record.submittedAt} · {record.authorName}：{record.content}（未关联反馈请求）</p>)}
+      <h3>干预预约</h3>{item.interventionAppointments.length ? item.interventionAppointments.map((appointment) => <p key={appointment.id}>{appointment.plannedAt} · {appointment.location} · {appointment.responsibleTeacher} · {appointment.status}；通知计划：{getInterventionNotificationPlan(appointment).map((plan) => `${plan.label} ${plan.expectedAt}`).join("；")}</p>) : <p>暂无</p>}
       <h3>干预记录</h3>{item.interventionRecords.length ? item.interventionRecords.map((record) => <p key={record.id}>{record.occurredAt} · {record.authorName} · {record.method}：{record.summary}；判断：{record.judgment}；计划：{record.followUpPlan}</p>) : <p>暂无</p>}
-      <h3>复测记录</h3>{item.retestRecords.length ? item.retestRecords.map((record) => <p key={record.id}>{record.arrangedAt} · {record.scaleNames.join("、")} · {record.resultSummary ?? "尚未完成复测"}</p>) : <p>暂无</p>}
-      <h3>转介记录</h3>{item.referralRecords.length ? item.referralRecords.map((record) => <div key={record.id}><p>{record.referredAt} · {record.referralType} · {record.organization ?? "-"}：{record.reason}</p>{record.followUpRecords.map((followUp) => <p key={followUp.id}>跟进 {followUp.occurredAt} · {followUp.authorName}：{followUp.summary}</p>)}</div>) : <p>暂无</p>}
+      <h3>复测记录</h3>{item.retestRecords.length ? item.retestRecords.map((record) => <p key={record.id}>{record.arrangedAt} · {record.scaleNames.join("、")} · {record.resultSummary ?? "尚未完成复测"} · 作答关联：{record.assessmentRecordId ?? "-"}</p>) : <p>暂无</p>}
+      <h3>转介记录</h3>{item.referralRecords.length ? item.referralRecords.map((record) => <div key={record.id}><p>{record.referredAt} · {record.referralType} · {record.organization ?? "-"}：{record.reason}</p>{record.followUpRecords.map((followUp) => <p key={followUp.id}>跟进 {followUp.occurredAt} · {followUp.authorName}：{followUp.summary}；专业结论：{followUp.conclusion}</p>)}</div>) : <p>暂无</p>}
       <h3>处置时间线</h3>{item.timeline.map((event) => <p key={event.id}>{event.occurredAt} · {event.title} · {event.operator}：{event.description}</p>)}
     </section>)}
   </article>;

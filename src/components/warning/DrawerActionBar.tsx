@@ -29,12 +29,13 @@ const actionsByStatus: Record<WarningStatus, DrawerAction[]> = {
   ],
   formal_warning: [
     { type: "request_feedback", label: "请求补充反馈" },
-    { type: "record_intervention", label: "记录干预", emphasis: "primary" },
+    { type: "schedule_intervention", label: "预约干预", emphasis: "primary" },
   ],
   in_intervention: [
-    { type: "add_intervention", label: "新增干预记录", emphasis: "primary" },
-    { type: "schedule_retest", label: "安排复测" },
-    { type: "start_referral", label: "转介" },
+    { type: "record_intervention_result", label: "记录干预结果", emphasis: "primary" },
+    { type: "mark_intervention_no_show", label: "未到场并改约" },
+    { type: "reschedule_intervention", label: "重新预约" },
+    { type: "cancel_intervention", label: "取消" },
   ],
   pending_retest: [
     { type: "view_retest_result", label: "查看复测结果" },
@@ -60,8 +61,16 @@ export function DrawerActionBar({ warning, currentTime, actionMessage, onAction 
         }];
     actions = [
       ...feedbackAction,
-      { type: "record_intervention", label: "记录干预", emphasis: "primary" },
+      { type: "schedule_intervention", label: "预约干预", emphasis: "primary" },
     ];
+  }
+  if (warning.currentStatus === "in_intervention") {
+    const hasPlannedAppointment = warning.interventionAppointments.some(
+      (appointment) => appointment.status === "planned",
+    );
+    actions = hasPlannedAppointment
+      ? actionsByStatus.in_intervention
+      : [{ type: "schedule_intervention", label: "预约干预", emphasis: "primary" }];
   }
   return (
     <footer className="shrink-0 border-t border-neutral-200 bg-white p-4">
@@ -71,13 +80,13 @@ export function DrawerActionBar({ warning, currentTime, actionMessage, onAction 
         </div>
       ) : null}
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {actions.map((action) => (
           <Button
             className={
               action.emphasis === "primary"
-                ? "flex-1 bg-neutral-900 text-white hover:bg-neutral-800"
-                : "flex-1"
+                ? "min-w-28 flex-1 bg-neutral-900 text-white hover:bg-neutral-800"
+                : "min-w-24 flex-1"
             }
             key={action.type}
             disabled={action.disabled}

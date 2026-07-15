@@ -26,6 +26,10 @@ function RetestRecordItem({ record }: { record: WarningRetestRecord }) {
             {displayValue(record.completedAt)}
           </div>
         </div>
+        <div>
+          <div className="text-xs font-semibold text-neutral-500">复测安排状态</div>
+          <div className="mt-1 font-medium text-neutral-800">{record.appointmentStatus === "completed" ? "已完成" : record.appointmentStatus === "planned" ? "已安排" : "-"}</div>
+        </div>
         <div className="col-span-2">
           <div className="text-xs font-semibold text-neutral-500">复测量表</div>
           <div className="mt-1 font-medium text-neutral-800">
@@ -43,10 +47,7 @@ function RetestRecordItem({ record }: { record: WarningRetestRecord }) {
           <dt className="font-semibold text-neutral-500">与上次结果对比</dt>
           <dd className="text-neutral-800">{displayValue(record.comparison)}</dd>
         </div>
-        <div>
-          <dt className="font-semibold text-neutral-500">心理老师结论</dt>
-          <dd className="text-neutral-800">{displayValue(record.conclusion)}</dd>
-        </div>
+        {record.assessmentRecordId ? <div><dt className="font-semibold text-neutral-500">完整作答记录</dt><dd className="text-neutral-800">已关联 {record.assessmentRecordId}</dd></div> : null}
       </dl>
     </div>
   );

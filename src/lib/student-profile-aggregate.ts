@@ -121,6 +121,9 @@ export function buildStudentProfileCaseDetail(
     interventionRecords: [...warning.interventionRecords].sort((left, right) =>
       right.occurredAt.localeCompare(left.occurredAt),
     ),
+    interventionAppointments: [...warning.interventionAppointments].sort((left, right) =>
+      right.plannedAt.localeCompare(left.plannedAt),
+    ),
     retestRecords: [...warning.retestRecords].sort((left, right) =>
       right.arrangedAt.localeCompare(left.arrangedAt),
     ),

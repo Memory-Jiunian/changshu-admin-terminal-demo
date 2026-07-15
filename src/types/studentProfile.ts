@@ -8,6 +8,7 @@ import type {
   WarningFeedbackRecord,
   WarningFeedbackRequest,
   WarningInterventionRecord,
+  WarningInterventionAppointment,
   WarningReferralRecord,
   WarningRetestRecord,
   WarningSourceType,
@@ -105,6 +106,7 @@ export type StudentProfileCaseDetail = {
   feedbackRecords: WarningFeedbackRecord[];
   feedbackCollaboration: WarningFeedbackCollaboration;
   interventionRecords: WarningInterventionRecord[];
+  interventionAppointments: WarningInterventionAppointment[];
   retestRecords: WarningRetestRecord[];
   referralRecords: WarningReferralRecord[];
   timeline: WarningTimelineItem[];

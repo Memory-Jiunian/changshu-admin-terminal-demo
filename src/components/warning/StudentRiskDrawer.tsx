@@ -20,6 +20,10 @@ import type {
   WarningActionType,
   WarningItem,
 } from "@/types/warning";
+import type {
+  WarningDetailNavigationIntent,
+  WarningDetailSection,
+} from "@/types/workbench";
 
 type StudentRiskDrawerProps = {
   warning: WarningItem | null;
@@ -36,6 +40,12 @@ type StudentRiskDrawerProps = {
   currentTime: string;
   onViewFullRetest?: (warningId: string, retestRecordId: string) => void;
   onOpenStudentProfileArchive?: (studentId: string, warningId: string) => void;
+  navigationIntent?: WarningDetailNavigationIntent;
+  onNavigationResolved?: (
+    requestedSection: WarningDetailSection,
+    resolvedSection: WarningDetailSection,
+    targetFound: boolean,
+  ) => void;
 };
 
 export function StudentRiskDrawer({
@@ -46,6 +56,8 @@ export function StudentRiskDrawer({
   onAction,
   currentTime,
   onViewFullRetest,
+  navigationIntent,
+  onNavigationResolved,
 }: StudentRiskDrawerProps) {
   const [actionMessage, setActionMessage] = useState("");
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -152,6 +164,8 @@ export function StudentRiskDrawer({
               onAction={handleAction}
               onOpenFullscreen={() => setFullscreenOpen(true)}
               onPlaceholderAction={handlePlaceholderAction}
+              onTargetResolved={onNavigationResolved}
+              targetSection={navigationIntent?.targetSection}
               warning={warning}
             />
           </SheetContent>

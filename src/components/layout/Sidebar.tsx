@@ -1,18 +1,23 @@
 import { cn } from "@/lib/utils";
 
-export type AppPage = "warning-management" | "student-profile";
+export type AppPage =
+  | "workbench"
+  | "warning-management"
+  | "student-profile"
+  | "school-overview"
+  | "settings";
 
 type NavigationItem = {
   label: string;
-  page?: AppPage;
+  page: AppPage;
 };
 
 const navItems: NavigationItem[] = [
-  { label: "工作台" },
+  { label: "工作台", page: "workbench" },
   { label: "预警管理", page: "warning-management" },
   { label: "学生档案", page: "student-profile" },
-  { label: "校级总览" },
-  { label: "系统设置" },
+  { label: "校级总览", page: "school-overview" },
+  { label: "系统设置", page: "settings" },
 ];
 
 type SidebarProps = {
@@ -37,7 +42,7 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
                   : "border-transparent text-white hover:bg-white/10",
               )}
               key={item.label}
-              onClick={() => item.page && onNavigate(item.page)}
+              onClick={() => onNavigate(item.page)}
               type="button"
             >
               {item.label}

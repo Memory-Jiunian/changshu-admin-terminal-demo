@@ -1,4 +1,5 @@
 import type { StudentProfileFilterQuery } from "@/types/studentProfile";
+import type { WorkbenchNavigationTarget } from "@/types/workbench";
 
 export type StudentProfileReturnState = {
   query: StudentProfileFilterQuery;
@@ -18,3 +19,5 @@ export type StudentProfileWarningReturnContext = {
   warningId: string;
   profileState: StudentProfileReturnState;
 };
+
+export type WorkbenchWarningReturnContext = WorkbenchNavigationTarget;

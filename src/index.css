@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes warning-section-highlight {
+  0% { box-shadow: 0 0 0 3px rgb(245 158 11 / 45%); }
+  100% { box-shadow: 0 0 0 3px rgb(245 158 11 / 0%); }
+}
+
+.warning-section-highlight {
+  animation: warning-section-highlight 1.6s ease-out 1;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

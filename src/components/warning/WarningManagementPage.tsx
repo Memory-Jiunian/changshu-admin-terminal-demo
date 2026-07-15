@@ -1,11 +1,15 @@
 import { ArrowLeft } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { StudentRiskDrawer } from "@/components/warning/StudentRiskDrawer";
 import { WarningFilterBar } from "@/components/warning/WarningFilterBar";
 import { WarningTable } from "@/components/warning/WarningTable";
 import { Button } from "@/components/ui/button";
 import { applyConfirmFormalWarning, applyWarningAction } from "@/lib/warning-actions";
+import {
+  canMarkWorkbenchFeedbackRead,
+  markWarningFeedbackRead,
+} from "@/lib/workbench-navigation";
 import { getEffectiveFeedbackStatus } from "@/lib/warning-feedback";
 import { formatMockDateTime, WARNING_MOCK_TODAY } from "@/lib/warning-time";
 import { useAdminData } from "@/state/AdminDataProvider";
@@ -21,6 +25,11 @@ import {
   type WarningActionSubmission,
   type WarningItem,
 } from "@/types/warning";
+import type {
+  WarningDetailNavigationIntent,
+  WarningDetailSection,
+  WorkbenchNavigationTarget,
+} from "@/types/workbench";
 
 const currentTeacher = "陈老师";
 
@@ -101,9 +110,18 @@ function matchesAdvancedFilters(item: WarningItem, filters: AdvancedFilterValues
 type WarningManagementPageProps = {
   initialSelectedWarningId?: string;
   onReturnToStudentProfile?: () => void;
+  workbenchNavigation?: WorkbenchNavigationTarget | null;
+  onReturnToWorkbench?: () => void;
+  onWorkbenchNavigationFailure?: (message: string) => void;
 };
 
-export function WarningManagementPage({ initialSelectedWarningId, onReturnToStudentProfile }: WarningManagementPageProps = {}) {
+export function WarningManagementPage({
+  initialSelectedWarningId,
+  onReturnToStudentProfile,
+  workbenchNavigation,
+  onReturnToWorkbench,
+  onWorkbenchNavigationFailure,
+}: WarningManagementPageProps = {}) {
   const currentTime = formatMockDateTime();
   const { warnings, setWarnings } = useAdminData();
   const [activeStatus, setActiveStatus] = useState<StatusTabValue>("all");
@@ -113,12 +131,45 @@ export function WarningManagementPage({ initialSelectedWarningId, onReturnToStud
     getEmptyAdvancedFilters(),
   );
   const [selectedWarningId, setSelectedWarningId] = useState<string | null>(initialSelectedWarningId ?? null);
+  const [navigationIntent, setNavigationIntent] = useState<WarningDetailNavigationIntent | undefined>(
+    workbenchNavigation
+      ? {
+          source: "workbench",
+          warningId: workbenchNavigation.warningId,
+          studentId: workbenchNavigation.studentId,
+          taskType: workbenchNavigation.taskType,
+          targetSection: workbenchNavigation.targetSection,
+        }
+      : undefined,
+  );
+  const [navigationNotice, setNavigationNotice] = useState("");
+  const handledWorkbenchNavigationRef = useRef("");
 
   useEffect(() => {
     if (initialSelectedWarningId) {
       setSelectedWarningId(initialSelectedWarningId);
     }
   }, [initialSelectedWarningId]);
+
+  useEffect(() => {
+    if (!workbenchNavigation) return;
+    const navigationKey = `${workbenchNavigation.warningId}:${workbenchNavigation.taskType}:${workbenchNavigation.targetSection}`;
+    if (handledWorkbenchNavigationRef.current === navigationKey) return;
+    handledWorkbenchNavigationRef.current = navigationKey;
+    const warningExists = warnings.some((warning) => warning.id === workbenchNavigation.warningId);
+    if (!warningExists) {
+      onWorkbenchNavigationFailure?.("事项不存在或不可查看，工作台任务已重新刷新。");
+      return;
+    }
+    setSelectedWarningId(workbenchNavigation.warningId);
+    setNavigationIntent({
+      source: "workbench",
+      warningId: workbenchNavigation.warningId,
+      studentId: workbenchNavigation.studentId,
+      taskType: workbenchNavigation.taskType,
+      targetSection: workbenchNavigation.targetSection,
+    });
+  }, [onWorkbenchNavigationFailure, warnings, workbenchNavigation]);
 
   const selectedWarning = useMemo(
     () => warnings.find((warning) => warning.id === selectedWarningId) ?? null,
@@ -205,7 +256,40 @@ export function WarningManagementPage({ initialSelectedWarningId, onReturnToStud
   }
 
   function handleViewDetail(item: WarningItem) {
+    setNavigationIntent(undefined);
+    setNavigationNotice("");
     setSelectedWarningId(item.id);
+  }
+
+  function handleNavigationResolved(
+    requestedSection: WarningDetailSection,
+    resolvedSection: WarningDetailSection,
+    targetFound: boolean,
+  ) {
+    if (!navigationIntent || !selectedWarning) return;
+
+    if (!targetFound) {
+      setNavigationNotice("该事项状态已更新，已为你打开最新事项概况。");
+      setNavigationIntent(undefined);
+      return;
+    }
+
+    if (
+      canMarkWorkbenchFeedbackRead({
+        intent: navigationIntent,
+        warning: selectedWarning,
+        renderedSection: resolvedSection,
+      })
+    ) {
+      setWarnings((currentWarnings) =>
+        currentWarnings.map((warning) =>
+          warning.id === selectedWarning.id ? markWarningFeedbackRead(warning) : warning,
+        ),
+      );
+      setNavigationNotice("新反馈已成功展示，并标记为已读。");
+    }
+
+    if (requestedSection === resolvedSection) setNavigationIntent(undefined);
   }
 
   function handleConfirmFormalWarning(
@@ -253,6 +337,19 @@ export function WarningManagementPage({ initialSelectedWarningId, onReturnToStud
           </Button>
         </div>
       ) : null}
+      {onReturnToWorkbench ? (
+        <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-sm">
+          <div className="text-sm text-neutral-600">正在处理工作台关联事项</div>
+          <Button className="gap-2" onClick={onReturnToWorkbench} type="button" variant="outline">
+            <ArrowLeft className="h-4 w-4" />返回工作台
+          </Button>
+        </div>
+      ) : null}
+      {navigationNotice ? (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {navigationNotice}
+        </div>
+      ) : null}
       <WarningFilterBar
         advancedFilters={advancedFilters}
         advancedOptions={advancedOptions}
@@ -277,9 +374,13 @@ export function WarningManagementPage({ initialSelectedWarningId, onReturnToStud
         currentTime={currentTime}
         onAction={handleWarningAction}
         onConfirmFormalWarning={handleConfirmFormalWarning}
+        navigationIntent={navigationIntent}
+        onNavigationResolved={handleNavigationResolved}
         onOpenChange={(drawerOpen) => {
           if (!drawerOpen) {
             setSelectedWarningId(null);
+            setNavigationIntent(undefined);
+            onReturnToWorkbench?.();
           }
         }}
         open={selectedWarning !== null}

@@ -1,4 +1,5 @@
 import { ArrowLeft, Maximize2, X } from "lucide-react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
   type WarningItem,
   type WarningStatus,
 } from "@/types/warning";
+import type { WarningDetailSection } from "@/types/workbench";
 
 type WarningDetailContentProps = {
   warning: WarningItem;
@@ -29,6 +31,12 @@ type WarningDetailContentProps = {
   onOpenFullscreen?: () => void;
   onReturnToDrawer?: () => void;
   onCloseDetail?: () => void;
+  targetSection?: WarningDetailSection;
+  onTargetResolved?: (
+    requestedSection: WarningDetailSection,
+    resolvedSection: WarningDetailSection,
+    targetFound: boolean,
+  ) => void;
 };
 
 type OverviewItemProps = {
@@ -96,7 +104,12 @@ export function WarningDetailContent({
   onOpenFullscreen,
   onReturnToDrawer,
   onCloseDetail,
+  targetSection,
+  onTargetResolved,
 }: WarningDetailContentProps) {
+  const detailRootRef = useRef<HTMLDivElement>(null);
+  const consumedTargetRef = useRef("");
+  const [highlightedSection, setHighlightedSection] = useState<WarningDetailSection | null>(null);
   const isFullscreen = mode === "fullscreen";
   const feedback = shouldShowFeedback(warning.currentStatus) ? (
     <FeedbackPanel currentTime={currentTime} warning={warning} />
@@ -105,8 +118,44 @@ export function WarningDetailContent({
     <InterventionRecords records={warning.interventionRecords} />
   ) : null;
 
+  useLayoutEffect(() => {
+    if (isFullscreen || !targetSection || !onTargetResolved) return;
+
+    const intentKey = `${warning.id}:${targetSection}`;
+    if (consumedTargetRef.current === intentKey) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const root = detailRootRef.current;
+      if (!root) return;
+
+      const requestedTarget = root.querySelector<HTMLElement>(
+        `[data-warning-section="${targetSection}"]`,
+      );
+      const overviewTarget = root.querySelector<HTMLElement>(
+        '[data-warning-section="overview"]',
+      );
+      const resolvedSection = requestedTarget ? targetSection : "overview";
+      const target = requestedTarget ?? overviewTarget;
+
+      if (!target) return;
+      consumedTargetRef.current = intentKey;
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      setHighlightedSection(resolvedSection);
+      onTargetResolved(targetSection, resolvedSection, Boolean(requestedTarget));
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [isFullscreen, onTargetResolved, targetSection, warning.id]);
+
+  function sectionClass(section: WarningDetailSection) {
+    return cn(
+      "scroll-mt-24 rounded-lg",
+      highlightedSection === section && "warning-section-highlight",
+    );
+  }
+
   return (
-    <div className="flex h-full min-h-0 flex-col bg-neutral-100">
+    <div className="flex h-full min-h-0 flex-col bg-neutral-100" ref={detailRootRef}>
       <header className="shrink-0 border-b border-neutral-200 bg-white px-5 py-4 pr-14">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -149,37 +198,39 @@ export function WarningDetailContent({
           {isFullscreen ? (
             <>
               <div className="space-y-4">
-                <StudentOverview warning={warning} />
-                <RiskEvidence warning={warning} />
-                {feedback}
+                <div className={sectionClass("overview")} data-warning-section="overview" onAnimationEnd={() => setHighlightedSection(null)}><StudentOverview warning={warning} /></div>
+                <div className={sectionClass("risk_evidence")} data-warning-section="risk_evidence" onAnimationEnd={() => setHighlightedSection(null)}><RiskEvidence warning={warning} /></div>
+                {feedback ? <div className={sectionClass("feedback")} data-warning-section="feedback" onAnimationEnd={() => setHighlightedSection(null)}>{feedback}</div> : null}
               </div>
               <div className="space-y-4">
                 {interventions}
-                <RetestRecords records={warning.retestRecords} />
-                <ReferralRecords warning={warning} />
+                <div className={sectionClass("retest")} data-warning-section="retest" onAnimationEnd={() => setHighlightedSection(null)}><RetestRecords records={warning.retestRecords} /></div>
+                {warning.referralRecords.length ? <div className={sectionClass("referral")} data-warning-section="referral" onAnimationEnd={() => setHighlightedSection(null)}><ReferralRecords warning={warning} /></div> : null}
                 <ProcessTimeline items={buildEffectiveWarningTimeline(warning)} />
               </div>
             </>
           ) : (
             <>
-              <StudentOverview warning={warning} />
-              <RiskEvidence warning={warning} />
-              {feedback}
+              <div className={sectionClass("overview")} data-warning-section="overview" onAnimationEnd={() => setHighlightedSection(null)}><StudentOverview warning={warning} /></div>
+              <div className={sectionClass("risk_evidence")} data-warning-section="risk_evidence" onAnimationEnd={() => setHighlightedSection(null)}><RiskEvidence warning={warning} /></div>
+              {feedback ? <div className={sectionClass("feedback")} data-warning-section="feedback" onAnimationEnd={() => setHighlightedSection(null)}>{feedback}</div> : null}
               {interventions}
-              <RetestRecords records={warning.retestRecords} />
-              <ReferralRecords warning={warning} />
+              <div className={sectionClass("retest")} data-warning-section="retest" onAnimationEnd={() => setHighlightedSection(null)}><RetestRecords records={warning.retestRecords} /></div>
+              {warning.referralRecords.length ? <div className={sectionClass("referral")} data-warning-section="referral" onAnimationEnd={() => setHighlightedSection(null)}><ReferralRecords warning={warning} /></div> : null}
               <ProcessTimeline items={buildEffectiveWarningTimeline(warning)} />
             </>
           )}
         </div>
       </ScrollArea>
 
-      <DrawerActionBar
-        actionMessage={actionMessage}
-        currentTime={currentTime}
-        onAction={onAction}
-        warning={warning}
-      />
+      <div className={sectionClass("action_bar")} data-warning-section="action_bar" onAnimationEnd={() => setHighlightedSection(null)}>
+        <DrawerActionBar
+          actionMessage={actionMessage}
+          currentTime={currentTime}
+          onAction={onAction}
+          warning={warning}
+        />
+      </div>
     </div>
   );
 }

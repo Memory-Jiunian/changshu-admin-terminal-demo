@@ -195,7 +195,31 @@ Fullscreen, PDF export, raw assessment/AI records, cross-case record indexes, wo
 - [x] Run regression / build / commit / push
 
 Active scope: Student profile Phase 5.2B.1 complete evidence, feedback collaboration, multiple referral follow-ups, and privacy-aware profile export.
-Workbench W0/W1 remains paused until this phase is accepted. Warning business rules remain frozen except the approved referral follow-up history extension.
+Phase 5.2B.1 is accepted as the Workbench W0 foundation. Warning business rules remain frozen except the approved referral follow-up history extension.
+
+## Phase W0: Workbench prerequisite verification
+
+- [x] Verify referral follow-up data and repeated append action
+- [x] Verify warning/profile/archive referral rendering
+- [x] Verify referral timeline and state invariants
+- [x] Verify shared warning provider
+- [x] Confirm warning-detail anchor authorization
+
+## Phase W1: Workbench MVP
+
+- [x] Add workbench domain types and pure selector
+- [x] Add six active task types and one reminder type
+- [x] Add feedback and re-test mutual exclusion
+- [x] Add factual priority sorting and data issues
+- [x] Add workbench summary, filters, reminder and task lists
+- [x] Add default workbench entry and explicit placeholder pages
+- [x] Add typed warning-detail navigation and return context
+- [x] Add six stable detail anchors and target highlighting
+- [x] Mark new feedback read only after successful feedback rendering
+- [x] Add workbench regression tests
+- [x] Run test / build / HTTP smoke / commit / push
+
+Active scope: Workbench MVP based on shared warning data and the approved referral follow-up foundation. Do not reimplement referral migration, first-intervention tasks, completed-task history, task transfer, workbench actions, clue pool, or backend.
 
 ## Phase 6: Polish and validation
 

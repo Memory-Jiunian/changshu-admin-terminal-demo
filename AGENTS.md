@@ -23,6 +23,10 @@ The current implemented modules are:
   - Core read-only detail drawer
   - Read-only complete records grouped by warning case
   - Shared archive/case record components
+- Workbench MVP:
+  - Six derived active task types
+  - One separate same-day re-test reminder
+  - Warning-detail section navigation and return context
 
 Do not implement unrelated pages unless the task explicitly asks for them.
 
@@ -182,6 +186,13 @@ Required UI:
    - Shared case overview, evidence, feedback, intervention, re-test, referral,
      outcome, and timeline sections
    - Shared detail width
+
+6. Workbench MVP
+   - Current teacher task summary
+   - Six active task types
+   - Separate same-day re-test reminders
+   - Task-type filtering and factual priority ordering
+   - Warning-detail deep links with return context
 
 Do not implement:
 
@@ -394,14 +405,16 @@ When action fails:
 
 ## Current active scope
 
-Student profile Phase 5.2B.1 is approved. Implement complete structured deep
-assessment records, product-visible AI conversations, feedback collaboration
-rounds, derived feedback timeline events, multiple referral follow-ups, and a
-privacy-aware printable profile export. Workbench W0/W1 remains paused.
+Workbench W0 verification is complete and Workbench W1 MVP is approved. The
+workbench derives six active task types and one separate same-day re-test
+reminder from shared warning data. It does not persist independent task state
+or perform professional warning actions.
 
-The only approved cross-module route in this slice is:
+The approved cross-module routes are:
 
 `Student profile -> matching warning detail -> original student profile context`.
+
+`Workbench -> matching warning detail section -> original workbench context`.
 
 App-level typed return context must also restore the profile/case-detail view,
 selected case, separate scroll positions, and expanded record sections. Do not
@@ -432,9 +445,9 @@ the current MVP. This does not grant cross-owner warning operations or alter
 the warning-management ownership rules. Homeroom teachers, grade directors,
 and school leaders do not enter individual student profiles.
 
-The clue-pool page, workbench, detailed student profile record modules,
+The clue-pool page, detailed student profile record modules,
 fullscreen profile mode, cross-case record indexes, all cross-module navigation except the
-single approved profile-to-warning-detail round trip, organization CRUD, real
+two approved round trips above, organization CRUD, real
 permissions, real backend, and school-system synchronization remain out of scope.
 
 When a new page PRD is completed, update this section before implementation.

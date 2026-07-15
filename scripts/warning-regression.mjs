@@ -50,6 +50,15 @@ assert(feedback.getEffectiveFeedbackStatus(pendingFeedback, currentTime) === "pe
 assert(feedback.getEffectiveFeedbackStatus(overdueFeedback, currentTime) === "feedback_overdue", "overdue feedback derives from deadline");
 assert(feedback.getEffectiveFeedbackStatus(receivedFeedback, currentTime) === "feedback_received", "read feedback is received");
 assert(feedback.getEffectiveFeedbackStatus(unreadFeedback, currentTime) === "new_feedback", "unread feedback is new");
+const unreadTimeline = unreadFeedback.timeline;
+const unreadRecordCount = unreadFeedback.feedbackRecords.length;
+const unreadRecordIds = unreadFeedback.feedbackRecords.filter((record) => !record.psychologistReadAt).map((record) => record.id);
+const markedRead = feedback.markWarningFeedbackRead({ warning: unreadFeedback, readAt: currentTime });
+assert(markedRead.feedbackRecords.length === unreadRecordCount, "mark read preserves feedback records");
+assert(markedRead.feedbackRecords.filter((record) => unreadRecordIds.includes(record.id)).every((record) => record.psychologistReadAt === currentTime), "mark read stamps unread feedback records");
+assert(markedRead.feedbackRecords.every((record) => record.psychologistReadAt), "mark read leaves no unread feedback records");
+assert(!feedback.hasUnreadWarningFeedback(markedRead), "all stamped feedback derives as read");
+assert(markedRead.timeline === unreadTimeline, "mark read does not write business timeline");
 assert(feedback.getFeedbackActionAvailability(pendingFeedback, currentTime).kind === "waiting", "pending task blocks duplicate request");
 assert(feedback.getFeedbackActionAvailability(overdueFeedback, currentTime).kind === "rerequest", "overdue task allows re-request");
 assert(feedback.getFeedbackActionAvailability(receivedFeedback, currentTime).kind === "hidden", "received feedback hides request");

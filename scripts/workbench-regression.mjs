@@ -27,10 +27,12 @@ const tasksUrl = moduleUrl(
 const navigationUrl = moduleUrl(
   compile("src/lib/workbench-navigation.ts")
     .replaceAll('"@/types/warning"', `"${warningTypesUrl}"`)
-    .replaceAll('"@/types/workbench"', `"${workbenchTypesUrl}"`),
+    .replaceAll('"@/types/workbench"', `"${workbenchTypesUrl}"`)
+    .replaceAll('"@/lib/warning-feedback"', `"${feedbackUrl}"`),
 );
-const [workbenchTypes, tasks, navigation, mock] = await Promise.all([
+const [workbenchTypes, feedback, tasks, navigation, mock] = await Promise.all([
   import(workbenchTypesUrl),
+  import(feedbackUrl),
   import(tasksUrl),
   import(navigationUrl),
   import(moduleUrl(compile("src/data/warningMock.ts"))),
@@ -98,16 +100,33 @@ assert(workbenchTypes.workbenchTaskSections.retest_result_pending === "retest", 
 assert(workbenchTypes.workbenchTaskSections.referral_follow_up === "referral", "referral targets referral");
 assert(workbenchTypes.warningDetailSections.length === 6, "six centralized detail section values exist");
 
+const sharedMockResult = tasks.buildWorkbenchItems({ warnings: mock.warningMockData, currentTeacher: "陈老师", currentTime });
+assert(new Set(sharedMockResult.tasks.map((task) => task.type)).size === 6, "shared mock visibly covers all six task types");
+assert(sharedMockResult.reminders.some((reminder) => reminder.type === "retest_plan_today"), "shared mock visibly covers today's retest reminder");
+assert(sharedMockResult.tasks.length === 6, "shared mock has one clear demo item for every active task type");
+assert(new Set(sharedMockResult.tasks.map((task) => task.studentId)).size === 6, "shared mock task demos use different students");
+assert(sharedMockResult.reminders.every((reminder) => reminder.targetSection === "retest"), "today reminders target the re-test section");
+const sharedMockSnapshot = JSON.stringify(mock.warningMockData);
+tasks.buildWorkbenchItems({ warnings: mock.warningMockData, currentTeacher: "陈老师", currentTime });
+assert(JSON.stringify(mock.warningMockData) === sharedMockSnapshot, "viewing and deriving reminders does not mutate shared warnings");
+
 const unread = fixtures[2];
 const intent = { source: "workbench", warningId: unread.id, studentId: unread.studentId, taskType: "new_feedback", targetSection: "feedback" };
-assert(navigation.canMarkWorkbenchFeedbackRead({ intent, warning: unread, renderedSection: "feedback" }), "matching rendered feedback permits read");
-assert(!navigation.canMarkWorkbenchFeedbackRead({ warning: unread, renderedSection: "feedback" }), "ordinary warning entry cannot mark read");
-assert(!navigation.canMarkWorkbenchFeedbackRead({ intent: { ...intent, warningId: "WRN-OTHER" }, warning: unread, renderedSection: "feedback" }), "mismatched warning cannot mark read");
-assert(!navigation.canMarkWorkbenchFeedbackRead({ intent, warning: unread, renderedSection: "overview" }), "unrendered feedback cannot mark read");
-const readWarning = navigation.markWarningFeedbackRead(unread);
+assert(navigation.shouldProtectWorkbenchFeedbackClose({ intent, warning: unread }), "workbench unread-feedback origin enables close protection");
+assert(!navigation.shouldProtectWorkbenchFeedbackClose({ warning: unread }), "ordinary warning entry does not enable close protection");
+assert(!navigation.shouldProtectWorkbenchFeedbackClose({ intent: { ...intent, warningId: "WRN-OTHER" }, warning: unread }), "mismatched warning does not enable close protection");
+assert(!navigation.shouldProtectWorkbenchFeedbackClose({ intent: { ...intent, taskType: "feedback_overdue" }, warning: unread }), "other workbench task does not enable close protection");
+const timelineBeforeRead = unread.timeline;
+const feedbackBeforeRead = unread.feedbackRecords;
+const readWarning = feedback.markWarningFeedbackRead({ warning: unread, readAt: currentTime });
 assert(!readWarning.hasUnreadFeedback, "successful read clears item-level unread flag");
-assert(readWarning.feedbackRecords === unread.feedbackRecords, "read preserves feedback records");
-assert(readWarning.timeline === unread.timeline, "read does not append business timeline");
+assert(readWarning.feedbackRecords.length === feedbackBeforeRead.length, "read preserves feedback records");
+assert(readWarning.feedbackRecords.every((record) => record.psychologistReadAt === currentTime), "read stamps every currently unread feedback record");
+assert(readWarning.timeline === timelineBeforeRead, "read does not append business timeline");
+assert(!navigation.shouldProtectWorkbenchFeedbackClose({ intent, warning: readWarning }), "read feedback closes without protection");
+assert(feedback.hasUnreadWarningFeedback(unread), "rendering input remains unread before explicit action");
+const mixedReadWarning = { ...unread, feedbackRecords: [{ ...unread.feedbackRecords[0], psychologistReadAt: currentTime }, { ...unread.feedbackRecords[0], id: "FB-UNREAD-2", psychologistReadAt: undefined }] };
+assert(feedback.hasUnreadWarningFeedback(mixedReadWarning), "one unread record keeps the item in new-feedback state");
 const afterRead = tasks.buildWorkbenchItems({
   warnings: fixtures.map((warning) => warning.id === readWarning.id ? readWarning : warning),
   currentTeacher: "陈老师",
@@ -118,6 +137,10 @@ assert(!afterRead.tasks.some((task) => task.id === `${readWarning.id}:new_feedba
 const detailSource = readFileSync("src/components/warning/WarningDetailContent.tsx", "utf8");
 const appSource = readFileSync("src/App.tsx", "utf8");
 const sidebarSource = readFileSync("src/components/layout/Sidebar.tsx", "utf8");
+const feedbackPanelSource = readFileSync("src/components/warning/FeedbackPanel.tsx", "utf8");
+const warningPageSource = readFileSync("src/components/warning/WarningManagementPage.tsx", "utf8");
+const reminderSource = readFileSync("src/components/workbench/WorkbenchReminderList.tsx", "utf8");
+const closeDialogSource = readFileSync("src/components/warning/UnreadFeedbackCloseDialog.tsx", "utf8");
 assert(workbenchTypes.warningDetailSections.every((section) => detailSource.includes(`data-warning-section=\"${section}\"`)), "all six anchors are attached to real detail DOM");
 assert(detailSource.includes("requestAnimationFrame") && detailSource.includes("scrollIntoView"), "targeting waits for render frame and scrolls real DOM");
 assert(detailSource.includes("requestedTarget ?? overviewTarget"), "missing target safely falls back to overview");
@@ -125,5 +148,9 @@ assert(detailSource.includes("consumedTargetRef"), "a navigation target is consu
 assert(appSource.includes('useState<AppPage>("workbench")'), "workbench is the default app entry");
 assert(sidebarSource.includes('page: "workbench"'), "sidebar links to the real workbench");
 assert(appSource.includes("PlaceholderPage title=\"校级总览\"") && appSource.includes("PlaceholderPage title=\"系统设置\""), "unimplemented pages use explicit placeholders");
+assert(feedbackPanelSource.includes("标记为已查看"), "feedback module exposes explicit read confirmation");
+assert(!warningPageSource.includes("canMarkWorkbenchFeedbackRead"), "navigation rendering no longer marks feedback read automatically");
+assert(reminderSource.includes("查看安排") && !reminderSource.includes("查看复测安排"), "today reminder uses the approved label");
+assert(closeDialogSource.includes("关闭并保留待办") && closeDialogSource.includes("标记已查看并关闭"), "close guard provides all protected choices");
 
 console.log(`Workbench regression assertions passed: ${assertionCount}`);

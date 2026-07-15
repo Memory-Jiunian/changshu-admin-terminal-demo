@@ -416,6 +416,15 @@ workbench route and ordinary warning-management route use the same shared
 feedback-record read state. A workbench new-feedback drawer must guard closing
 while unread feedback remains, without writing a business timeline event.
 
+Phase I1 is approved for intervention appointment, attendance, follow-up, and
+re-test record alignment. Keep the internal main status value
+`in_intervention`, but display it as `待干预` in all user-facing surfaces.
+Appointments use their own `planned`, `completed`, `no_show`, `cancelled`, and
+`rescheduled` sub-statuses and must never create a new warning main status.
+Formal warnings may schedule intervention regardless of whether a homeroom
+teacher feedback task is still active. Appointment notifications are mock
+contracts only; do not claim that a real mini-program message was sent.
+
 The approved cross-module routes are:
 
 `Student profile -> matching warning detail -> original student profile context`.

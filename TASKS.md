@@ -235,6 +235,18 @@ Active scope: Workbench MVP based on shared warning data and the approved referr
 
 Active scope: Workbench Phase W1.1 demo coverage and explicit feedback read confirmation. Do not implement first-intervention, intervention follow-up, intervention re-test, school overview, or new professional workflow rules.
 
+## Phase I1: Intervention appointment, follow-up, and no-show workflow
+
+- [x] I1.0 Sync domain, flow, page, and acceptance specifications
+- [x] I1.1 Add appointment sub-status, records, and notification contracts
+- [x] I1.2 Implement intervention scheduling, attendance, follow-up, reschedule, and cancellation
+- [x] I1.3 Add intervention and overdue re-test workbench tasks and reminders
+- [x] I1.4 Align complete re-test responses and referral follow-up conclusions
+- [x] I1.5 Synchronize warning detail, profile, archive, and export views
+- [x] I1.6 Run regression, build, HTTP smoke, commit, and push
+
+Active scope: Phase I1 intervention appointment, attendance, follow-up, and no-show workflow. Keep seven warning main states unchanged; `in_intervention` is displayed as `待干预`. School overview, clue pool, backend, permissions, and real notifications remain out of scope.
+
 ## Phase 6: Polish and validation
 
 - [ ] Match prototype layout

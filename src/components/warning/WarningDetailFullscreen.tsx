@@ -12,6 +12,7 @@ type WarningDetailFullscreenProps = {
   onCloseDetail: () => void;
   onPlaceholderAction: (label: string) => void;
   onAction: (action: WarningActionType) => void;
+  onMarkFeedbackRead?: () => void;
 };
 
 export function WarningDetailFullscreen({
@@ -23,6 +24,7 @@ export function WarningDetailFullscreen({
   onCloseDetail,
   onPlaceholderAction,
   onAction,
+  onMarkFeedbackRead,
 }: WarningDetailFullscreenProps) {
   return (
     <Dialog onOpenChange={onOpenChange} open={open && Boolean(warning)}>
@@ -38,6 +40,7 @@ export function WarningDetailFullscreen({
             mode="fullscreen"
             onCloseDetail={onCloseDetail}
             onAction={onAction}
+            onMarkFeedbackRead={onMarkFeedbackRead}
             onPlaceholderAction={onPlaceholderAction}
             onReturnToDrawer={() => onOpenChange(false)}
             warning={warning}

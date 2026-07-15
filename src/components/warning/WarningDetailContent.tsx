@@ -31,6 +31,7 @@ type WarningDetailContentProps = {
   onOpenFullscreen?: () => void;
   onReturnToDrawer?: () => void;
   onCloseDetail?: () => void;
+  onMarkFeedbackRead?: () => void;
   targetSection?: WarningDetailSection;
   onTargetResolved?: (
     requestedSection: WarningDetailSection,
@@ -104,6 +105,7 @@ export function WarningDetailContent({
   onOpenFullscreen,
   onReturnToDrawer,
   onCloseDetail,
+  onMarkFeedbackRead,
   targetSection,
   onTargetResolved,
 }: WarningDetailContentProps) {
@@ -112,7 +114,7 @@ export function WarningDetailContent({
   const [highlightedSection, setHighlightedSection] = useState<WarningDetailSection | null>(null);
   const isFullscreen = mode === "fullscreen";
   const feedback = shouldShowFeedback(warning.currentStatus) ? (
-    <FeedbackPanel currentTime={currentTime} warning={warning} />
+    <FeedbackPanel currentTime={currentTime} onMarkFeedbackRead={onMarkFeedbackRead} warning={warning} />
   ) : null;
   const interventions = shouldShowInterventionRecords(warning) ? (
     <InterventionRecords records={warning.interventionRecords} />

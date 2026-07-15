@@ -6,12 +6,52 @@ export type FeedbackActionAvailability =
   | { kind: "rerequest"; label: "重新请求反馈"; disabled: false; message: "" }
   | { kind: "hidden"; label: "请求补充反馈"; disabled: true; message: "" };
 
+export function hasUnreadWarningFeedback(warning: WarningItem) {
+  if (!warning.feedbackRecords.length) return false;
+
+  const hasRecordLevelReadState = warning.feedbackRecords.some(
+    (record) => record.psychologistReadAt !== undefined,
+  );
+  return hasRecordLevelReadState
+    ? warning.feedbackRecords.some((record) => !record.psychologistReadAt)
+    : warning.hasUnreadFeedback;
+}
+
+export function markWarningFeedbackRead({
+  warning,
+  feedbackRecordIds,
+  readAt,
+}: {
+  warning: WarningItem;
+  feedbackRecordIds?: string[];
+  readAt: string;
+}): WarningItem {
+  const targetIds = new Set(
+    feedbackRecordIds ?? warning.feedbackRecords
+      .filter((record) => !record.psychologistReadAt)
+      .map((record) => record.id),
+  );
+  const feedbackRecords = warning.feedbackRecords.map((record) =>
+    targetIds.has(record.id) && !record.psychologistReadAt
+      ? { ...record, psychologistReadAt: readAt }
+      : record,
+  );
+  const hasUnreadFeedback = feedbackRecords.some((record) => !record.psychologistReadAt);
+
+  return {
+    ...warning,
+    feedbackRecords,
+    hasUnreadFeedback,
+    feedbackStatus: hasUnreadFeedback ? "new_feedback" : "feedback_received",
+  };
+}
+
 export function getEffectiveFeedbackStatus(
   warning: WarningItem,
   currentTime: string,
 ): FeedbackStatus {
   if (warning.feedbackRecords.length > 0) {
-    return warning.hasUnreadFeedback ? "new_feedback" : "feedback_received";
+    return hasUnreadWarningFeedback(warning) ? "new_feedback" : "feedback_received";
   }
 
   if (!warning.feedbackDeadline) {

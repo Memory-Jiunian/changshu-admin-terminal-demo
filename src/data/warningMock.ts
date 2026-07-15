@@ -79,7 +79,7 @@ const warningMockSeeds: WarningMockSeed[] = [
     suggestedRiskLevel: "low",
     currentStatus: "observing",
     observationNote: "补充评估未见即时危机表现，继续观察睡眠和到校变化。",
-    nextReviewAt: "2026-07-10 10:00",
+    nextReviewAt: "2026-07-08 10:00",
     latestActivity: "心理老师标记继续观察",
     activityTime: "2026-07-08 10:15",
     feedbackStatus: "not_requested",
@@ -287,7 +287,7 @@ const warningMockSeeds: WarningMockSeed[] = [
     latestActivity: "班主任待复测提醒已发送",
     activityTime: "2026-07-06 08:30",
     feedbackStatus: "feedback_received",
-    responsibleTeacher: "刘老师",
+    responsibleTeacher: "陈老师",
     assessmentSummary: "持续干预后状态较前期稳定，目前已进入第二次复测窗口。",
     aiSummary: "近期无新增 AI 高危表达。",
     teacherFeedbackSummary: "班主任反馈学生出勤稳定，课堂状态较前期改善。",
@@ -316,7 +316,7 @@ const warningMockSeeds: WarningMockSeed[] = [
       {
         id: "RR-005-2",
         arrangedAt: "2026-06-22 14:00",
-        plannedAt: "2026-07-07 10:00",
+        plannedAt: "2026-07-08 15:00",
         scaleIds: ["phq-9", "gad-7"],
         scaleNames: ["PHQ-9 抑郁症筛查量表", "GAD-7 广泛性焦虑量表"],
       },
@@ -395,11 +395,11 @@ const warningMockSeeds: WarningMockSeed[] = [
     currentStatus: "referral",
     latestActivity: "新增转介跟进",
     activityTime: "2026-07-05 17:20",
-    feedbackStatus: "feedback_overdue",
-    responsibleTeacher: "周老师",
+    feedbackStatus: "pending_feedback",
+    responsibleTeacher: "陈老师",
     assessmentSummary: "深度测评提示需要外部专业资源介入。",
     aiSummary: "AI倾诉摘要显示多项持续性风险表达。",
-    teacherFeedbackSummary: "班主任协作反馈已超时，仍需补充在校事实观察。",
+    teacherFeedbackSummary: "班主任协作反馈任务进行中，等待补充在校事实观察。",
     feedbackRecords: [],
     hasUnreadFeedback: false,
     interventionRecords: [
@@ -1091,16 +1091,21 @@ export const warningMockData: WarningItem[] = warningMockSeeds.map((warning, ind
       : [];
 
   const feedbackRecords = warning.feedbackRecords.map((record, recordIndex) => {
+    const psychologistReadAt = warning.hasUnreadFeedback
+      ? recordIndex === 0
+        ? undefined
+        : warning.activityTime
+      : warning.activityTime;
     if (warning.id === "WRN-20260707-004") {
-      return { ...record, requestId: recordIndex === 0 ? feedbackRequests[0]?.id : undefined };
+      return { ...record, requestId: recordIndex === 0 ? feedbackRequests[0]?.id : undefined, psychologistReadAt };
     }
     if (warning.id === "WRN-20260704-007") {
-      return { ...record, requestId: feedbackRequests[Math.min(recordIndex, feedbackRequests.length - 1)]?.id };
+      return { ...record, requestId: feedbackRequests[Math.min(recordIndex, feedbackRequests.length - 1)]?.id, psychologistReadAt };
     }
     if (warning.id === "WRN-20260705-005") {
-      return { ...record, requestId: "FQ-MISSING-DEMO" };
+      return { ...record, requestId: "FQ-MISSING-DEMO", psychologistReadAt };
     }
-    return { ...record, requestId: feedbackRequests[0]?.id };
+    return { ...record, requestId: feedbackRequests[0]?.id, psychologistReadAt };
   });
 
   const referralRecords = (warning.referralRecords ?? []).map((record) => ({

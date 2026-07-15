@@ -41,6 +41,7 @@ export type WarningFeedbackRecord = {
   authorName: string;
   content: string;
   submittedAt: string;
+  psychologistReadAt?: string;
 };
 
 export type WarningFeedbackRound = {

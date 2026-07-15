@@ -12,7 +12,9 @@ import {
 } from "@/components/warning/WarningActionDialog";
 import { WarningDetailContent } from "@/components/warning/WarningDetailContent";
 import { WarningDetailFullscreen } from "@/components/warning/WarningDetailFullscreen";
+import { UnreadFeedbackCloseDialog } from "@/components/warning/UnreadFeedbackCloseDialog";
 import { cn } from "@/lib/utils";
+import { shouldProtectWorkbenchFeedbackClose } from "@/lib/workbench-navigation";
 import type {
   ConfirmFormalWarningValues,
   WarningActionResponse,
@@ -46,6 +48,8 @@ type StudentRiskDrawerProps = {
     resolvedSection: WarningDetailSection,
     targetFound: boolean,
   ) => void;
+  navigationOrigin?: WarningDetailNavigationIntent;
+  onMarkFeedbackRead: (warningId: string) => void;
 };
 
 export function StudentRiskDrawer({
@@ -58,6 +62,8 @@ export function StudentRiskDrawer({
   onViewFullRetest,
   navigationIntent,
   onNavigationResolved,
+  navigationOrigin,
+  onMarkFeedbackRead,
 }: StudentRiskDrawerProps) {
   const [actionMessage, setActionMessage] = useState("");
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -66,6 +72,8 @@ export function StudentRiskDrawer({
   const [retestResultOpen, setRetestResultOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [fullRetestRecordId, setFullRetestRecordId] = useState<string | null>(null);
+  const [closeGuardOpen, setCloseGuardOpen] = useState(false);
+  const [closeGuardBusy, setCloseGuardBusy] = useState(false);
 
   useEffect(() => {
     setActionMessage("");
@@ -75,7 +83,39 @@ export function StudentRiskDrawer({
     setRetestResultOpen(false);
     setArchiveOpen(false);
     setFullRetestRecordId(null);
+    setCloseGuardOpen(false);
+    setCloseGuardBusy(false);
   }, [warning?.id, open]);
+
+  function shouldProtectClose() {
+    return Boolean(
+      warning &&
+        shouldProtectWorkbenchFeedbackClose({ intent: navigationOrigin, warning }),
+    );
+  }
+
+  function requestDrawerOpenChange(nextOpen: boolean) {
+    if (!nextOpen && shouldProtectClose()) {
+      setCloseGuardOpen(true);
+      return;
+    }
+    onOpenChange(nextOpen);
+  }
+
+  function handleMarkFeedbackRead() {
+    if (!warning) return;
+    onMarkFeedbackRead(warning.id);
+    setActionMessage("班主任反馈已标记为已查看。");
+  }
+
+  function closeAndReturnToWorkbench(markRead: boolean) {
+    if (!warning || closeGuardBusy) return;
+    setCloseGuardBusy(true);
+    if (markRead) onMarkFeedbackRead(warning.id);
+    setCloseGuardOpen(false);
+    setFullscreenOpen(false);
+    onOpenChange(false);
+  }
 
   function handlePlaceholderAction(label: string) {
     if (!warning) {
@@ -97,7 +137,7 @@ export function StudentRiskDrawer({
 
   function handleCloseDetail() {
     setFullscreenOpen(false);
-    onOpenChange(false);
+    requestDrawerOpenChange(false);
   }
 
   function handleAction(action: WarningActionType) {
@@ -145,7 +185,7 @@ export function StudentRiskDrawer({
 
   return (
     <>
-      <Sheet onOpenChange={onOpenChange} open={open && Boolean(warning)}>
+      <Sheet onOpenChange={requestDrawerOpenChange} open={open && Boolean(warning)}>
         {warning ? (
           <SheetContent
             className={cn(
@@ -162,6 +202,7 @@ export function StudentRiskDrawer({
               currentTime={currentTime}
               mode="drawer"
               onAction={handleAction}
+              onMarkFeedbackRead={handleMarkFeedbackRead}
               onOpenFullscreen={() => setFullscreenOpen(true)}
               onPlaceholderAction={handlePlaceholderAction}
               onTargetResolved={onNavigationResolved}
@@ -177,6 +218,7 @@ export function StudentRiskDrawer({
         currentTime={currentTime}
         onCloseDetail={handleCloseDetail}
         onAction={handleAction}
+        onMarkFeedbackRead={handleMarkFeedbackRead}
         onOpenChange={setFullscreenOpen}
         onPlaceholderAction={handlePlaceholderAction}
         open={fullscreenOpen}
@@ -224,6 +266,14 @@ export function StudentRiskDrawer({
         onOpenChange={setArchiveOpen}
         open={archiveOpen}
         warning={warning}
+      />
+
+      <UnreadFeedbackCloseDialog
+        busy={closeGuardBusy}
+        onClosePreservingTask={() => closeAndReturnToWorkbench(false)}
+        onContinue={() => setCloseGuardOpen(false)}
+        onMarkReadAndClose={() => closeAndReturnToWorkbench(true)}
+        open={closeGuardOpen}
       />
     </>
   );

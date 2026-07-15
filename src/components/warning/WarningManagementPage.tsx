@@ -6,11 +6,7 @@ import { WarningFilterBar } from "@/components/warning/WarningFilterBar";
 import { WarningTable } from "@/components/warning/WarningTable";
 import { Button } from "@/components/ui/button";
 import { applyConfirmFormalWarning, applyWarningAction } from "@/lib/warning-actions";
-import {
-  canMarkWorkbenchFeedbackRead,
-  markWarningFeedbackRead,
-} from "@/lib/workbench-navigation";
-import { getEffectiveFeedbackStatus } from "@/lib/warning-feedback";
+import { getEffectiveFeedbackStatus, markWarningFeedbackRead } from "@/lib/warning-feedback";
 import { formatMockDateTime, WARNING_MOCK_TODAY } from "@/lib/warning-time";
 import { useAdminData } from "@/state/AdminDataProvider";
 import {
@@ -274,22 +270,18 @@ export function WarningManagementPage({
       return;
     }
 
-    if (
-      canMarkWorkbenchFeedbackRead({
-        intent: navigationIntent,
-        warning: selectedWarning,
-        renderedSection: resolvedSection,
-      })
-    ) {
-      setWarnings((currentWarnings) =>
-        currentWarnings.map((warning) =>
-          warning.id === selectedWarning.id ? markWarningFeedbackRead(warning) : warning,
-        ),
-      );
-      setNavigationNotice("新反馈已成功展示，并标记为已读。");
-    }
-
     if (requestedSection === resolvedSection) setNavigationIntent(undefined);
+  }
+
+  function handleMarkFeedbackRead(warningId: string) {
+    const readAt = formatMockDateTime();
+    setWarnings((currentWarnings) =>
+      currentWarnings.map((warning) =>
+        warning.id === warningId
+          ? markWarningFeedbackRead({ warning, readAt })
+          : warning,
+      ),
+    );
   }
 
   function handleConfirmFormalWarning(
@@ -375,7 +367,9 @@ export function WarningManagementPage({
         onAction={handleWarningAction}
         onConfirmFormalWarning={handleConfirmFormalWarning}
         navigationIntent={navigationIntent}
+        navigationOrigin={workbenchNavigation ?? undefined}
         onNavigationResolved={handleNavigationResolved}
+        onMarkFeedbackRead={handleMarkFeedbackRead}
         onOpenChange={(drawerOpen) => {
           if (!drawerOpen) {
             setSelectedWarningId(null);

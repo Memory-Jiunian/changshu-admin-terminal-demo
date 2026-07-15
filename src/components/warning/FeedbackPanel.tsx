@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { FeedbackCollaborationRounds } from "@/components/case-records/FeedbackCollaborationRounds";
-import { getEffectiveFeedbackStatus } from "@/lib/warning-feedback";
+import { getEffectiveFeedbackStatus, hasUnreadWarningFeedback } from "@/lib/warning-feedback";
 import { buildWarningFeedbackCollaboration } from "@/lib/warning-records";
 import {
   feedbackStatusLabels,
@@ -11,6 +12,7 @@ import {
 type FeedbackPanelProps = {
   warning: WarningItem;
   currentTime: string;
+  onMarkFeedbackRead?: () => void;
 };
 
 const feedbackBadgeClass: Record<FeedbackStatus, string> = {
@@ -33,8 +35,9 @@ function getEmptyFeedbackText(status: FeedbackStatus) {
   return "暂无反馈";
 }
 
-export function FeedbackPanel({ warning, currentTime }: FeedbackPanelProps) {
+export function FeedbackPanel({ warning, currentTime, onMarkFeedbackRead }: FeedbackPanelProps) {
   const effectiveFeedbackStatus = getEffectiveFeedbackStatus(warning, currentTime);
+  const hasUnreadFeedback = hasUnreadWarningFeedback(warning);
   const collaboration = buildWarningFeedbackCollaboration(warning.feedbackRequests, warning.feedbackRecords);
 
   return (
@@ -59,6 +62,14 @@ export function FeedbackPanel({ warning, currentTime }: FeedbackPanelProps) {
           {getEmptyFeedbackText(effectiveFeedbackStatus)}
         </div>
       )}
+
+      {hasUnreadFeedback && onMarkFeedbackRead ? (
+        <div className="mt-4 flex justify-end border-t border-neutral-100 pt-3">
+          <Button onClick={onMarkFeedbackRead} size="sm" type="button">
+            标记为已查看
+          </Button>
+        </div>
+      ) : null}
 
     </section>
   );

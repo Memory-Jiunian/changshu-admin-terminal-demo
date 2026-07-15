@@ -1,4 +1,4 @@
-import { getEffectiveFeedbackStatus } from "@/lib/warning-feedback";
+import { getEffectiveFeedbackStatus, hasUnreadWarningFeedback } from "@/lib/warning-feedback";
 import { getEffectiveRiskLevel, type RiskLevel, type WarningItem } from "@/types/warning";
 import {
   workbenchReminderSections,
@@ -103,7 +103,7 @@ export function buildWorkbenchItems({
     }
 
     const latestFeedback = latestBy(warning.feedbackRecords, (record) => record.submittedAt);
-    if (warning.hasUnreadFeedback && latestFeedback) {
+    if (hasUnreadWarningFeedback(warning) && latestFeedback) {
       tasks.push(makeTask(warning, "new_feedback", "班主任已提交新的事实观察，等待查看。", latestFeedback.submittedAt, currentDate));
     } else if (getEffectiveFeedbackStatus(warning, currentTime) === "feedback_overdue") {
       const dueAt = warning.feedbackDeadline;

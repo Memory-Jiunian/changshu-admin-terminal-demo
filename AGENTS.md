@@ -444,6 +444,14 @@ Workbench counts and arrangements include only cases owned by the current
 psychological teacher; never change ownership or include another teacher's case
 to make demo totals align.
 
+Phase I1.2 standardizes business-dialog height, groups intervention appointments
+and results into read-only rounds by `appointmentId`, and makes the desktop
+workbench fill the App Shell without visible nested scrollbars. These are
+presentation and derived-view changes only. They must not alter I1.1 status,
+grace-period, task-admission, ordering, timeline-event, or professional-judgment
+rules. Unlinked legacy intervention records remain visible and are never matched
+by timestamp inference.
+
 The approved cross-module routes are:
 
 `Student profile -> matching warning detail -> original student profile context`.

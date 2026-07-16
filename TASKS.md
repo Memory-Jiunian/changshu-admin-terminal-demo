@@ -260,6 +260,24 @@ Active scope: Phase I1 intervention appointment, attendance, follow-up, and no-s
 
 Active scope: Phase I1.1 warning, feedback, timeline, intervention arrangement, and re-test consistency. Keep seven warning main states unchanged. School overview, clue pool, backend, permissions, and real notifications remain out of scope.
 
+## Phase I1.2: Missing items and adaptive workbench layout
+
+- [x] Standardize business Dialog safe height and internal scrolling
+- [x] Group intervention appointments and results by appointmentId
+- [x] Preserve unlinked legacy intervention records
+- [x] Align latest intervention result fields across detail, archive, and export
+- [x] Normalize feedback-request timeline field labels
+- [x] Remove “first” from unscheduled-intervention copy
+- [x] Make App Shell sidebar width a single layout truth
+- [x] Remove workbench centered max-width constraint
+- [x] Add desktop independent hidden-scroll list bodies
+- [x] Add narrow single-page scrolling fallback
+- [x] Run regression, build, HTTP smoke, viewport review, commit, and push
+
+Active scope: Phase I1.2 closes intervention-round presentation and workbench
+viewport layout gaps without changing Phase I1.1 business rules. School overview
+and clue pool remain paused.
+
 ## Phase 6: Polish and validation
 
 - [ ] Match prototype layout

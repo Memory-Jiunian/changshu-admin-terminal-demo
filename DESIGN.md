@@ -195,3 +195,28 @@ The first implementation should match the current prototype direction:
 - Table inside rounded card
 - Right-side student risk detail drawer
 - Fixed drawer footer actions
+
+## App Shell and workbench viewport
+
+- The expanded desktop sidebar is `152px`; the collapsed sidebar is `64px`.
+- Sidebar width is the single App Shell column truth. Main content must not add a
+  compensating left margin or preserve the expanded width after collapse.
+- Main content uses all space after the sidebar with normal `16px-24px` padding;
+  workbench content must not use a centered `max-width` container.
+- At `1180px` and above, the workbench uses `minmax(0, 7fr) minmax(320px, 3fr)`.
+  The title and overview cards remain full width above the two columns.
+- Desktop workbench height fills the area below the topbar. The page itself does
+  not scroll; task and arrangement bodies each own one independent scroll area.
+- Scrollbars may be visually hidden, but wheel, trackpad, keyboard navigation,
+  focus scrolling, and programmatic restoration must remain available.
+- Below `1180px`, the workbench becomes one vertical page with one page-level
+  scroll container and no nested column scrolling.
+
+## Business Dialog sizing
+
+- Small, medium, and large business Dialog widths are `520px`, `680px`, and
+  `840px` respectively.
+- Business Dialog content uses `max-height: calc(100dvh - 64px)`, leaving at
+  least `32px` above and below the viewport edge.
+- Header and Footer remain fixed inside the Dialog; only the middle form body
+  scrolls when content exceeds the available height.

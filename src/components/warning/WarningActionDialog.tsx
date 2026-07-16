@@ -12,7 +12,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { assessmentScaleOptions } from "@/data/assessmentScaleMock";
 import { cn } from "@/lib/utils";
-import { getFeedbackActionAvailability } from "@/lib/warning-feedback";
+import {
+  getFeedbackActionAvailability,
+  getObservationFeedbackActionAvailability,
+} from "@/lib/warning-feedback";
+import { getLatestCompletedRetest } from "@/lib/warning-retests";
 import { formatDateTimeInput, getMockDateTimeInput } from "@/lib/warning-time";
 import type {
   RetestStatusOutcome,
@@ -75,11 +79,11 @@ const dialogTitles: Record<WarningFormActionType, string> = {
   continue_observation: "继续观察",
   request_feedback: "请求补充反馈",
   record_intervention: "记录干预",
-  add_intervention: "新增干预记录",
+  add_intervention: "记录干预结果",
   schedule_intervention: "预约干预",
   record_intervention_result: "记录干预结果",
-  mark_intervention_no_show: "未到场并改约",
-  reschedule_intervention: "改约干预",
+  mark_intervention_no_show: "确认未到场并重新预约",
+  reschedule_intervention: "调整干预预约",
   cancel_intervention: "取消干预预约",
   schedule_retest: "安排复测",
   start_referral: "发起转介",
@@ -204,15 +208,17 @@ export function WarningActionDialog({
     return null;
   }
 
-  const latestRetest = [...warning.retestRecords].sort((left, right) =>
-    right.arrangedAt.localeCompare(left.arrangedAt),
-  )[0];
+  const latestRetest = getLatestCompletedRetest(warning);
   const canUpdateRetest = Boolean(latestRetest?.completedAt);
   const hasReferral = warning.referralRecords.length > 0;
+  const actionTime = formatDateTimeInput(getMockDateTimeInput());
   const dialogTitle = action === "request_feedback" &&
-    getFeedbackActionAvailability(warning, formatDateTimeInput(getMockDateTimeInput())).kind === "rerequest"
+    getFeedbackActionAvailability(warning, actionTime).kind === "rerequest"
       ? "重新请求反馈"
-      : dialogTitles[action];
+      : action === "continue_observation" &&
+          getObservationFeedbackActionAvailability(warning, actionTime).kind === "rerequest"
+        ? "重新请求反馈并更新观察计划"
+        : dialogTitles[action];
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));

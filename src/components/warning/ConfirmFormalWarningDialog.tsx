@@ -15,7 +15,7 @@ import { formatDateTimeInput, getMockDateTimeInput } from "@/lib/warning-time";
 import {
   riskLevelLabels,
   type ConfirmFormalWarningValues,
-  type RiskLevel,
+  type ActiveWarningRiskLevel,
   type WarningItem,
 } from "@/types/warning";
 
@@ -26,7 +26,7 @@ type ConfirmFormalWarningDialogProps = {
   onConfirm: (values: ConfirmFormalWarningValues) => void;
 };
 
-const riskLevels: RiskLevel[] = ["medium", "high", "critical"];
+const riskLevels: ActiveWarningRiskLevel[] = ["medium", "high", "critical"];
 
 export function ConfirmFormalWarningDialog({
   open,
@@ -34,7 +34,7 @@ export function ConfirmFormalWarningDialog({
   onOpenChange,
   onConfirm,
 }: ConfirmFormalWarningDialogProps) {
-  const [confirmedRiskLevel, setConfirmedRiskLevel] = useState<RiskLevel | null>(null);
+  const [confirmedRiskLevel, setConfirmedRiskLevel] = useState<ActiveWarningRiskLevel | null>(null);
   const [judgmentNote, setJudgmentNote] = useState("");
   const [adjustmentReason, setAdjustmentReason] = useState("");
   const [feedbackRequestNote, setFeedbackRequestNote] = useState("");

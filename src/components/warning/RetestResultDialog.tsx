@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { WarningItem } from "@/types/warning";
+import { getLatestCompletedRetest } from "@/lib/warning-retests";
 
 type RetestResultDialogProps = {
   warning: WarningItem | null;
@@ -29,9 +30,7 @@ export function RetestResultDialog({ warning, open, onOpenChange, onViewFullRete
   if (!warning) {
     return null;
   }
-  const record = [...warning.retestRecords].sort((left, right) =>
-    right.arrangedAt.localeCompare(left.arrangedAt),
-  )[0];
+  const record = getLatestCompletedRetest(warning);
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -40,7 +39,7 @@ export function RetestResultDialog({ warning, open, onOpenChange, onViewFullRete
           <DialogTitle>查看复测结果</DialogTitle>
           <DialogDescription>{warning.studentName} · 最近一次复测记录</DialogDescription>
         </DialogHeader>
-        {!record?.completedAt ? (
+        {!record ? (
           <div className="rounded-md border border-dashed border-neutral-200 bg-neutral-50 px-3 py-6 text-center text-sm text-neutral-500">复测尚未完成</div>
         ) : (
           <div className="grid gap-4 rounded-md border border-neutral-200 bg-neutral-50 p-4 sm:grid-cols-2">

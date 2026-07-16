@@ -62,7 +62,7 @@ function OverviewItem({ label, value }: OverviewItemProps) {
 }
 
 function shouldShowFeedback(status: WarningStatus) {
-  return status !== "pending_review" && status !== "observing";
+  return status !== "pending_review";
 }
 
 function shouldShowInterventionRecords(warning: WarningItem) {

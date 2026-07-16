@@ -1,7 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FeedbackCollaborationRounds } from "@/components/case-records/FeedbackCollaborationRounds";
-import { getEffectiveFeedbackStatus, hasUnreadWarningFeedback } from "@/lib/warning-feedback";
+import {
+  getEffectiveFeedbackStatus,
+  getFeedbackDataIssues,
+  hasUnreadWarningFeedback,
+} from "@/lib/warning-feedback";
 import { buildWarningFeedbackCollaboration } from "@/lib/warning-records";
 import {
   feedbackStatusLabels,
@@ -39,6 +43,10 @@ export function FeedbackPanel({ warning, currentTime, onMarkFeedbackRead }: Feed
   const effectiveFeedbackStatus = getEffectiveFeedbackStatus(warning, currentTime);
   const hasUnreadFeedback = hasUnreadWarningFeedback(warning);
   const collaboration = buildWarningFeedbackCollaboration(warning.feedbackRequests, warning.feedbackRecords);
+  const dataIssues = [
+    ...getFeedbackDataIssues(warning, currentTime),
+    ...collaboration.dataIssues,
+  ];
 
   return (
     <section className="rounded-lg border border-neutral-200 bg-white p-4">
@@ -54,6 +62,12 @@ export function FeedbackPanel({ warning, currentTime, onMarkFeedbackRead }: Feed
         <span>联系电话：{warning.headTeacherPhone}</span>
         <span className="col-span-2">反馈截止：{warning.feedbackDeadline || "-"}</span>
       </div>
+
+      {dataIssues.length ? (
+        <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          {dataIssues.map((issue) => <div key={issue}>{issue}</div>)}
+        </div>
+      ) : null}
 
       {warning.feedbackRequests.length || warning.feedbackRecords.length ? (
         <FeedbackCollaborationRounds collaboration={collaboration} />

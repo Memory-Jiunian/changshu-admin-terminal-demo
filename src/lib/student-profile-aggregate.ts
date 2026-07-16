@@ -6,6 +6,7 @@ import type {
   StudentProfileSummary,
 } from "@/types/studentProfile";
 import { getEffectiveRiskLevel, type WarningItem } from "@/types/warning";
+import { getEffectiveFeedbackStatus } from "@/lib/warning-feedback";
 import {
   buildEffectiveWarningTimeline,
   buildWarningFeedbackCollaboration,
@@ -23,13 +24,14 @@ function sortWarningsNewestFirst(warnings: WarningItem[]) {
 }
 
 function getCaseStartTime(warning: WarningItem) {
-  if (warning.timeline.length === 0) {
+  const timeline = buildEffectiveWarningTimeline(warning);
+  if (timeline.length === 0) {
     return warning.activityTime;
   }
 
-  return warning.timeline.reduce(
+  return timeline.reduce(
     (earliest, item) => item.occurredAt < earliest ? item.occurredAt : earliest,
-    warning.timeline[0].occurredAt,
+    timeline[0].occurredAt,
   );
 }
 
@@ -42,13 +44,13 @@ function getClosedAt(warning: WarningItem) {
     return undefined;
   }
 
-  return warning.timeline.find((item) => item.title === "完成闭环归档")?.occurredAt
+  return buildEffectiveWarningTimeline(warning).find((item) => item.title === "完成闭环归档")?.occurredAt
     ?? warning.activityTime;
 }
 
-function buildCaseSummary(warning: WarningItem): StudentProfileCaseSummary {
+function buildCaseSummary(warning: WarningItem, currentTime = warning.activityTime): StudentProfileCaseSummary {
   const isActive = isActiveProfileWarning(warning);
-  const closedEvent = warning.timeline.find((item) => item.title === "完成闭环归档");
+  const closedEvent = buildEffectiveWarningTimeline(warning).find((item) => item.title === "完成闭环归档");
   const outcome = isActive
     ? "active"
     : warning.currentStatus === "closed"
@@ -67,7 +69,7 @@ function buildCaseSummary(warning: WarningItem): StudentProfileCaseSummary {
     confirmedRiskLevel: warning.confirmedRiskLevel,
     riskLevelAdjustmentReason: warning.riskLevelAdjustmentReason,
     currentStatus: warning.currentStatus,
-    feedbackStatus: warning.feedbackStatus,
+    feedbackStatus: getEffectiveFeedbackStatus(warning, currentTime),
     responsibleTeacher: warning.responsibleTeacher,
     latestActivity: warning.latestActivity,
     activityTime: warning.activityTime,
@@ -85,9 +87,10 @@ function buildCaseSummary(warning: WarningItem): StudentProfileCaseSummary {
 
 export function buildStudentProfileCaseDetail(
   warning: WarningItem,
+  currentTime = warning.activityTime,
 ): StudentProfileCaseDetail {
   return {
-    summary: buildCaseSummary(warning),
+    summary: buildCaseSummary(warning, currentTime),
     riskEvidence: {
       sourceType: warning.sourceType,
       evidenceTypes: [...warning.evidenceTypes],
@@ -251,6 +254,7 @@ export function buildStudentProfileSummaries(
 export function buildStudentProfileDetail(
   student: StudentProfileRecord,
   warnings: WarningItem[],
+  currentTime?: string,
 ): StudentProfileDetail {
   const { relatedWarnings, activeWarning, dataIssues } = selectWarningsForStudent(
     student,
@@ -261,14 +265,14 @@ export function buildStudentProfileDetail(
   return {
     student,
     summary,
-    activeCase: activeWarning ? buildCaseSummary(activeWarning) : undefined,
+    activeCase: activeWarning ? buildCaseSummary(activeWarning, currentTime) : undefined,
     historicalCases: relatedWarnings
       .filter((warning) => !isActiveProfileWarning(warning))
-      .map(buildCaseSummary),
+      .map((warning) => buildCaseSummary(warning, currentTime)),
     caseDetails: Object.fromEntries(
       relatedWarnings.map((warning) => [
         warning.id,
-        buildStudentProfileCaseDetail(warning),
+        buildStudentProfileCaseDetail(warning, currentTime),
       ]),
     ),
     dataIssues,

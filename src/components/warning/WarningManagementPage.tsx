@@ -139,6 +139,7 @@ export function WarningManagementPage({
       : undefined,
   );
   const [navigationNotice, setNavigationNotice] = useState("");
+  const [globalToast, setGlobalToast] = useState("");
   const handledWorkbenchNavigationRef = useRef("");
 
   useEffect(() => {
@@ -316,11 +317,21 @@ export function WarningManagementPage({
     setWarnings((currentWarnings) =>
       currentWarnings.map((item) => (item.id === warningId ? result.warning : item)),
     );
+    if (submission.type === "end_review") {
+      setSelectedWarningId(null);
+      setGlobalToast("本次风险事项已解除，已从活动预警列表移除。");
+    }
     return { success: true, message: result.message };
   }
 
   return (
     <div className="space-y-5">
+      {globalToast ? (
+        <div className="fixed right-6 top-20 z-[80] max-w-sm rounded-md bg-neutral-950 px-4 py-3 text-sm font-medium text-white shadow-lg" role="status">
+          {globalToast}
+          <button className="ml-3 text-neutral-300 hover:text-white" onClick={() => setGlobalToast("")} type="button">关闭</button>
+        </div>
+      ) : null}
       {onReturnToStudentProfile ? (
         <div className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-sm">
           <div className="text-sm text-neutral-600">正在查看学生档案关联的预警事项</div>

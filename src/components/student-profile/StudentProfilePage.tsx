@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { studentProfileMockData } from "@/data/studentProfileMock";
 import { buildStudentProfileDetail, buildStudentProfileSummaries } from "@/lib/student-profile-aggregate";
 import { getFirstAvailableClass, loadStudentClassPreference, saveStudentClassPreference } from "@/lib/student-profile-class-preference";
+import { formatMockDateTime } from "@/lib/warning-time";
 import { cloneStudentProfileFilterQuery, createDefaultStudentProfileFilterQuery, filterStudentProfiles, getStudentProfileFilterOptions, paginateStudentProfiles } from "@/lib/student-profile-filters";
 import { useAdminData } from "@/state/AdminDataProvider";
 import type { StudentProfileReturnState } from "@/types/navigation";
@@ -24,6 +25,7 @@ type StudentProfilePageProps = {
 
 export function StudentProfilePage({ initialLoadState = "ready", initialReturnState, onOpenWarningDetail }: StudentProfilePageProps) {
   const { warnings } = useAdminData();
+  const currentTime = formatMockDateTime();
   const summaries = useMemo(
     () => buildStudentProfileSummaries(studentProfileMockData, warnings),
     [warnings],
@@ -74,8 +76,8 @@ export function StudentProfilePage({ initialLoadState = "ready", initialReturnSt
     [selectedStudentId],
   );
   const selectedDetail = useMemo(
-    () => selectedStudent ? buildStudentProfileDetail(selectedStudent, warnings) : null,
-    [selectedStudent, warnings],
+    () => selectedStudent ? buildStudentProfileDetail(selectedStudent, warnings, currentTime) : null,
+    [currentTime, selectedStudent, warnings],
   );
   const selectedCaseDetail = useMemo(
     () => drawerView.type === "case_detail"

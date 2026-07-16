@@ -1,5 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { getFeedbackActionAvailability } from "@/lib/warning-feedback";
+import {
+  getFeedbackActionAvailability,
+  getObservationFeedbackActionAvailability,
+} from "@/lib/warning-feedback";
+import {
+  getInterventionAppointmentTiming,
+  getLatestPlannedInterventionAppointment,
+} from "@/lib/intervention-appointments";
 import type { WarningActionType, WarningItem, WarningStatus } from "@/types/warning";
 
 type DrawerActionBarProps = {
@@ -33,8 +40,6 @@ const actionsByStatus: Record<WarningStatus, DrawerAction[]> = {
   ],
   in_intervention: [
     { type: "record_intervention_result", label: "记录干预结果", emphasis: "primary" },
-    { type: "mark_intervention_no_show", label: "未到场并改约" },
-    { type: "reschedule_intervention", label: "重新预约" },
     { type: "cancel_intervention", label: "取消" },
   ],
   pending_retest: [
@@ -50,6 +55,19 @@ const actionsByStatus: Record<WarningStatus, DrawerAction[]> = {
 
 export function DrawerActionBar({ warning, currentTime, actionMessage, onAction }: DrawerActionBarProps) {
   let actions = actionsByStatus[warning.currentStatus];
+  if (warning.currentStatus === "observing") {
+    const availability = getObservationFeedbackActionAvailability(warning, currentTime);
+    actions = [
+      {
+        type: "continue_observation",
+        label: availability.label,
+        emphasis: "secondary",
+        disabled: availability.disabled,
+      },
+      { type: "confirm_formal_warning", label: "确认正式预警", emphasis: "primary" },
+      { type: "end_review", label: "结束本次线索处理" },
+    ];
+  }
   if (warning.currentStatus === "formal_warning") {
     const availability = getFeedbackActionAvailability(warning, currentTime);
     const feedbackAction: DrawerAction[] = availability.kind === "hidden"
@@ -65,11 +83,17 @@ export function DrawerActionBar({ warning, currentTime, actionMessage, onAction 
     ];
   }
   if (warning.currentStatus === "in_intervention") {
-    const hasPlannedAppointment = warning.interventionAppointments.some(
-      (appointment) => appointment.status === "planned",
+    const activeAppointment = getLatestPlannedInterventionAppointment(
+      warning.interventionAppointments,
     );
-    actions = hasPlannedAppointment
-      ? actionsByStatus.in_intervention
+    actions = activeAppointment
+      ? [
+          { type: "record_intervention_result", label: "记录干预结果", emphasis: "primary" },
+          getInterventionAppointmentTiming(activeAppointment, currentTime) === "confirmation_required"
+            ? { type: "mark_intervention_no_show", label: "确认未到场并重新预约" }
+            : { type: "reschedule_intervention", label: "调整预约" },
+          { type: "cancel_intervention", label: "取消" },
+        ]
       : [{ type: "schedule_intervention", label: "预约干预", emphasis: "primary" }];
   }
   return (

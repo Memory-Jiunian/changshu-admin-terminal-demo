@@ -1,4 +1,4 @@
-import type { RiskLevel } from "@/types/warning";
+import type { ActiveWarningRiskLevel } from "@/types/warning";
 
 export type WorkbenchTaskType =
   | "pending_review"
@@ -7,11 +7,14 @@ export type WorkbenchTaskType =
   | "feedback_overdue"
   | "retest_result_pending"
   | "referral_follow_up"
-  | "intervention_unscheduled"
-  | "intervention_status_pending"
-  | "retest_status_pending";
+  | "intervention_unscheduled";
 
 export type WorkbenchReminderType = "retest_plan_today" | "intervention_plan_upcoming";
+
+export type WorkbenchArrangementState =
+  | "upcoming"
+  | "intervention_confirmation_required"
+  | "retest_incomplete";
 
 export type WarningDetailSection =
   | "overview"
@@ -30,7 +33,7 @@ export type WorkbenchTask = {
   studentId: string;
   studentName: string;
   gradeClass: string;
-  riskLevel: RiskLevel;
+  riskLevel: ActiveWarningRiskLevel;
   responsibleTeacher: string;
   reason: string;
   triggeredAt: string;
@@ -48,13 +51,16 @@ export type WorkbenchReminder = {
   studentId: string;
   studentName: string;
   gradeClass: string;
-  riskLevel: RiskLevel;
+  riskLevel: ActiveWarningRiskLevel;
   responsibleTeacher: string;
   reason: string;
   plannedAt: string;
   scaleNames?: string[];
   location?: string;
   targetSection: "retest" | "intervention";
+  state: WorkbenchArrangementState;
+  statusLabel: string;
+  ctaLabel: string;
 };
 
 export type WorkbenchDataIssue = {
@@ -106,8 +112,6 @@ export const workbenchTaskLabels: Record<WorkbenchTaskType, string> = {
   retest_result_pending: "复测结果待更新",
   referral_follow_up: "转介跟进中",
   intervention_unscheduled: "待安排干预",
-  intervention_status_pending: "干预情况待确认",
-  retest_status_pending: "复测情况待确认",
 };
 
 export const workbenchTaskSections: Record<WorkbenchTaskType, WarningDetailSection> = {
@@ -118,8 +122,6 @@ export const workbenchTaskSections: Record<WorkbenchTaskType, WarningDetailSecti
   retest_result_pending: "retest",
   referral_follow_up: "referral",
   intervention_unscheduled: "action_bar",
-  intervention_status_pending: "intervention",
-  retest_status_pending: "retest",
 };
 
 export const workbenchReminderSections: Record<WorkbenchReminderType, "retest" | "intervention"> = {

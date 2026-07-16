@@ -1,5 +1,14 @@
 import { getEffectiveFeedbackStatus, hasUnreadWarningFeedback } from "@/lib/warning-feedback";
-import { getEffectiveRiskLevel, type RiskLevel, type WarningItem } from "@/types/warning";
+import {
+  getInterventionAppointmentTiming,
+  getLatestPlannedInterventionAppointment,
+} from "@/lib/intervention-appointments";
+import {
+  getLatestCompletedRetest,
+  getLatestPlannedRetest,
+  isRetestIncompleteAfterGrace,
+} from "@/lib/warning-retests";
+import { getEffectiveRiskLevel, type ActiveWarningRiskLevel, type WarningItem } from "@/types/warning";
 import {
   workbenchReminderSections,
   workbenchTaskSections,
@@ -10,11 +19,10 @@ import {
   type WorkbenchTaskType,
 } from "@/types/workbench";
 
-const riskPriority: Record<RiskLevel, number> = {
+const riskPriority: Record<ActiveWarningRiskLevel, number> = {
   critical: 4,
   high: 3,
   medium: 2,
-  low: 1,
 };
 
 function datePart(value: string) {
@@ -72,6 +80,20 @@ function sortTasks(tasks: WorkbenchTask[]) {
   });
 }
 
+function arrangementPriority(state: WorkbenchReminder["state"]) {
+  if (state === "intervention_confirmation_required") return 0;
+  if (state === "retest_incomplete") return 1;
+  return 2;
+}
+
+function sortArrangements(items: WorkbenchReminder[]) {
+  return [...items].sort((left, right) =>
+    arrangementPriority(left.state) - arrangementPriority(right.state) ||
+    left.plannedAt.localeCompare(right.plannedAt) ||
+    left.id.localeCompare(right.id),
+  );
+}
+
 export function buildWorkbenchItems({
   warnings,
   currentTeacher,
@@ -121,38 +143,79 @@ export function buildWorkbenchItems({
     }
 
     if (warning.currentStatus === "pending_retest") {
-      const latestRetest = latestBy(warning.retestRecords, (record) => record.arrangedAt);
-      if (!latestRetest) {
+      const latestPlannedRetest = getLatestPlannedRetest(warning);
+      const latestCompletedRetest = getLatestCompletedRetest(warning);
+      if (!latestPlannedRetest && !latestCompletedRetest) {
         dataIssues.push({ id: `${warning.id}:missing-retest`, warningId: warning.id, message: "待复测事项缺少复测记录。" });
-      } else if (latestRetest.completedAt) {
-        tasks.push(makeTask(warning, "retest_result_pending", "学生已完成复测，等待心理老师更新状态。", latestRetest.completedAt, currentDate));
-      } else if (latestRetest.plannedAt < currentTime) {
-        tasks.push(makeTask(warning, "retest_status_pending", "计划复测时间已过，等待确认学生完成情况。", latestRetest.plannedAt, currentDate, latestRetest.plannedAt));
-      } else if ([currentDate, nextDate(currentDate)].includes(datePart(latestRetest.plannedAt))) {
+      }
+      if (
+        latestCompletedRetest &&
+        (!latestPlannedRetest || latestCompletedRetest.arrangedAt >= latestPlannedRetest.arrangedAt)
+      ) {
+        tasks.push(makeTask(warning, "retest_result_pending", "学生已完成复测，等待心理老师更新状态。", latestCompletedRetest.completedAt!, currentDate));
+      }
+      if (latestPlannedRetest && isRetestIncompleteAfterGrace(latestPlannedRetest, currentTime)) {
         reminders.push({
           id: `${warning.id}:retest_plan_today`, kind: "reminder", type: "retest_plan_today",
           warningId: warning.id, studentId: warning.studentId, studentName: warning.studentName,
           gradeClass: warning.gradeClass, riskLevel: getEffectiveRiskLevel(warning),
-          responsibleTeacher: warning.responsibleTeacher, reason: "学生计划今天完成复测。",
-          plannedAt: latestRetest.plannedAt, scaleNames: [...latestRetest.scaleNames],
+          responsibleTeacher: warning.responsibleTeacher, reason: "复测计划已超过完成宽限期，等待查看并重新安排。",
+          plannedAt: latestPlannedRetest.plannedAt, scaleNames: [...latestPlannedRetest.scaleNames],
           targetSection: workbenchReminderSections.retest_plan_today,
+          state: "retest_incomplete",
+          statusLabel: "复测未完成",
+          ctaLabel: "查看并重新安排",
+        });
+      } else if (latestPlannedRetest && [currentDate, nextDate(currentDate)].includes(datePart(latestPlannedRetest.plannedAt))) {
+        reminders.push({
+          id: `${warning.id}:retest_plan_today`, kind: "reminder", type: "retest_plan_today",
+          warningId: warning.id, studentId: warning.studentId, studentName: warning.studentName,
+          gradeClass: warning.gradeClass, riskLevel: getEffectiveRiskLevel(warning),
+          responsibleTeacher: warning.responsibleTeacher, reason: "学生有今日或次日复测计划。",
+          plannedAt: latestPlannedRetest.plannedAt, scaleNames: [...latestPlannedRetest.scaleNames],
+          targetSection: workbenchReminderSections.retest_plan_today,
+          state: "upcoming",
+          statusLabel: "复测安排",
+          ctaLabel: "查看安排",
         });
       }
     }
 
-    const plannedAppointments = warning.interventionAppointments
-      .filter((appointment) => appointment.status === "planned")
-      .sort((left, right) => right.plannedAt.localeCompare(left.plannedAt));
-    const activeAppointment = plannedAppointments[0];
+    const activeAppointment = getLatestPlannedInterventionAppointment(
+      warning.interventionAppointments,
+    );
     if (warning.currentStatus === "formal_warning" && !activeAppointment) {
-      tasks.push(makeTask(warning, "intervention_unscheduled", "事项已形成正式预警，尚未安排首次干预。", warning.activityTime, currentDate));
+      const wasCancelled = warning.interventionAppointments.some(
+        (appointment) => appointment.status === "cancelled",
+      );
+      tasks.push(makeTask(
+        warning,
+        "intervention_unscheduled",
+        wasCancelled
+          ? "原干预预约已取消，请重新安排干预。"
+          : "正式预警已确认，尚未预约首次干预。",
+        warning.activityTime,
+        currentDate,
+      ));
     }
     if (warning.currentStatus === "in_intervention") {
       if (!activeAppointment) {
         dataIssues.push({ id: `${warning.id}:missing-intervention-appointment`, warningId: warning.id, message: "待干预事项没有有效预约，请尽快重新安排。" });
-      } else if (activeAppointment.plannedAt < currentTime) {
-        tasks.push(makeTask(warning, "intervention_status_pending", "干预预约时间已过，等待确认完成、未到场或改约。", activeAppointment.plannedAt, currentDate, activeAppointment.plannedAt));
-      } else if ([currentDate, nextDate(currentDate)].includes(datePart(activeAppointment.plannedAt))) {
+      } else {
+        const timing = getInterventionAppointmentTiming(activeAppointment, currentTime);
+        if (timing === "confirmation_required") {
+          reminders.push({
+            id: `${warning.id}:intervention_plan_upcoming`, kind: "reminder", type: "intervention_plan_upcoming",
+            warningId: warning.id, studentId: warning.studentId, studentName: warning.studentName,
+            gradeClass: warning.gradeClass, riskLevel: getEffectiveRiskLevel(warning),
+            responsibleTeacher: warning.responsibleTeacher, reason: "干预预约已超过结果记录宽限期，等待心理老师确认。",
+            plannedAt: activeAppointment.plannedAt, location: activeAppointment.location,
+            targetSection: workbenchReminderSections.intervention_plan_upcoming,
+            state: "intervention_confirmation_required",
+            statusLabel: "预约时间已过 · 待确认",
+            ctaLabel: "确认干预情况",
+          });
+        } else if ([currentDate, nextDate(currentDate)].includes(datePart(activeAppointment.plannedAt))) {
         reminders.push({
           id: `${warning.id}:intervention_plan_upcoming`, kind: "reminder", type: "intervention_plan_upcoming",
           warningId: warning.id, studentId: warning.studentId, studentName: warning.studentName,
@@ -160,7 +223,11 @@ export function buildWorkbenchItems({
           responsibleTeacher: warning.responsibleTeacher, reason: "学生有今日或次日干预预约。",
           plannedAt: activeAppointment.plannedAt, location: activeAppointment.location,
           targetSection: workbenchReminderSections.intervention_plan_upcoming,
+          state: "upcoming",
+          statusLabel: timing === "awaiting_result" ? "预约进行中 · 等待结果记录" : "干预预约",
+          ctaLabel: "查看安排",
         });
+        }
       }
     }
 
@@ -189,7 +256,7 @@ export function buildWorkbenchItems({
 
   return {
     tasks: sortTasks(tasks),
-    reminders: [...reminders].sort((left, right) => left.plannedAt.localeCompare(right.plannedAt) || left.id.localeCompare(right.id)),
+    reminders: sortArrangements(reminders),
     dataIssues,
   };
 }

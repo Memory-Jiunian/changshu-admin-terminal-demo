@@ -15,6 +15,17 @@ export type FeedbackStatus =
   | "new_feedback";
 
 export type RiskLevel = "low" | "medium" | "high" | "critical";
+export type ActiveWarningRiskLevel = Exclude<RiskLevel, "low">;
+
+export type WarningTimelineSourceType =
+  | "warning_transition"
+  | "feedback_request"
+  | "feedback_record"
+  | "intervention_appointment"
+  | "intervention_record"
+  | "retest_record"
+  | "referral_record"
+  | "referral_follow_up";
 
 export type WarningSourceType =
   | "screening_abnormal"
@@ -32,6 +43,8 @@ export type WarningTimelineItem = {
   operator: string;
   occurredAt: string;
   description: string;
+  sourceType?: WarningTimelineSourceType;
+  sourceId?: string;
 };
 
 export type WarningFeedbackRecord = {
@@ -192,8 +205,8 @@ export type WarningItem = {
   gradeClass: string;
   sourceType: WarningSourceType;
   evidenceTypes: WarningEvidenceType[];
-  suggestedRiskLevel: RiskLevel;
-  confirmedRiskLevel?: RiskLevel;
+  suggestedRiskLevel: ActiveWarningRiskLevel;
+  confirmedRiskLevel?: ActiveWarningRiskLevel;
   riskLevelAdjustmentReason?: string;
   currentStatus: WarningStatus;
   latestActivity: string;
@@ -226,7 +239,7 @@ export type WarningItem = {
 };
 
 export type ConfirmFormalWarningValues = {
-  confirmedRiskLevel: RiskLevel;
+  confirmedRiskLevel: ActiveWarningRiskLevel;
   judgmentNote: string;
   riskLevelAdjustmentReason: string;
   feedbackRequestNote: string;
@@ -358,7 +371,7 @@ export type TimeRangeFilter = "today" | "last_3_days" | "last_7_days";
 
 export type AdvancedFilterValues = {
   gradeClass: string[];
-  riskLevel: RiskLevel[];
+  riskLevel: ActiveWarningRiskLevel[];
   currentStatus: WarningStatus[];
   evidenceTypes: WarningEvidenceType[];
   responsibleTeacher: string[];
@@ -427,6 +440,6 @@ export const timeRangeLabels: Record<TimeRangeFilter, string> = {
   last_7_days: "近 7 天",
 };
 
-export function getEffectiveRiskLevel(warning: WarningItem): RiskLevel {
+export function getEffectiveRiskLevel(warning: WarningItem): ActiveWarningRiskLevel {
   return warning.confirmedRiskLevel ?? warning.suggestedRiskLevel;
 }

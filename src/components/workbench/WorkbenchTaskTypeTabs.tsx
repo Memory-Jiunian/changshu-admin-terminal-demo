@@ -1,7 +1,7 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { workbenchTaskLabels, type WorkbenchTaskFilter, type WorkbenchTaskType } from "@/types/workbench";
 
-const types: WorkbenchTaskType[] = ["pending_review", "observation_due", "new_feedback", "feedback_overdue", "intervention_unscheduled", "intervention_status_pending", "retest_status_pending", "retest_result_pending", "referral_follow_up"];
+const types: WorkbenchTaskType[] = ["pending_review", "observation_due", "new_feedback", "feedback_overdue", "intervention_unscheduled", "retest_result_pending", "referral_follow_up"];
 
 export function WorkbenchTaskTypeTabs({ value, counts, onChange }: { value: WorkbenchTaskFilter; counts: Record<WorkbenchTaskType, number>; onChange: (value: WorkbenchTaskFilter) => void }) {
   return <Tabs onValueChange={(next) => onChange(next as WorkbenchTaskFilter)} value={value}>

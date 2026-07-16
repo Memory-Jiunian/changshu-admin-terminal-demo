@@ -9,6 +9,11 @@ import {
   type WarningTimelineItem,
 } from "@/types/warning";
 import { getFeedbackActionAvailability } from "@/lib/warning-feedback";
+import {
+  getInterventionAppointmentTiming,
+  getLatestPlannedInterventionAppointment,
+} from "@/lib/intervention-appointments";
+import { getLatestCompletedRetest } from "@/lib/warning-retests";
 
 type ApplyWarningActionResult =
   | { success: true; warning: WarningItem; message: string }
@@ -46,12 +51,6 @@ function withActivity(
     latestActivity,
     activityTime: occurredAt,
   };
-}
-
-function getLatestRetest(warning: WarningItem) {
-  return [...warning.retestRecords].sort((left, right) =>
-    right.arrangedAt.localeCompare(left.arrangedAt),
-  )[0];
 }
 
 function buildAppointment(
@@ -124,12 +123,29 @@ export function applyWarningAction(
       if (nextReviewAt <= occurredAt || feedbackDeadline <= occurredAt) {
         return { success: false, message: "复核时间和反馈截止时间必须晚于当前时间。" };
       }
-      if (warning.feedbackRequests.some((request) => request.status === "pending")) {
+      const pendingRequest = [...warning.feedbackRequests]
+        .filter((request) => request.status === "pending")
+        .sort((left, right) => right.requestedAt.localeCompare(left.requestedAt))[0];
+      const pendingRequestHasFeedback = Boolean(
+        pendingRequest && warning.feedbackRecords.some((record) => record.requestId === pendingRequest.id),
+      );
+      if (pendingRequest && !pendingRequestHasFeedback && occurredAt <= pendingRequest.deadline) {
         return { success: false, message: "当前已有进行中的班主任反馈任务。" };
       }
+      const isRerequest = Boolean(
+        pendingRequest && !pendingRequestHasFeedback && occurredAt > pendingRequest.deadline,
+      );
+      const feedbackRequests = warning.feedbackRequests.map((request) => {
+        if (request.id !== pendingRequest?.id) return request;
+        return {
+          ...request,
+          status: pendingRequestHasFeedback ? "completed" as const : "overdue" as const,
+        };
+      });
+      const requestId = makeId("FQ", warning, occurredAt, warning.feedbackRequests.length);
       return {
         success: true,
-        message: "已更新为观察中。",
+        message: isRerequest ? "已重新请求班主任反馈并更新观察计划。" : "已更新观察计划并创建新一轮反馈任务。",
         warning: withActivity(warning, occurredAt, "心理老师标记继续观察", {
           currentStatus: "observing",
           observationNote: observationNote.trim(),
@@ -139,18 +155,18 @@ export function applyWarningAction(
           feedbackDeadline,
           hasUnreadFeedback: false,
           feedbackRequests: [{
-            id: makeId("FQ", warning, occurredAt, warning.feedbackRequests.length),
+            id: requestId,
             requestedAt: occurredAt,
             requestedBy: warning.responsibleTeacher,
             requestNote: feedbackRequestNote.trim(),
             deadline: feedbackDeadline,
             status: "pending",
-          }, ...warning.feedbackRequests],
+          }, ...feedbackRequests],
           timeline: [
             timelineItem(
               warning,
               occurredAt,
-              "标记继续观察",
+              isRerequest ? "重新请求反馈" : "标记继续观察",
               `观察说明：${observationNote.trim()}；下次复核时间：${nextReviewAt}；已向班主任请求反馈：${feedbackRequestNote.trim()}；截止时间：${feedbackDeadline}。`,
             ),
             ...warning.timeline,
@@ -239,6 +255,19 @@ export function applyWarningAction(
     }
     case "mark_intervention_no_show":
     case "reschedule_intervention": {
+      const currentAppointment = getLatestPlannedInterventionAppointment(
+        warning.interventionAppointments,
+      );
+      if (!currentAppointment || currentAppointment.id !== submission.values.appointmentId) {
+        return { success: false, message: "当前有效干预预约不存在或已更新。" };
+      }
+      const timing = getInterventionAppointmentTiming(currentAppointment, occurredAt);
+      if (submission.type === "mark_intervention_no_show" && timing !== "confirmation_required") {
+        return { success: false, message: "预约仍在进行或宽限期内，暂不能确认未到场。" };
+      }
+      if (submission.type === "reschedule_intervention" && timing === "confirmation_required") {
+        return { success: false, message: "预约已超过确认宽限期，请先确认未到场后重新预约。" };
+      }
       const oldStatus = submission.type === "mark_intervention_no_show" ? "no_show" : "rescheduled";
       const appointments = updateAppointment(warning, submission.values.appointmentId, { status: oldStatus });
       if (!appointments) return { success: false, message: "原干预预约不存在。" };
@@ -252,10 +281,10 @@ export function applyWarningAction(
         warning.interventionAppointments.length,
         submission.values.appointmentId,
       );
-      const title = submission.type === "mark_intervention_no_show" ? "记录未到场并改约" : "改约干预";
+      const title = submission.type === "mark_intervention_no_show" ? "确认未到场并重新预约" : "调整干预预约";
       return {
         success: true,
-        message: submission.type === "mark_intervention_no_show" ? "已记录未到场并创建新预约。" : "干预预约已改期。",
+        message: submission.type === "mark_intervention_no_show" ? "已确认未到场并创建新预约。" : "干预预约已调整。",
         warning: withActivity(warning, occurredAt, title, {
           currentStatus: "in_intervention",
           interventionAppointments: [appointment, ...appointments],
@@ -277,12 +306,12 @@ export function applyWarningAction(
       if (!reason) return { success: false, message: "请填写取消原因。" };
       return {
         success: true,
-        message: "干预预约已取消，可重新预约。",
+        message: "干预预约已取消，事项已回到正式预警等待重新安排。",
         warning: withActivity(warning, occurredAt, "取消干预预约", {
-          currentStatus: "in_intervention",
+          currentStatus: "formal_warning",
           interventionAppointments: appointments,
           timeline: [
-            timelineItem(warning, occurredAt, "取消干预预约", `取消原因：${reason}。事项保持待干预，可重新预约。`),
+            timelineItem(warning, occurredAt, "取消干预预约", `取消原因：${reason}。事项回到正式预警，等待重新安排干预。`),
             ...warning.timeline,
           ],
         }),
@@ -399,14 +428,14 @@ export function applyWarningAction(
       return {
         success: true,
         message: "干预记录已保存。",
-        warning: withActivity(warning, values.occurredAt, "心理老师新增干预记录", {
+        warning: withActivity(warning, values.occurredAt, "心理老师记录干预结果", {
           currentStatus: "in_intervention",
           interventionRecords: [record, ...warning.interventionRecords],
           timeline: [
             timelineItem(
               warning,
               values.occurredAt,
-              "新增干预记录",
+              "记录干预结果",
               `心理老师完成${record.method}。本次判断：${record.judgment}；后续计划：${record.followUpPlan}。`,
             ),
             ...warning.timeline,
@@ -529,7 +558,7 @@ export function applyWarningAction(
       };
     }
     case "update_retest_status": {
-      const latestRetest = getLatestRetest(warning);
+      const latestRetest = getLatestCompletedRetest(warning);
       if (!latestRetest?.completedAt) {
         return { success: false, message: "最近一次复测尚未完成，不能更新状态。" };
       }
@@ -629,7 +658,7 @@ export function applyConfirmFormalWarning(
     judgmentNote ? `判断说明：${judgmentNote}` : "",
     `补充反馈要求：${feedbackRequestNote}`,
     `反馈截止时间：${values.feedbackDeadline}`,
-    `系统已同步生成班主任${warning.headTeacherName}协作任务并通知对应班主任`,
+    `系统已生成班主任${warning.headTeacherName}协作任务与通知计划`,
   ].filter(Boolean);
 
   return withActivity(warning, occurredAt, "已确认正式预警", {

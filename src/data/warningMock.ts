@@ -1342,10 +1342,134 @@ const retestTodayDemo: WarningItem = {
   ),
 };
 
+function buildSchoolOverviewHistoryCase({
+  id,
+  studentId,
+  studentName,
+  gradeClass,
+  sourceType,
+  confirmedRiskLevel,
+  confirmedAt,
+  endedAt,
+  referralAt,
+}: {
+  id: string;
+  studentId: string;
+  studentName: string;
+  gradeClass: string;
+  sourceType: WarningItem["sourceType"];
+  confirmedRiskLevel: NonNullable<WarningItem["confirmedRiskLevel"]>;
+  confirmedAt: string;
+  endedAt: string;
+  referralAt?: string;
+}): WarningItem {
+  const template = normalizedWarningMockData[0];
+  const confirmedRiskLabel = {
+    medium: "中风险",
+    high: "高风险",
+    critical: "危险",
+  }[confirmedRiskLevel];
+  return {
+    ...template,
+    id,
+    studentId,
+    studentName,
+    gradeClass,
+    sourceType,
+    suggestedRiskLevel: confirmedRiskLevel,
+    confirmedRiskLevel,
+    currentStatus: "closed",
+    latestActivity: "已完成闭环归档",
+    activityTime: endedAt,
+    feedbackStatus: "feedback_received",
+    responsibleTeacher: "周老师",
+    assessmentSummary: "历史事项已完成专业评估与处置。",
+    aiSummary: "历史事项仅保留摘要级线索。",
+    deepAssessmentRecords: [],
+    aiConversationRecords: [],
+    teacherFeedbackSummary: "历史协作记录已归档。",
+    feedbackRecords: [],
+    feedbackRequests: [],
+    hasUnreadFeedback: false,
+    interventionRecords: [],
+    interventionAppointments: [],
+    retestRecords: [],
+    referralRecords: referralAt ? [{
+      id: `REF-${id}`,
+      referredAt: referralAt,
+      referralType: "校外专业支持",
+      reason: "根据当时评估结果发起转介。",
+      followUpRecords: [],
+    }] : [],
+    timeline: [{
+      id: `TL-${id}-FORMAL`,
+      title: "确认正式预警",
+      operator: "周老师",
+      occurredAt: confirmedAt,
+      description: `心理老师确认${confirmedRiskLabel}，系统同步生成班主任协作任务。`,
+    }, ...(referralAt ? [{
+      id: `TL-${id}-REFERRAL`,
+      title: "发起转介",
+      operator: "周老师",
+      occurredAt: referralAt,
+      description: "心理老师发起校外专业支持转介。",
+    }] : []), {
+      id: `TL-${id}-CLOSED`,
+      title: "完成闭环归档",
+      operator: "周老师",
+      occurredAt: endedAt,
+      description: "心理老师确认事项完成闭环归档。",
+    }],
+    isActive: false,
+    disposition: "active",
+    endedAt,
+    endReason: "经阶段处置与复核后完成闭环。",
+    observationNote: undefined,
+    nextReviewAt: undefined,
+    feedbackDeadline: undefined,
+    feedbackRequestNote: undefined,
+  };
+}
+
+const schoolOverviewHistoryDemos: WarningItem[] = [
+  buildSchoolOverviewHistoryCase({
+    id: "WRN-20260328-H01",
+    studentId: "STU-0109",
+    studentName: "徐嘉禾",
+    gradeClass: "初二（4）班",
+    sourceType: "screening_abnormal",
+    confirmedRiskLevel: "medium",
+    confirmedAt: "2026-03-08 10:00",
+    endedAt: "2026-03-28 16:00",
+  }),
+  buildSchoolOverviewHistoryCase({
+    id: "WRN-20260620-H02",
+    studentId: "STU-0106",
+    studentName: "李欣怡",
+    gradeClass: "高二（3）班",
+    sourceType: "ai_chat_trigger",
+    confirmedRiskLevel: "high",
+    confirmedAt: "2026-04-12 10:00",
+    referralAt: "2026-05-06 14:00",
+    endedAt: "2026-06-20 16:00",
+  }),
+  buildSchoolOverviewHistoryCase({
+    id: "WRN-20260701-H03",
+    studentId: "STU-0108",
+    studentName: "吴桐",
+    gradeClass: "高三（7）班",
+    sourceType: "teacher_report",
+    confirmedRiskLevel: "medium",
+    confirmedAt: "2026-05-18 09:00",
+    endedAt: "2026-07-01 15:00",
+  }),
+];
+
 export const warningMockData: WarningItem[] = [
   ...normalizedWarningMockData,
   interventionStatusPendingDemo,
   observingFeedbackReceivedDemo,
   observingFeedbackOverdueDemo,
   retestTodayDemo,
+  ...schoolOverviewHistoryDemos,
 ];

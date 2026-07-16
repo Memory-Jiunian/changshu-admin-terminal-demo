@@ -174,6 +174,62 @@ export const studentProfileMockData: StudentProfileRecord[] = [
     warningCaseIds: ["WRN-20260708-012"],
   },
   {
+    studentId: "STU-0013",
+    studentName: "顾晨曦",
+    studentNumber: "20240206013",
+    currentGrade: "初二",
+    currentClass: "6班",
+    currentHeadTeacher: "孙老师",
+    enrollmentStatus: "enrolled",
+    updatedAt: "2026-07-08 12:00",
+    enrollmentHistory: [
+      { id: "EH-0013-1", studentId: "STU-0013", grade: "初二", className: "6班", changeType: "grade_change", startedAt: "2025-09-01" },
+    ],
+    warningCaseIds: ["WRN-20260708-013"],
+  },
+  {
+    studentId: "STU-0014",
+    studentName: "沈知夏",
+    studentNumber: "20250105014",
+    currentGrade: "初一",
+    currentClass: "5班",
+    currentHeadTeacher: "王老师",
+    enrollmentStatus: "enrolled",
+    updatedAt: "2026-07-08 12:00",
+    enrollmentHistory: [
+      { id: "EH-0014-1", studentId: "STU-0014", grade: "初一", className: "5班", changeType: "enrollment", startedAt: "2025-09-01" },
+    ],
+    warningCaseIds: ["WRN-20260708-014"],
+  },
+  {
+    studentId: "STU-0015",
+    studentName: "陆安然",
+    studentNumber: "20250105015",
+    currentGrade: "初一",
+    currentClass: "5班",
+    currentHeadTeacher: "王老师",
+    enrollmentStatus: "enrolled",
+    updatedAt: "2026-07-08 12:00",
+    enrollmentHistory: [
+      { id: "EH-0015-1", studentId: "STU-0015", grade: "初一", className: "5班", changeType: "enrollment", startedAt: "2025-09-01" },
+    ],
+    warningCaseIds: ["WRN-20260708-015"],
+  },
+  {
+    studentId: "STU-0016",
+    studentName: "唐语晴",
+    studentNumber: "20230101016",
+    currentGrade: "初三",
+    currentClass: "1班",
+    currentHeadTeacher: "赵老师",
+    enrollmentStatus: "enrolled",
+    updatedAt: "2026-07-08 12:00",
+    enrollmentHistory: [
+      { id: "EH-0016-1", studentId: "STU-0016", grade: "初三", className: "1班", changeType: "grade_change", startedAt: "2025-09-01" },
+    ],
+    warningCaseIds: ["WRN-20260708-016"],
+  },
+  {
     studentId: "STU-0105",
     studentName: "李欣怡",
     studentNumber: "20240101009",
@@ -199,7 +255,7 @@ export const studentProfileMockData: StudentProfileRecord[] = [
     enrollmentHistory: [
       { id: "EH-0106-1", studentId: "STU-0106", grade: "高二", className: "3班", changeType: "grade_change", startedAt: "2025-09-01" },
     ],
-    warningCaseIds: [],
+    warningCaseIds: ["WRN-20260620-H02"],
   },
   {
     studentId: "STU-0108",
@@ -213,7 +269,7 @@ export const studentProfileMockData: StudentProfileRecord[] = [
     enrollmentHistory: [
       { id: "EH-0108-1", studentId: "STU-0108", grade: "高三", className: "7班", changeType: "graduation", startedAt: "2025-09-01", endedAt: "2026-06-30" },
     ],
-    warningCaseIds: [],
+    warningCaseIds: ["WRN-20260701-H03"],
   },
   {
     studentId: "STU-0109",
@@ -227,6 +283,6 @@ export const studentProfileMockData: StudentProfileRecord[] = [
     enrollmentHistory: [
       { id: "EH-0109-1", studentId: "STU-0109", grade: "初二", className: "4班", changeType: "left_school", startedAt: "2025-09-01", endedAt: "2026-06-20" },
     ],
-    warningCaseIds: [],
+    warningCaseIds: ["WRN-20260328-H01"],
   },
 ];

@@ -6,7 +6,6 @@ import { StudentProfileTable } from "@/components/student-profile/StudentProfile
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { studentProfileMockData } from "@/data/studentProfileMock";
 import { buildStudentProfileDetail, buildStudentProfileSummaries } from "@/lib/student-profile-aggregate";
 import { getFirstAvailableClass, loadStudentClassPreference, saveStudentClassPreference } from "@/lib/student-profile-class-preference";
 import { formatMockDateTime } from "@/lib/warning-time";
@@ -24,11 +23,11 @@ type StudentProfilePageProps = {
 };
 
 export function StudentProfilePage({ initialLoadState = "ready", initialReturnState, onOpenWarningDetail }: StudentProfilePageProps) {
-  const { warnings } = useAdminData();
+  const { students, warnings } = useAdminData();
   const currentTime = formatMockDateTime();
   const summaries = useMemo(
-    () => buildStudentProfileSummaries(studentProfileMockData, warnings),
-    [warnings],
+    () => buildStudentProfileSummaries(students, warnings),
+    [students, warnings],
   );
   const options = useMemo(() => getStudentProfileFilterOptions(summaries), [summaries]);
   const [query, setQuery] = useState(() => {
@@ -72,8 +71,8 @@ export function StudentProfilePage({ initialLoadState = "ready", initialReturnSt
     [currentPage, filteredProfiles],
   );
   const selectedStudent = useMemo(
-    () => studentProfileMockData.find((student) => student.studentId === selectedStudentId),
-    [selectedStudentId],
+    () => students.find((student) => student.studentId === selectedStudentId),
+    [selectedStudentId, students],
   );
   const selectedDetail = useMemo(
     () => selectedStudent ? buildStudentProfileDetail(selectedStudent, warnings, currentTime) : null,

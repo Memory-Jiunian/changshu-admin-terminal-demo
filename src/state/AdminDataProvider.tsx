@@ -8,9 +8,15 @@ import {
 } from "react";
 
 import { warningMockData } from "@/data/warningMock";
+import { assessmentMockData } from "@/data/assessmentMock";
+import { studentProfileMockData } from "@/data/studentProfileMock";
+import type { StudentAssessmentRecord } from "@/types/assessment";
+import type { StudentProfileRecord } from "@/types/studentProfile";
 import type { WarningItem } from "@/types/warning";
 
 type AdminDataContextValue = {
+  students: StudentProfileRecord[];
+  assessments: StudentAssessmentRecord[];
   warnings: WarningItem[];
   setWarnings: Dispatch<SetStateAction<WarningItem[]>>;
 };
@@ -21,7 +27,9 @@ export function AdminDataProvider({ children }: PropsWithChildren) {
   const [warnings, setWarnings] = useState<WarningItem[]>(() => warningMockData);
 
   return (
-    <AdminDataContext.Provider value={{ warnings, setWarnings }}>
+    <AdminDataContext.Provider
+      value={{ students: studentProfileMockData, assessments: assessmentMockData, warnings, setWarnings }}
+    >
       {children}
     </AdminDataContext.Provider>
   );

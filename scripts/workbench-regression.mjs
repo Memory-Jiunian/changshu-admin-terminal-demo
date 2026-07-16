@@ -158,7 +158,10 @@ const appSource = readFileSync("src/App.tsx", "utf8");
 const sidebarSource = readFileSync("src/components/layout/Sidebar.tsx", "utf8");
 const feedbackPanelSource = readFileSync("src/components/warning/FeedbackPanel.tsx", "utf8");
 const warningPageSource = readFileSync("src/components/warning/WarningManagementPage.tsx", "utf8");
+const workbenchPageSource = readFileSync("src/components/workbench/WorkbenchPage.tsx", "utf8");
 const reminderSource = readFileSync("src/components/workbench/WorkbenchReminderList.tsx", "utf8");
+const taskTabsSource = readFileSync("src/components/workbench/WorkbenchTaskTypeTabs.tsx", "utf8");
+const appShellSource = readFileSync("src/components/layout/AppShell.tsx", "utf8");
 const taskSelectorSource = readFileSync("src/lib/workbench-tasks.ts", "utf8");
 const closeDialogSource = readFileSync("src/components/warning/UnreadFeedbackCloseDialog.tsx", "utf8");
 assert(workbenchTypes.warningDetailSections.every((section) => detailSource.includes(`data-warning-section=\"${section}\"`)), "all seven anchors are attached to real detail DOM");
@@ -172,5 +175,12 @@ assert(feedbackPanelSource.includes("标记为已查看"), "feedback module expo
 assert(!warningPageSource.includes("canMarkWorkbenchFeedbackRead"), "navigation rendering no longer marks feedback read automatically");
 assert(reminderSource.includes("item.ctaLabel") && taskSelectorSource.includes('ctaLabel: "查看安排"') && taskSelectorSource.includes('ctaLabel: "确认干预情况"') && taskSelectorSource.includes('ctaLabel: "查看并重新安排"'), "arrangements use the approved dynamic labels");
 assert(closeDialogSource.includes("关闭并保留待办") && closeDialogSource.includes("标记已查看并关闭"), "close guard provides all protected choices");
+assert(workbenchPageSource.includes("min-[1180px]:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)]"), "workbench uses the approved responsive 70/30 grid");
+assert(workbenchPageSource.indexOf("<WorkbenchSummary") < workbenchPageSource.indexOf("min-[1180px]:grid-cols"), "summary remains full width above the content grid");
+assert(reminderSource.includes("max-h-[calc(100vh-15rem)]") && reminderSource.includes("overflow-y-auto"), "arrangements use an independent bounded scroll area");
+assert(taskTabsSource.includes("flex-nowrap") && taskTabsSource.includes("overflow-x-auto"), "task tabs stay on one horizontally scrollable row");
+assert(sidebarSource.includes('collapsed ? "w-16" : "w-[152px]"'), "desktop sidebar uses the approved expanded and collapsed widths");
+assert(sidebarSource.includes("TooltipContent") && sidebarSource.includes("aria-current"), "collapsed navigation retains tooltips and selected-page semantics");
+assert(appShellSource.includes("sidebarCollapsed") && appShellSource.includes("setSidebarCollapsed"), "sidebar collapse is isolated to shell UI state");
 
 console.log(`Workbench regression assertions passed: ${assertionCount}`);

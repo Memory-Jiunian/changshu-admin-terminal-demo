@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from "react";
+import { useState, type PropsWithChildren } from "react";
 
 import { Sidebar, type AppPage } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
@@ -9,11 +9,18 @@ type AppShellProps = PropsWithChildren<{
 }>;
 
 export function AppShell({ children, activePage, onNavigate }: AppShellProps) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   return (
     <div className="min-h-screen bg-neutral-100 text-neutral-950">
       <Topbar />
       <div className="flex min-h-[calc(100vh-4rem)]">
-        <Sidebar activePage={activePage} onNavigate={onNavigate} />
+        <Sidebar
+          activePage={activePage}
+          collapsed={sidebarCollapsed}
+          onNavigate={onNavigate}
+          onToggle={() => setSidebarCollapsed((collapsed) => !collapsed)}
+        />
         <main className="min-w-0 flex-1 p-6">{children}</main>
       </div>
     </div>

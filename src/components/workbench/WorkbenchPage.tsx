@@ -66,9 +66,13 @@ export function WorkbenchPage({ initialReturnContext, notice, onOpenWarning, loa
     <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1" ref={scrollRef}>
       {notice ? <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{notice}</div> : null}
       <WorkbenchSummary overdueCount={overdueCount} reminderCount={upcomingArrangements.length} taskCount={result.tasks.length + attentionArrangements.length} />
-      <WorkbenchReminderList onOpen={openReminder} reminders={result.reminders} />
-      {result.dataIssues.length ? <Card className="border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><div className="flex items-center gap-2 font-medium"><AlertTriangle className="h-4 w-4" />数据核对提示</div>{result.dataIssues.map((issue) => <div className="mt-1 pl-6" key={issue.id}>{issue.message}</div>)}</Card> : null}
-      <Card className="overflow-hidden shadow-sm"><WorkbenchTaskTypeTabs counts={counts} onChange={setSelectedTaskType} value={selectedTaskType} /><div className="flex items-center justify-between border-b border-neutral-100 px-5 py-3 text-sm"><span className="flex items-center gap-2 font-medium"><ListFilter className="h-4 w-4" />当前待办</span><span className="text-xs text-neutral-500">共 {visibleTasks.length} 条</span></div>{visibleTasks.length ? visibleTasks.map((task) => <WorkbenchTaskItem key={task.id} onOpen={openTask} selected={task.id === selectedTaskId} task={task} />) : <div className="px-5 py-12 text-center text-sm text-neutral-500">{result.tasks.length || attentionArrangements.length ? "当前类型暂无待办" : "今日暂无需要主动处理的事项"}</div>}</Card>
+      <div className="grid items-start gap-4 min-[1180px]:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)]">
+        <div className="min-w-0 space-y-4">
+          {result.dataIssues.length ? <Card className="border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><div className="flex items-center gap-2 font-medium"><AlertTriangle className="h-4 w-4" />数据核对提示</div>{result.dataIssues.map((issue) => <div className="mt-1 pl-6" key={issue.id}>{issue.message}</div>)}</Card> : null}
+          <Card className="overflow-hidden shadow-sm"><WorkbenchTaskTypeTabs counts={counts} onChange={setSelectedTaskType} value={selectedTaskType} /><div className="flex items-center justify-between border-b border-neutral-100 px-5 py-3 text-sm"><span className="flex items-center gap-2 font-medium"><ListFilter className="h-4 w-4" />当前待办</span><span className="text-xs text-neutral-500">共 {visibleTasks.length} 条 · 仅展示当前心理老师负责事项</span></div>{visibleTasks.length ? visibleTasks.map((task) => <WorkbenchTaskItem key={task.id} onOpen={openTask} selected={task.id === selectedTaskId} task={task} />) : <div className="px-5 py-12 text-center text-sm text-neutral-500">{result.tasks.length || attentionArrangements.length ? "当前类型暂无待办" : "今日暂无需要主动处理的事项"}</div>}</Card>
+        </div>
+        <WorkbenchReminderList onOpen={openReminder} reminders={result.reminders} />
+      </div>
     </div>
   </section>;
 }

@@ -1124,8 +1124,12 @@ const normalizedWarningMockData: WarningItem[] = warningMockSeeds.map((warning, 
   });
 
   const deepAssessmentRecords = buildDeepAssessmentRecords(warning, index);
-  const interventionAppointments: WarningInterventionAppointment[] = warning.interventionRecords.map((record, recordIndex) => ({
-    id: `IA-${warning.id}-${recordIndex + 1}`,
+  const interventionRecords = warning.interventionRecords.map((record, recordIndex) => ({
+    ...record,
+    appointmentId: record.appointmentId ?? `IA-${warning.id}-${recordIndex + 1}`,
+  }));
+  const interventionAppointments: WarningInterventionAppointment[] = interventionRecords.map((record) => ({
+    id: record.appointmentId,
     plannedAt: record.occurredAt,
     location: "心理咨询室",
     responsibleTeacher: warning.responsibleTeacher,
@@ -1184,6 +1188,7 @@ const normalizedWarningMockData: WarningItem[] = warningMockSeeds.map((warning, 
     feedbackRecords,
     deepAssessmentRecords,
     aiConversationRecords: buildAiConversationRecords(warning),
+    interventionRecords,
     interventionAppointments,
     retestRecords,
     feedbackDeadline,

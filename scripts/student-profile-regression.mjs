@@ -15,6 +15,9 @@ const warningTypesUrl = moduleUrl(compile("src/types/warning.ts"));
 const studentTypesUrl = moduleUrl(compile("src/types/studentProfile.ts"));
 const feedbackUrl = moduleUrl(compile("src/lib/warning-feedback.ts"));
 const appointmentsUrl = moduleUrl(compile("src/lib/intervention-appointments.ts"));
+const interventionsUrl = moduleUrl(
+  compile("src/lib/warning-interventions.ts").replaceAll('"@/types/warning"', `"${warningTypesUrl}"`),
+);
 const retestsUrl = moduleUrl(compile("src/lib/warning-retests.ts"));
 const recordsUrl = moduleUrl(
   compile("src/lib/warning-records.ts").replaceAll('"@/types/warning"', `"${warningTypesUrl}"`),
@@ -31,7 +34,8 @@ const aggregateUrl = moduleUrl(
     .replaceAll('"@/types/studentProfile"', `"${studentTypesUrl}"`)
     .replaceAll('"@/types/warning"', `"${warningTypesUrl}"`)
     .replaceAll('"@/lib/warning-feedback"', `"${feedbackUrl}"`)
-    .replaceAll('"@/lib/warning-records"', `"${recordsUrl}"`),
+    .replaceAll('"@/lib/warning-records"', `"${recordsUrl}"`)
+    .replaceAll('"@/lib/warning-interventions"', `"${interventionsUrl}"`),
 );
 const filtersUrl = moduleUrl(
   compile("src/lib/student-profile-filters.ts").replaceAll(
@@ -44,10 +48,11 @@ const classPreferenceUrl = moduleUrl(
     .replaceAll('"@/types/studentProfile"', `"${studentTypesUrl}"`),
 );
 
-const [studentTypes, actions, aggregate, filters, classPreference, studentMock, warningMock] = await Promise.all([
+const [studentTypes, actions, aggregate, interventions, filters, classPreference, studentMock, warningMock] = await Promise.all([
   import(studentTypesUrl),
   import(actionsUrl),
   import(aggregateUrl),
+  import(interventionsUrl),
   import(filtersUrl),
   import(classPreferenceUrl),
   import(moduleUrl(compile("src/data/studentProfileMock.ts"))),
@@ -194,6 +199,9 @@ const richCase = interventionDetail.caseDetails["WRN-20260707-004"];
 assert(richCase.feedbackRequests.length === warnings.find((warning) => warning.id === richCase.summary.warningId).feedbackRequests.length, "feedback request count matches warning data");
 assert(richCase.feedbackRecords.length === warnings.find((warning) => warning.id === richCase.summary.warningId).feedbackRecords.length, "feedback record count matches warning data");
 assert(richCase.interventionRecords.length >= 2 && isNewestFirst(richCase.interventionRecords, "occurredAt"), "multiple interventions are newest first");
+assert(richCase.interventionHistory.rounds.some((round) => round.result?.appointmentId === round.appointment.id), "intervention results are grouped with appointments by appointmentId");
+const unlinkedHistory = interventions.buildWarningInterventionHistory({ appointments: [], records: [{ ...richCase.interventionRecords[0], appointmentId: undefined }] });
+assert(unlinkedHistory.unlinkedRecords.length === 1 && unlinkedHistory.dataIssues.some((issue) => issue.includes("缺少 appointmentId")), "unlinked legacy intervention records remain visible and report a data issue");
 assert(isNewestFirst(richCase.feedbackRequests, "requestedAt") && isNewestFirst(richCase.feedbackRecords, "submittedAt"), "feedback requests and records are independently sorted");
 
 const formalStudent = students.find((student) => student.studentId === "STU-0003");
@@ -322,6 +330,7 @@ const activeCaseSource = readFileSync("src/components/student-profile/StudentAct
 const historyCaseSource = readFileSync("src/components/student-profile/StudentCaseSummaryList.tsx", "utf8");
 const retestSectionSource = readFileSync("src/components/case-records/CaseRetestSection.tsx", "utf8");
 const interventionSectionSource = readFileSync("src/components/case-records/CaseInterventionSection.tsx", "utf8");
+const interventionHistorySource = readFileSync("src/components/case-records/InterventionHistoryView.tsx", "utf8");
 const exportDialogSource = readFileSync("src/components/student-profile/StudentProfileExportDialog.tsx", "utf8");
 const exportReportSource = readFileSync("src/components/student-profile/StudentProfilePrintableReport.tsx", "utf8");
 assert(appSource.includes("<AdminDataProvider>"), "provider is mounted above page switching");
@@ -336,10 +345,10 @@ assert(richCase.riskEvidence.deepAssessmentRecords.some((record) => record.respo
 assert(richCase.riskEvidence.aiConversationRecords.some((record) => record.messages.length > 0), "case detail exposes visible AI messages from warning data");
 assert(richCase.feedbackCollaboration.rounds.length > 0 && richCase.timeline.some((item) => item.id.startsWith("TL-FEEDBACK-")), "case detail derives feedback rounds and feedback timeline events");
 assert(referralCase.referralRecords.some((record) => record.followUpRecords.length > 0), "legacy referral results migrate to follow-up records");
-assert(richCase.interventionAppointments.length > 0 && interventionSectionSource.includes("改约来源") && interventionSectionSource.includes("通知计划"), "profile and archive share complete intervention appointment history");
+assert(richCase.interventionAppointments.length > 0 && interventionSectionSource.includes("InterventionHistoryView") && interventionHistorySource.includes("改约来源") && interventionHistorySource.includes("通知计划"), "profile and archive share complete intervention rounds");
 assert(richCase.retestRecords.filter((record) => record.completedAt).every((record) => record.assessmentRecordId), "profile retests link complete assessment responses");
 assert(referralCase.referralRecords.flatMap((record) => record.followUpRecords).every((record) => record.conclusion), "profile referral follow-ups include professional conclusions");
-assert(exportReportSource.includes("interventionAppointments") && exportReportSource.includes("assessmentRecordId") && exportReportSource.includes("followUp.conclusion"), "export synchronizes appointments, retest links, and referral conclusions");
+assert(exportReportSource.includes("interventionHistory.rounds") && exportReportSource.includes("assessmentRecordId") && exportReportSource.includes("followUp.conclusion"), "export synchronizes intervention rounds, retest links, and referral conclusions");
 assert(exportDialogSource.includes('type="checkbox"') && exportDialogSource.includes("window.print()"), "profile export requires explicit sensitive-record selection and uses browser print");
 assert(exportReportSource.includes("includeSensitiveSourceRecords") && !exportReportSource.includes("html2canvas"), "export report excludes sensitive source records by default and avoids screenshots");
 

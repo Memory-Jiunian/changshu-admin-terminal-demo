@@ -12,6 +12,7 @@ import {
   buildWarningFeedbackCollaboration,
   migrateWarningReferralRecord,
 } from "@/lib/warning-records";
+import { buildWarningInterventionHistory } from "@/lib/warning-interventions";
 
 export function isActiveProfileWarning(warning: WarningItem) {
   return warning.isActive && warning.currentStatus !== "closed";
@@ -127,6 +128,10 @@ export function buildStudentProfileCaseDetail(
     interventionAppointments: [...warning.interventionAppointments].sort((left, right) =>
       right.plannedAt.localeCompare(left.plannedAt),
     ),
+    interventionHistory: buildWarningInterventionHistory({
+      appointments: warning.interventionAppointments,
+      records: warning.interventionRecords,
+    }),
     retestRecords: [...warning.retestRecords].sort((left, right) =>
       right.arrangedAt.localeCompare(left.arrangedAt),
     ),

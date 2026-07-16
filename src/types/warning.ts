@@ -160,6 +160,18 @@ export type WarningInterventionAppointment = {
   cancellationReason?: string;
 };
 
+export type WarningInterventionRound = {
+  appointment: WarningInterventionAppointment;
+  result?: WarningInterventionRecord;
+  dataIssues: string[];
+};
+
+export type WarningInterventionHistory = {
+  rounds: WarningInterventionRound[];
+  unlinkedRecords: WarningInterventionRecord[];
+  dataIssues: string[];
+};
+
 export type WarningRetestRecord = {
   id: string;
   arrangedAt: string;

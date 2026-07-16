@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { PlaceholderPage } from "@/components/layout/PlaceholderPage";
+import { SchoolOverviewPage } from "@/components/school-overview/SchoolOverviewPage";
 import type { AppPage } from "@/components/layout/Sidebar";
 import { StudentProfilePage } from "@/components/student-profile/StudentProfilePage";
 import { WarningManagementPage } from "@/components/warning/WarningManagementPage";
@@ -82,7 +83,7 @@ export default function App() {
           />
         );
       case "school-overview":
-        return <PlaceholderPage title="校级总览" />;
+        return <SchoolOverviewPage />;
       case "settings":
         return <PlaceholderPage title="系统设置" />;
     }

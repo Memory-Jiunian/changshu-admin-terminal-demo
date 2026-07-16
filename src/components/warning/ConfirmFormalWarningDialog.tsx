@@ -3,6 +3,13 @@ import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  BUSINESS_DIALOG_BODY_CLASS,
+  BUSINESS_DIALOG_CONTENT_CLASS,
+  BUSINESS_DIALOG_FOOTER_CLASS,
+  BUSINESS_DIALOG_HEADER_CLASS,
+  BUSINESS_DIALOG_WIDTH_CLASS,
+} from "@/components/warning/BusinessDialogLayout";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -102,15 +109,15 @@ export function ConfirmFormalWarningDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="max-w-[520px]">
-        <DialogHeader>
+      <DialogContent className={cn(BUSINESS_DIALOG_CONTENT_CLASS, BUSINESS_DIALOG_WIDTH_CLASS.small)}>
+        <DialogHeader className={BUSINESS_DIALOG_HEADER_CLASS}>
           <DialogTitle>确认正式预警</DialogTitle>
           <DialogDescription>
             {warning.studentName} · {warning.gradeClass}。请由负责心理老师确认正式风险等级。
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 py-1">
+        <div className={cn(BUSINESS_DIALOG_BODY_CLASS, "space-y-5")}>
           <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-3">
             <div className="text-xs font-semibold text-neutral-500">系统提示风险等级</div>
             <Badge className="mt-2 border-neutral-300 bg-white text-neutral-900" variant="outline">
@@ -224,7 +231,7 @@ export function ConfirmFormalWarningDialog({
           ) : null}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className={BUSINESS_DIALOG_FOOTER_CLASS}>
           <Button onClick={() => onOpenChange(false)} type="button" variant="outline">
             取消
           </Button>

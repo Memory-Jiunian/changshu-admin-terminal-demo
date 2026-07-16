@@ -2,6 +2,7 @@ import { useState, type PropsWithChildren } from "react";
 
 import { Sidebar, type AppPage } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
+import { cn } from "@/lib/utils";
 
 type AppShellProps = PropsWithChildren<{
   activePage: AppPage;
@@ -12,16 +13,23 @@ export function AppShell({ children, activePage, onNavigate }: AppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-neutral-100 text-neutral-950">
+    <div className="h-screen overflow-hidden bg-neutral-100 text-neutral-950">
       <Topbar />
-      <div className="flex min-h-[calc(100vh-4rem)]">
+      <div
+        className={cn(
+          "grid h-[calc(100dvh-4rem)] min-h-0 transition-[grid-template-columns] duration-200",
+          sidebarCollapsed
+            ? "grid-cols-[64px_minmax(0,1fr)]"
+            : "grid-cols-[152px_minmax(0,1fr)]",
+        )}
+      >
         <Sidebar
           activePage={activePage}
           collapsed={sidebarCollapsed}
           onNavigate={onNavigate}
           onToggle={() => setSidebarCollapsed((collapsed) => !collapsed)}
         />
-        <main className="min-w-0 flex-1 p-6">{children}</main>
+        <main className={cn("min-h-0 min-w-0 p-6", activePage === "workbench" ? "overflow-hidden" : "overflow-y-auto")}>{children}</main>
       </div>
     </div>
   );

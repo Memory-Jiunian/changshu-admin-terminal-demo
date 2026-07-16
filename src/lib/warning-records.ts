@@ -122,7 +122,7 @@ export function buildEffectiveWarningTimeline(warning: WarningItem): WarningTime
       title: index === 0 ? "请求补充反馈" : "重新请求反馈",
       operator: request.requestedBy,
       occurredAt: request.requestedAt,
-      description: `补充反馈要求：${request.requestNote}；截止时间：${request.deadline}。`,
+      description: `补充反馈要求：${request.requestNote}；反馈截止时间：${request.deadline}。`,
     }));
   });
 
@@ -176,7 +176,7 @@ export function buildEffectiveWarningTimeline(warning: WarningItem): WarningTime
       title: "记录干预结果",
       operator: record.authorName,
       occurredAt: record.occurredAt,
-      description: `干预方式：${record.method}；情况摘要：${record.summary}；本次判断：${record.judgment}；后续计划：${record.followUpPlan}。`,
+      description: `干预方式：${record.method}；情况摘要：${record.summary}；本次判断：${record.judgment}；下一步计划：${record.followUpPlan}。`,
     }));
   }
 

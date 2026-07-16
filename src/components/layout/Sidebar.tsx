@@ -51,8 +51,7 @@ export function Sidebar({ activePage, collapsed, onNavigate, onToggle }: Sidebar
     <TooltipProvider delayDuration={200}>
       <aside
         className={cn(
-          "relative shrink-0 bg-neutral-700 py-4 text-white transition-[width] duration-200",
-          collapsed ? "w-16" : "w-[152px]",
+          "relative h-full w-full bg-neutral-700 py-4 text-white",
         )}
       >
         <nav aria-label="主导航" className="space-y-1">

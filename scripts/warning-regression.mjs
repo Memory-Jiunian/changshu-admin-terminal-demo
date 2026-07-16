@@ -14,6 +14,7 @@ function moduleUrl(code) {
 const typesUrl = moduleUrl(compile("src/types/warning.ts"));
 const feedbackUrl = moduleUrl(compile("src/lib/warning-feedback.ts"));
 const appointmentsUrl = moduleUrl(compile("src/lib/intervention-appointments.ts"));
+const interventionsUrl = moduleUrl(compile("src/lib/warning-interventions.ts").replaceAll('"@/types/warning"', `"${typesUrl}"`));
 const retestsUrl = moduleUrl(compile("src/lib/warning-retests.ts"));
 const recordsUrl = moduleUrl(compile("src/lib/warning-records.ts").replaceAll('"@/types/warning"', `"${typesUrl}"`));
 const actionsCode = compile("src/lib/warning-actions.ts")
@@ -21,10 +22,11 @@ const actionsCode = compile("src/lib/warning-actions.ts")
   .replaceAll('"@/lib/warning-feedback"', `"${feedbackUrl}"`)
   .replaceAll('"@/lib/intervention-appointments"', `"${appointmentsUrl}"`)
   .replaceAll('"@/lib/warning-retests"', `"${retestsUrl}"`);
-const [types, feedback, appointments, retests, records, actions, mock] = await Promise.all([
+const [types, feedback, appointments, interventions, retests, records, actions, mock] = await Promise.all([
   import(typesUrl),
   import(feedbackUrl),
   import(appointmentsUrl),
+  import(interventionsUrl),
   import(retestsUrl),
   import(recordsUrl),
   import(moduleUrl(actionsCode)),
@@ -126,6 +128,8 @@ assert(cancelledAppointment.success && cancelledAppointment.warning.intervention
 assert(appointments.INTERVENTION_CONFIRMATION_GRACE_MINUTES === 60 && appointments.getInterventionAppointmentTiming(appointment.warning.interventionAppointments[0], "2026-07-08 14:00") === "awaiting_result" && appointments.getInterventionAppointmentTiming(appointment.warning.interventionAppointments[0], "2026-07-08 14:01") === "confirmation_required", "intervention grace boundary is exact");
 const completedIntervention = actions.applyWarningAction(appointment.warning, { type: "record_intervention_result", values: { appointmentId: appointment.warning.interventionAppointments[0].id, occurredAt: "2026-07-08 14:00", method: "个体访谈", summary: "完成首次干预", judgment: "继续支持", nextPlan: "continue_intervention", nextAppointment: { ...appointmentValues, plannedAt: "2026-07-10 10:00" }, requestFeedback: false } }, "2026-07-08 14:00");
 assert(completedIntervention.success && completedIntervention.warning.interventionRecords[0].appointmentId, "intervention result links the completed appointment");
+const completedHistory = interventions.buildWarningInterventionHistory({ appointments: completedIntervention.warning.interventionAppointments, records: completedIntervention.warning.interventionRecords });
+assert(completedHistory.rounds.some((round) => round.result?.appointmentId === round.appointment.id), "completed intervention is grouped into its appointment round");
 assert(completedIntervention.warning.interventionAppointments.filter((item) => item.status === "planned").length === 1, "continue intervention creates the next appointment");
 const interventionRetest = actions.applyWarningAction(appointment.warning, { type: "record_intervention_result", values: { appointmentId: appointment.warning.interventionAppointments[0].id, occurredAt: "2026-07-08 14:00", method: "个体访谈", summary: "完成干预", judgment: "进入客观复测", nextPlan: "schedule_retest", requestFeedback: false, retest: { plannedAt: "2026-07-10 10:00", scaleIds: ["phq-9"], scaleNames: ["PHQ-9"], note: "" } } }, "2026-07-08 14:00");
 assert(interventionRetest.success && interventionRetest.warning.currentStatus === "pending_retest", "intervention result can enter pending retest");
@@ -159,6 +163,7 @@ const effectiveTimeline = records.buildEffectiveWarningTimeline(unreadFeedback);
 assert(effectiveTimeline.filter((item) => item.id.startsWith("TL-FEEDBACK-")).length === unreadFeedback.feedbackRecords.length, "every feedback record appears once in effective timeline");
 assert(effectiveTimeline.every((item, index) => index === 0 || effectiveTimeline[index - 1].occurredAt >= item.occurredAt), "effective timeline is newest first");
 assert(effectiveTimeline.filter((item) => item.sourceType === "feedback_request").length === unreadFeedback.feedbackRequests.length, "every feedback request appears once in effective timeline");
+assert(effectiveTimeline.filter((item) => item.sourceType === "feedback_request").every((item) => item.description.indexOf("补充反馈要求：") < item.description.indexOf("反馈截止时间：")), "feedback request timeline uses the frozen field labels and order");
 const interventionTimeline = records.buildEffectiveWarningTimeline(findWarning("WRN-20260707-004"));
 assert(interventionTimeline.filter((item) => item.sourceType === "intervention_record").length === findWarning("WRN-20260707-004").interventionRecords.length, "intervention records drive timeline events");
 const twoRetests = findWarning("WRN-20260704-007");
@@ -175,5 +180,14 @@ assert(retestReferral.success && retestReferral.warning.currentStatus === "refer
 assert(types.getEffectiveRiskLevel(confirmed) === "medium", "effective risk uses confirmation");
 assert(mock.warningMockData.flatMap((item) => item.retestRecords).filter((item) => item.completedAt).every((item) => item.assessmentRecordId), "completed retests link complete assessment responses");
 assert(mock.warningMockData.flatMap((item) => item.referralRecords).flatMap((item) => item.followUpRecords).every((item) => item.conclusion), "referral follow-ups include professional conclusions");
+
+const businessDialogLayoutSource = readFileSync("src/components/warning/BusinessDialogLayout.ts", "utf8");
+const actionDialogSource = readFileSync("src/components/warning/WarningActionDialog.tsx", "utf8");
+const confirmDialogSource = readFileSync("src/components/warning/ConfirmFormalWarningDialog.tsx", "utf8");
+const interventionViewSource = readFileSync("src/components/case-records/InterventionHistoryView.tsx", "utf8");
+assert(businessDialogLayoutSource.includes("max-h-[calc(100dvh-64px)]") && businessDialogLayoutSource.includes("overflow-y-auto"), "business dialogs share viewport-safe height and a middle scroll body");
+assert(actionDialogSource.includes("BUSINESS_DIALOG_HEADER_CLASS") && actionDialogSource.includes("BUSINESS_DIALOG_FOOTER_CLASS") && confirmDialogSource.includes("BUSINESS_DIALOG_BODY_CLASS"), "business action dialogs share fixed header, body, and footer layout tokens");
+assert(["实际干预时间", "干预方式", "情况摘要", "本次判断", "下一步计划", "记录人"].every((label) => interventionViewSource.includes(label)), "intervention rounds render every latest result field");
+assert(interventionViewSource.includes("尚未记录本次干预结果") && interventionViewSource.includes("未关联历史记录"), "intervention rounds cover pending and unlinked records");
 
 console.log(`warning regression assertions: ${assertionCount} passed`);

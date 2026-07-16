@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { WorkbenchReminder } from "@/types/workbench";
 
 export function WorkbenchReminderList({ reminders, onOpen }: { reminders: WorkbenchReminder[]; onOpen: (reminder: WorkbenchReminder) => void }) {
-  return <Card className="flex max-h-[calc(100vh-15rem)] min-w-0 flex-col overflow-hidden shadow-sm min-[1180px]:sticky min-[1180px]:top-0">
+  return <Card className="flex min-h-0 min-w-0 flex-col overflow-hidden shadow-sm">
     <div className="shrink-0 border-b border-neutral-200 px-4 py-3">
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-semibold"><CalendarClock className="h-4 w-4" />今日 / 近期安排</h2>
@@ -14,7 +14,7 @@ export function WorkbenchReminderList({ reminders, onOpen }: { reminders: Workbe
       </div>
       <p className="mt-1 text-xs leading-5 text-neutral-500">待确认和未完成项优先；今日提醒仅统计普通 upcoming 安排。</p>
     </div>
-    <div className="min-h-0 overflow-y-auto p-3">
+    <div aria-label="今日及近期安排列表" className="scrollbar-hidden p-3 min-[1180px]:min-h-0 min-[1180px]:flex-1 min-[1180px]:overflow-y-auto" tabIndex={0}>
       {reminders.length ? <div className="space-y-2.5">{reminders.map((item) => {
         const isAttention = item.state !== "upcoming";
         const arrangementType = item.type === "intervention_plan_upcoming" ? "干预预约" : "复测安排";

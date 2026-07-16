@@ -177,10 +177,14 @@ assert(reminderSource.includes("item.ctaLabel") && taskSelectorSource.includes('
 assert(closeDialogSource.includes("关闭并保留待办") && closeDialogSource.includes("标记已查看并关闭"), "close guard provides all protected choices");
 assert(workbenchPageSource.includes("min-[1180px]:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)]"), "workbench uses the approved responsive 70/30 grid");
 assert(workbenchPageSource.indexOf("<WorkbenchSummary") < workbenchPageSource.indexOf("min-[1180px]:grid-cols"), "summary remains full width above the content grid");
-assert(reminderSource.includes("max-h-[calc(100vh-15rem)]") && reminderSource.includes("overflow-y-auto"), "arrangements use an independent bounded scroll area");
-assert(taskTabsSource.includes("flex-nowrap") && taskTabsSource.includes("overflow-x-auto"), "task tabs stay on one horizontally scrollable row");
-assert(sidebarSource.includes('collapsed ? "w-16" : "w-[152px]"'), "desktop sidebar uses the approved expanded and collapsed widths");
+assert(reminderSource.includes("min-[1180px]:overflow-y-auto") && reminderSource.includes("scrollbar-hidden"), "arrangements use one hidden-scroll desktop list body");
+assert(taskTabsSource.includes("flex-nowrap") && taskTabsSource.includes("overflow-x-auto") && taskTabsSource.includes("scrollbar-hidden"), "task tabs stay on one horizontally scrollable row without a visible track");
+assert(appShellSource.includes("grid-cols-[64px_minmax(0,1fr)]") && appShellSource.includes("grid-cols-[152px_minmax(0,1fr)]"), "App Shell owns the expanded and collapsed sidebar column widths");
 assert(sidebarSource.includes("TooltipContent") && sidebarSource.includes("aria-current"), "collapsed navigation retains tooltips and selected-page semantics");
 assert(appShellSource.includes("sidebarCollapsed") && appShellSource.includes("setSidebarCollapsed"), "sidebar collapse is isolated to shell UI state");
+assert(!workbenchPageSource.includes('return <section className="mx-auto flex') && workbenchPageSource.includes('grid h-full min-h-0 w-full'), "ready workbench fills the App Shell without centered max-width gaps");
+assert(workbenchPageSource.includes("min-[1180px]:grid-rows-[auto_auto_minmax(0,1fr)]") && workbenchPageSource.includes("min-[1180px]:overflow-hidden"), "desktop workbench uses a viewport-filling non-scrolling page grid");
+assert(workbenchPageSource.includes('aria-label="当前待办列表"') && reminderSource.includes('aria-label="今日及近期安排列表"'), "desktop columns expose one focusable list body each");
+assert(taskSelectorSource.includes("事项已形成正式预警，尚未安排干预。") && !taskSelectorSource.includes("首次干预"), "unscheduled intervention copy no longer says first intervention");
 
 console.log(`Workbench regression assertions passed: ${assertionCount}`);

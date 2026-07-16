@@ -193,7 +193,7 @@ export function buildWorkbenchItems({
         "intervention_unscheduled",
         wasCancelled
           ? "原干预预约已取消，请重新安排干预。"
-          : "正式预警已确认，尚未预约首次干预。",
+          : "事项已形成正式预警，尚未安排干预。",
         warning.activityTime,
         currentDate,
       ));

@@ -2,6 +2,13 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
+  BUSINESS_DIALOG_BODY_CLASS,
+  BUSINESS_DIALOG_CONTENT_CLASS,
+  BUSINESS_DIALOG_FOOTER_CLASS,
+  BUSINESS_DIALOG_HEADER_CLASS,
+  BUSINESS_DIALOG_WIDTH_CLASS,
+} from "@/components/warning/BusinessDialogLayout";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -460,15 +467,15 @@ export function WarningActionDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="max-h-[82vh] max-w-[560px] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className={cn(BUSINESS_DIALOG_CONTENT_CLASS, BUSINESS_DIALOG_WIDTH_CLASS.medium)}>
+        <DialogHeader className={BUSINESS_DIALOG_HEADER_CLASS}>
           <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>
             {warning.studentName} · {warning.gradeClass}。提交后将同步更新列表与详情。
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-1">
+        <div className={cn(BUSINESS_DIALOG_BODY_CLASS, "space-y-4")}>
           {action === "end_review" ? (
             <Field error={errors.endReason} label="结束原因" required>
               <TextArea
@@ -760,7 +767,7 @@ export function WarningActionDialog({
           {formError ? <div className="rounded-md bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{formError}</div> : null}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className={BUSINESS_DIALOG_FOOTER_CLASS}>
           <Button onClick={() => onOpenChange(false)} type="button" variant="outline">取消</Button>
           <Button className="bg-neutral-900 text-white hover:bg-neutral-800" onClick={handleSubmit} type="button">确认提交</Button>
         </DialogFooter>

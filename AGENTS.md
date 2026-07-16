@@ -425,6 +425,25 @@ Formal warnings may schedule intervention regardless of whether a homeroom
 teacher feedback task is still active. Appointment notifications are mock
 contracts only; do not claim that a real mini-program message was sent.
 
+Phase I1.1 reconciles the walkthrough findings without changing the seven main
+statuses. Active warning items use only `medium`, `high`, or `critical`; the
+global `RiskLevel` still includes `low` for student-profile and assessment
+facts. Observing items participate in homeroom-teacher feedback rounds. An
+expired intervention appointment remains `planned` until a psychological
+teacher confirms the outcome; after a 60-minute grace period it is only marked
+as requiring confirmation. An incomplete re-test receives a 120-minute grace
+period. Cancelling the current intervention appointment returns the case to
+`formal_warning` while preserving all appointment and intervention history.
+
+The effective warning timeline is derived from structured feedback requests,
+feedback records, intervention appointments and results, re-test records,
+referrals and referral follow-ups, merged with compatible transition events.
+Use `sourceType + sourceId` to prevent duplicate events. Warning detail,
+student profile, archive, and export must read this same effective timeline.
+Workbench counts and arrangements include only cases owned by the current
+psychological teacher; never change ownership or include another teacher's case
+to make demo totals align.
+
 The approved cross-module routes are:
 
 `Student profile -> matching warning detail -> original student profile context`.

@@ -247,6 +247,19 @@ Active scope: Workbench Phase W1.1 demo coverage and explicit feedback read conf
 
 Active scope: Phase I1 intervention appointment, attendance, follow-up, and no-show workflow. Keep seven warning main states unchanged; `in_intervention` is displayed as `待干预`. School overview, clue pool, backend, permissions, and real notifications remain out of scope.
 
+## Phase I1.1: Walkthrough reconciliation
+
+- [ ] I1.1A Sync specifications and split active warning risk levels
+- [ ] I1.1B Align observing feedback rounds and global end-review toast
+- [ ] I1.1C Derive one effective timeline from structured records
+- [ ] I1.1D Add intervention grace period and cancellation return rule
+- [ ] I1.1E Move intervention/re-test attention into arrangements
+- [ ] I1.1F Separate latest planned and latest completed re-tests
+- [ ] I1.1G Cover mock scenarios and regression
+- [ ] Run test / build / HTTP smoke / 1440x900 walkthrough / commit / push
+
+Active scope: Phase I1.1 warning, feedback, timeline, intervention arrangement, and re-test consistency. Keep seven warning main states unchanged. School overview, clue pool, backend, permissions, and real notifications remain out of scope.
+
 ## Phase 6: Polish and validation
 
 - [ ] Match prototype layout

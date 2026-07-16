@@ -220,3 +220,16 @@ The first implementation should match the current prototype direction:
   least `32px` above and below the viewport edge.
 - Header and Footer remain fixed inside the Dialog; only the middle form body
   scrolls when content exceeds the available height.
+
+## School overview layout
+
+- The school overview uses the full App Shell content width with no centered
+  `max-width` wrapper.
+- At desktop widths, four core metrics and compact attention facts remain in the
+  first viewport; analysis modules use a responsive two-column grid.
+- At narrower widths, modules become one page-level vertical flow. Do not add
+  nested chart scroll containers or page-level horizontal scrolling.
+- Charts must also expose visible text values and accessible summaries. Color is
+  supplementary, not the only encoding.
+- Suppressed class values use the same safe copy in visible text, tooltips, ARIA,
+  and DOM attributes; hidden precise numbers must not be rendered.

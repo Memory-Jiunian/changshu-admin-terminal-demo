@@ -27,6 +27,11 @@ The current implemented modules are:
   - Six derived active task types
   - One separate same-day re-test reminder
   - Warning-detail section navigation and return context
+- School overview Phase S1:
+  - Current-term assessment coverage
+  - Confirmed current-risk and organization distributions
+  - Disposition pressure, trends, and structured source distribution
+  - Aggregate-only privacy protection without case drill-down
 
 Do not implement unrelated pages unless the task explicitly asks for them.
 
@@ -115,8 +120,9 @@ warnings, modify risk status, or view full AI conversations and assessments.
 
 ### School leader
 
-School leaders only see desensitized overview data in later pages.  
-Do not expose full student risk detail to school leaders in this version.
+School leaders may view the desensitized, aggregate school overview. They must
+not see student identities, case content, precise class risk counts below the
+privacy threshold, or links into warning and profile detail.
 
 ---
 
@@ -201,7 +207,6 @@ Do not implement:
 - Real permission system
 - Student archive full page
 - Intervention record full page
-- School overview page
 - Mini-program notification integration
 - Full AI conversation page
 - Raw assessment-question and full AI-conversation record modules
@@ -452,6 +457,21 @@ grace-period, task-admission, ordering, timeline-event, or professional-judgment
 rules. Unlinked legacy intervention records remain visible and are never matched
 by timestamp inference.
 
+Phase S1 is the active implementation slice. The school overview derives one
+read-only ViewModel from shared enrolled-student, assessment, warning, and time
+data. It aggregates the full school and must never reuse the workbench's current
+psychological-teacher filter. Current confirmed-risk students require an active
+case with `confirmedRiskLevel` in `medium`, `high`, or `critical`; suggested risk
+never substitutes for professional confirmation. Student counts and case counts
+remain separate, and current snapshots never use closed cases.
+
+Class rows with fewer than three confirmed-risk students must be suppressed in
+the ViewModel itself: exact risk counts, level breakdowns, and exact rates are
+not available to page markup, tooltip text, ARIA labels, or DOM attributes. The
+overview is aggregate-only and provides no case drill-down, student identity,
+export, custom dates, prediction, resource recommendation, or business action.
+Opening, filtering, or reading the overview never writes a warning timeline.
+
 The approved cross-module routes are:
 
 `Student profile -> matching warning detail -> original student profile context`.
@@ -490,7 +510,8 @@ and school leaders do not enter individual student profiles.
 The clue-pool page, detailed student profile record modules,
 fullscreen profile mode, cross-case record indexes, all cross-module navigation except the
 two approved round trips above, organization CRUD, real
-permissions, real backend, and school-system synchronization remain out of scope.
+permissions, real backend, school-overview case drill-down/export, and
+school-system synchronization remain out of scope.
 
 When a new page PRD is completed, update this section before implementation.
 

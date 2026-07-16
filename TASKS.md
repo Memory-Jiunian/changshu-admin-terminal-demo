@@ -278,6 +278,42 @@ Active scope: Phase I1.2 closes intervention-round presentation and workbench
 viewport layout gaps without changing Phase I1.1 business rules. School overview
 and clue pool remain paused.
 
+## Phase S1.0: School overview specifications
+
+- [x] Archive the seven revised school-overview specifications
+- [x] Update domain, PRD, design, discovery, and active-scope documentation
+- [x] Add school-overview and assessment domain types
+
+## Phase S1.1: School overview selectors
+
+- [x] Add a pure school-overview selector
+- [x] Derive coverage, current risk, attention, distributions, trends, and sources
+- [x] Add selector regression tests before page implementation
+
+## Phase S1.2: School overview page
+
+- [x] Replace the sidebar placeholder with the real overview
+- [x] Add current-term and organization scope controls
+- [x] Add metric, attention, distribution, trend, and methodology modules
+
+## Phase S1.3: Privacy and failure states
+
+- [x] Suppress class counts below three in the ViewModel
+- [x] Add loading, failure, empty, partial-error, and data-issue states
+- [x] Add accessible summaries and responsive single-scroll layout
+
+## Phase S1.4: Tests and visual review
+
+- [x] Complete shared mock coverage
+- [x] Run all regressions, build, and HTTP smoke
+- [x] Review 1440x900, 1536x864, and 1280x720 screenshots
+- [x] Commit and push main
+
+Active scope: Phase S1 school overview MVP derived from shared student,
+assessment, warning, and time data. The page is aggregate-only and has no case
+drill-down, export, custom dates, prediction, backend, or real permission layer.
+Warning, workbench, and student-profile business rules remain frozen.
+
 ## Phase 6: Polish and validation
 
 - [ ] Match prototype layout

@@ -13,13 +13,19 @@ function moduleUrl(code) {
 
 const typesUrl = moduleUrl(compile("src/types/warning.ts"));
 const feedbackUrl = moduleUrl(compile("src/lib/warning-feedback.ts"));
+const appointmentsUrl = moduleUrl(compile("src/lib/intervention-appointments.ts"));
+const retestsUrl = moduleUrl(compile("src/lib/warning-retests.ts"));
 const recordsUrl = moduleUrl(compile("src/lib/warning-records.ts").replaceAll('"@/types/warning"', `"${typesUrl}"`));
 const actionsCode = compile("src/lib/warning-actions.ts")
   .replaceAll('"@/types/warning"', `"${typesUrl}"`)
-  .replaceAll('"@/lib/warning-feedback"', `"${feedbackUrl}"`);
-const [types, feedback, records, actions, mock] = await Promise.all([
+  .replaceAll('"@/lib/warning-feedback"', `"${feedbackUrl}"`)
+  .replaceAll('"@/lib/intervention-appointments"', `"${appointmentsUrl}"`)
+  .replaceAll('"@/lib/warning-retests"', `"${retestsUrl}"`);
+const [types, feedback, appointments, retests, records, actions, mock] = await Promise.all([
   import(typesUrl),
   import(feedbackUrl),
+  import(appointmentsUrl),
+  import(retestsUrl),
   import(recordsUrl),
   import(moduleUrl(actionsCode)),
   import(moduleUrl(compile("src/data/warningMock.ts"))),
@@ -41,6 +47,8 @@ assert(mock.warningMockData.every((item) => item.studentId && item.headTeacherNa
 assert(mock.warningMockData.flatMap((item) => item.retestRecords).every((record) => record.scaleIds.length > 0 && record.scaleNames.length > 0), "all retests identify scales");
 assert(mock.warningMockData.some((item) => item.deepAssessmentRecords.some((record) => record.responses.length > 0)), "deep assessments include complete responses");
 assert(mock.warningMockData.some((item) => item.aiConversationRecords.some((record) => record.messages.length > 0)), "AI evidence includes visible messages");
+assert(mock.warningMockData.filter((item) => item.isActive).every((item) => item.suggestedRiskLevel !== "low" && item.confirmedRiskLevel !== "low"), "active warnings exclude low risk");
+assert(mock.warningMockData.some((item) => item.deepAssessmentRecords.some((record) => record.riskLevel === "low")), "assessment and profile facts still support low risk");
 
 const pendingFeedback = findWarning("WRN-20260708-003");
 const overdueFeedback = findWarning("WRN-20260708-012");
@@ -61,7 +69,7 @@ assert(!feedback.hasUnreadWarningFeedback(markedRead), "all stamped feedback der
 assert(markedRead.timeline === unreadTimeline, "mark read does not write business timeline");
 assert(feedback.getFeedbackActionAvailability(pendingFeedback, currentTime).kind === "waiting", "pending task blocks duplicate request");
 assert(feedback.getFeedbackActionAvailability(overdueFeedback, currentTime).kind === "rerequest", "overdue task allows re-request");
-assert(feedback.getFeedbackActionAvailability(receivedFeedback, currentTime).kind === "request", "completed feedback round allows a new request");
+assert(feedback.getFeedbackActionAvailability(receivedFeedback, currentTime).kind === "hidden", "formal warning hides repeat request after feedback is received");
 
 const blockedRequest = actions.applyWarningAction(pendingFeedback, { type: "request_feedback", values: { feedbackRequestNote: "note", feedbackDeadline: "2026-07-10 10:00" } }, currentTime);
 assert(!blockedRequest.success, "service blocks duplicate in-progress request");
@@ -71,7 +79,7 @@ assert(rerequest.warning.feedbackStatus === "pending_feedback", "re-request retu
 assert(rerequest.warning.feedbackRequests.length === overdueFeedback.feedbackRequests.length + 1, "re-request preserves request history");
 assert(rerequest.warning.timeline[0].title === "重新请求反馈", "re-request writes the correct timeline event");
 const repeatedRequest = actions.applyWarningAction(receivedFeedback, { type: "request_feedback", values: { feedbackRequestNote: "new round", feedbackDeadline: "2026-07-10 16:00" } }, currentTime);
-assert(repeatedRequest.success && repeatedRequest.warning.feedbackRequests.length === receivedFeedback.feedbackRequests.length + 1, "completed feedback allows a new collaboration round");
+assert(!repeatedRequest.success, "formal warning does not open another round after feedback is received");
 
 const review = findWarning("WRN-20260708-001");
 const confirmed = actions.applyConfirmFormalWarning(review, { confirmedRiskLevel: "medium", judgmentNote: "note", riskLevelAdjustmentReason: "reason", feedbackRequestNote: "observe attendance", feedbackDeadline: "2026-07-10 17:00" }, currentTime);
@@ -84,6 +92,16 @@ assert(confirmed.timeline[0].description.includes("observe attendance"), "confir
 const observed = actions.applyWarningAction(review, { type: "continue_observation", values: { observationNote: "observe", nextReviewAt: "2026-07-10 10:00", feedbackRequestNote: "observe attendance", feedbackDeadline: "2026-07-09 17:00" } }, currentTime);
 assert(observed.success && observed.warning.currentStatus === "observing", "observation transition works");
 assert(observed.warning.feedbackRequests.length === 1 && observed.warning.feedbackStatus === "pending_feedback", "observation creates a feedback request");
+const observingWaiting = findWarning("WRN-20260708-002");
+const observingReceived = findWarning("WRN-20260708-014");
+const observingOverdue = findWarning("WRN-20260708-015");
+assert(feedback.getObservationFeedbackActionAvailability(observingWaiting, currentTime).kind === "waiting", "observing waits while the current request is active");
+assert(feedback.getObservationFeedbackActionAvailability(observingReceived, currentTime).kind === "continue", "observing continues after current-round feedback");
+assert(feedback.getObservationFeedbackActionAvailability(observingOverdue, currentTime).kind === "rerequest", "observing can re-request after timeout");
+const nextObservationRound = actions.applyWarningAction(observingReceived, { type: "continue_observation", values: { observationNote: "继续观察到校表现", nextReviewAt: "2026-07-10 10:00", feedbackRequestNote: "补充课堂参与事实", feedbackDeadline: "2026-07-09 17:00" } }, currentTime);
+assert(nextObservationRound.success && nextObservationRound.warning.feedbackRequests.length === observingReceived.feedbackRequests.length + 1, "received observing feedback creates a new round");
+const renewedObservation = actions.applyWarningAction(observingOverdue, { type: "continue_observation", values: { observationNote: "继续观察同伴互动", nextReviewAt: "2026-07-10 10:00", feedbackRequestNote: "重新反馈同伴互动", feedbackDeadline: "2026-07-09 17:00" } }, currentTime);
+assert(renewedObservation.success && renewedObservation.warning.feedbackRequests.some((item) => item.status === "overdue"), "overdue observing feedback preserves the old overdue round");
 const ended = actions.applyWarningAction(review, { type: "end_review", values: { endReason: "resolved" } }, currentTime);
 assert(ended.success && !ended.warning.isActive && ended.warning.disposition === "ended_without_warning", "end review removes active item without a new status");
 const intervention = actions.applyWarningAction(receivedFeedback, { type: "record_intervention", values: { occurredAt: currentTime, method: "talk", summary: "summary", judgment: "judgment", followUpPlan: "plan" } }, currentTime);
@@ -97,12 +115,15 @@ assert(appointment.warning.interventionAppointments[0].status === "planned", "ap
 assert(appointment.warning.interventionAppointments[0].notificationOffsetsMinutes.join(",") === "1440,120", "appointment stores mock notification offsets");
 const pendingFeedbackAppointment = actions.applyWarningAction(pendingFeedback, { type: "schedule_intervention", values: appointmentValues }, currentTime);
 assert(pendingFeedbackAppointment.success, "pending homeroom feedback does not block intervention scheduling");
-const noShow = actions.applyWarningAction(appointment.warning, { type: "mark_intervention_no_show", values: { appointmentId: appointment.warning.interventionAppointments[0].id, appointment: { ...appointmentValues, plannedAt: "2026-07-10 09:00" } } }, "2026-07-08 14:00");
+const blockedNoShow = actions.applyWarningAction(appointment.warning, { type: "mark_intervention_no_show", values: { appointmentId: appointment.warning.interventionAppointments[0].id, appointment: { ...appointmentValues, plannedAt: "2026-07-10 09:00" } } }, "2026-07-08 14:00");
+assert(!blockedNoShow.success && appointment.warning.interventionAppointments[0].status === "planned", "grace-period time passage does not write no-show");
+const noShow = actions.applyWarningAction(appointment.warning, { type: "mark_intervention_no_show", values: { appointmentId: appointment.warning.interventionAppointments[0].id, appointment: { ...appointmentValues, plannedAt: "2026-07-10 09:00" } } }, "2026-07-08 14:01");
 assert(noShow.success && noShow.warning.interventionAppointments.some((item) => item.status === "no_show") && noShow.warning.interventionAppointments[0].status === "planned", "no-show preserves old appointment and creates a new one");
-const rescheduledAppointment = actions.applyWarningAction(appointment.warning, { type: "reschedule_intervention", values: { appointmentId: appointment.warning.interventionAppointments[0].id, appointment: { ...appointmentValues, plannedAt: "2026-07-10 11:00" } } }, "2026-07-08 14:00");
+const rescheduledAppointment = actions.applyWarningAction(appointment.warning, { type: "reschedule_intervention", values: { appointmentId: appointment.warning.interventionAppointments[0].id, appointment: { ...appointmentValues, plannedAt: "2026-07-10 11:00" } } }, "2026-07-08 13:30");
 assert(rescheduledAppointment.success && rescheduledAppointment.warning.interventionAppointments.some((item) => item.status === "rescheduled"), "reschedule preserves the original appointment");
 const cancelledAppointment = actions.applyWarningAction(appointment.warning, { type: "cancel_intervention", values: { appointmentId: appointment.warning.interventionAppointments[0].id, reason: "学生临时请假" } }, "2026-07-08 14:00");
-assert(cancelledAppointment.success && cancelledAppointment.warning.interventionAppointments[0].status === "cancelled" && cancelledAppointment.warning.currentStatus === "in_intervention", "cancellation uses a sub-status and keeps the main state");
+assert(cancelledAppointment.success && cancelledAppointment.warning.interventionAppointments[0].status === "cancelled" && cancelledAppointment.warning.currentStatus === "formal_warning", "cancellation returns to formal warning and preserves the appointment");
+assert(appointments.INTERVENTION_CONFIRMATION_GRACE_MINUTES === 60 && appointments.getInterventionAppointmentTiming(appointment.warning.interventionAppointments[0], "2026-07-08 14:00") === "awaiting_result" && appointments.getInterventionAppointmentTiming(appointment.warning.interventionAppointments[0], "2026-07-08 14:01") === "confirmation_required", "intervention grace boundary is exact");
 const completedIntervention = actions.applyWarningAction(appointment.warning, { type: "record_intervention_result", values: { appointmentId: appointment.warning.interventionAppointments[0].id, occurredAt: "2026-07-08 14:00", method: "个体访谈", summary: "完成首次干预", judgment: "继续支持", nextPlan: "continue_intervention", nextAppointment: { ...appointmentValues, plannedAt: "2026-07-10 10:00" }, requestFeedback: false } }, "2026-07-08 14:00");
 assert(completedIntervention.success && completedIntervention.warning.interventionRecords[0].appointmentId, "intervention result links the completed appointment");
 assert(completedIntervention.warning.interventionAppointments.filter((item) => item.status === "planned").length === 1, "continue intervention creates the next appointment");
@@ -137,6 +158,12 @@ assert(collaboration.rounds.length > 0 && collaboration.proactiveRecords.length 
 const effectiveTimeline = records.buildEffectiveWarningTimeline(unreadFeedback);
 assert(effectiveTimeline.filter((item) => item.id.startsWith("TL-FEEDBACK-")).length === unreadFeedback.feedbackRecords.length, "every feedback record appears once in effective timeline");
 assert(effectiveTimeline.every((item, index) => index === 0 || effectiveTimeline[index - 1].occurredAt >= item.occurredAt), "effective timeline is newest first");
+assert(effectiveTimeline.filter((item) => item.sourceType === "feedback_request").length === unreadFeedback.feedbackRequests.length, "every feedback request appears once in effective timeline");
+const interventionTimeline = records.buildEffectiveWarningTimeline(findWarning("WRN-20260707-004"));
+assert(interventionTimeline.filter((item) => item.sourceType === "intervention_record").length === findWarning("WRN-20260707-004").interventionRecords.length, "intervention records drive timeline events");
+const twoRetests = findWarning("WRN-20260704-007");
+assert(records.buildEffectiveWarningTimeline(twoRetests).filter((item) => item.sourceType === "retest_record").length >= twoRetests.retestRecords.length, "multiple retests keep separate timeline events");
+assert(retests.getLatestCompletedRetest(twoRetests)?.completedAt, "latest completed retest is selected independently");
 
 const completedRetest = findWarning("WRN-20260708-009");
 const closed = actions.applyWarningAction(completedRetest, { type: "update_retest_status", values: { outcome: "close" } }, currentTime);

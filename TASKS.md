@@ -249,14 +249,14 @@ Active scope: Phase I1 intervention appointment, attendance, follow-up, and no-s
 
 ## Phase I1.1: Walkthrough reconciliation
 
-- [ ] I1.1A Sync specifications and split active warning risk levels
-- [ ] I1.1B Align observing feedback rounds and global end-review toast
-- [ ] I1.1C Derive one effective timeline from structured records
-- [ ] I1.1D Add intervention grace period and cancellation return rule
-- [ ] I1.1E Move intervention/re-test attention into arrangements
-- [ ] I1.1F Separate latest planned and latest completed re-tests
-- [ ] I1.1G Cover mock scenarios and regression
-- [ ] Run test / build / HTTP smoke / 1440x900 walkthrough / commit / push
+- [x] I1.1A Sync specifications and split active warning risk levels
+- [x] I1.1B Align observing feedback rounds and global end-review toast
+- [x] I1.1C Derive one effective timeline from structured records
+- [x] I1.1D Add intervention grace period and cancellation return rule
+- [x] I1.1E Move intervention/re-test attention into arrangements
+- [x] I1.1F Separate latest planned and latest completed re-tests
+- [x] I1.1G Cover mock scenarios and regression
+- [x] Run test / build / HTTP smoke / 1440x900 walkthrough / commit / push
 
 Active scope: Phase I1.1 warning, feedback, timeline, intervention arrangement, and re-test consistency. Keep seven warning main states unchanged. School overview, clue pool, backend, permissions, and real notifications remain out of scope.
 

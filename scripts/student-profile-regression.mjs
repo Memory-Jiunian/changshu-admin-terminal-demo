@@ -14,18 +14,23 @@ function moduleUrl(code) {
 const warningTypesUrl = moduleUrl(compile("src/types/warning.ts"));
 const studentTypesUrl = moduleUrl(compile("src/types/studentProfile.ts"));
 const feedbackUrl = moduleUrl(compile("src/lib/warning-feedback.ts"));
+const appointmentsUrl = moduleUrl(compile("src/lib/intervention-appointments.ts"));
+const retestsUrl = moduleUrl(compile("src/lib/warning-retests.ts"));
 const recordsUrl = moduleUrl(
   compile("src/lib/warning-records.ts").replaceAll('"@/types/warning"', `"${warningTypesUrl}"`),
 );
 const actionsUrl = moduleUrl(
   compile("src/lib/warning-actions.ts")
     .replaceAll('"@/types/warning"', `"${warningTypesUrl}"`)
-    .replaceAll('"@/lib/warning-feedback"', `"${feedbackUrl}"`),
+    .replaceAll('"@/lib/warning-feedback"', `"${feedbackUrl}"`)
+    .replaceAll('"@/lib/intervention-appointments"', `"${appointmentsUrl}"`)
+    .replaceAll('"@/lib/warning-retests"', `"${retestsUrl}"`),
 );
 const aggregateUrl = moduleUrl(
   compile("src/lib/student-profile-aggregate.ts")
     .replaceAll('"@/types/studentProfile"', `"${studentTypesUrl}"`)
     .replaceAll('"@/types/warning"', `"${warningTypesUrl}"`)
+    .replaceAll('"@/lib/warning-feedback"', `"${feedbackUrl}"`)
     .replaceAll('"@/lib/warning-records"', `"${recordsUrl}"`),
 );
 const filtersUrl = moduleUrl(
@@ -105,7 +110,9 @@ const lowRiskResults = filters.filterStudentProfiles(summaries, {
   ...defaultQuery,
   advanced: { ...defaultQuery.advanced, riskLevel: ["low"] },
 });
-assert(lowRiskResults.length > 0 && lowRiskResults.every((item) => item.activeRiskLevel === "low"), "low risk is available for profile filtering");
+assert(lowRiskResults.length === 0, "no active warning is silently classified as low risk");
+assert(readFileSync("src/components/student-profile/StudentProfileAdvancedFilter.tsx", "utf8").includes("riskLevelLabels.low"), "student profile retains the low-risk filter option");
+assert(warnings.some((item) => item.deepAssessmentRecords.some((record) => record.riskLevel === "low")), "student profile records retain low-risk assessment facts");
 
 const riskValues = [...new Set(defaultResults.flatMap((item) => item.activeRiskLevel ? [item.activeRiskLevel] : []))];
 const riskResults = filters.filterStudentProfiles(summaries, {

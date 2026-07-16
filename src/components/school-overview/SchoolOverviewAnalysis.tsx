@@ -1,22 +1,22 @@
-import { useState, type ReactNode } from "react";
-import { AlertCircle, BarChart3, Building2, GitBranch, RefreshCw, TrendingUp } from "lucide-react";
+import { AlertCircle, BarChart3, CircleGauge, GitBranch, RefreshCw, TrendingUp, UsersRound, type LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type {
   DistributionItem,
-  OrganizationRiskRow,
+  GradeRiskDistribution,
   SchoolOverviewModuleKey,
   SchoolOverviewTrend,
-  SchoolOverviewTrendMetric,
   SchoolOverviewViewModel,
 } from "@/types/school-overview";
 
 type AnalysisCardProps = {
   title: string;
   description: string;
-  icon: typeof BarChart3;
+  icon: LucideIcon;
   children: ReactNode;
   failed?: boolean;
   onRetry?: () => void;
@@ -26,11 +26,12 @@ type AnalysisCardProps = {
 function AnalysisCard({ title, description, icon: Icon, children, failed, onRetry, className }: AnalysisCardProps) {
   return (
     <Card className={cn("min-w-0 p-4 shadow-sm", className)}>
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <h2 className="flex items-center gap-2 font-semibold text-neutral-950"><Icon className="h-4 w-4 text-neutral-500" aria-hidden="true" />{title}</h2>
-          <p className="mt-1 text-xs leading-5 text-neutral-500">{description}</p>
-        </div>
+      <div className="mb-4">
+        <h2 className="flex items-center gap-2 font-semibold text-neutral-950">
+          <Icon className="h-4 w-4 text-neutral-500" aria-hidden="true" />
+          {title}
+        </h2>
+        <p className="mt-1 text-xs leading-5 text-neutral-500">{description}</p>
       </div>
       {failed ? <ModuleFailure onRetry={onRetry} /> : children}
     </Card>
@@ -42,7 +43,9 @@ function ModuleFailure({ onRetry }: { onRetry?: () => void }) {
     <div className="flex min-h-[180px] flex-col items-center justify-center rounded-md border border-dashed border-neutral-300 bg-neutral-50 px-4 text-center" role="status">
       <AlertCircle className="h-5 w-5 text-neutral-500" aria-hidden="true" />
       <p className="mt-2 text-sm font-medium text-neutral-800">本模块加载失败</p>
-      <Button className="mt-3 gap-2" onClick={onRetry} size="sm" type="button" variant="outline"><RefreshCw className="h-3.5 w-3.5" />重试</Button>
+      <Button className="mt-3 gap-2" onClick={onRetry} size="sm" type="button" variant="outline">
+        <RefreshCw className="h-3.5 w-3.5" />重试
+      </Button>
     </div>
   );
 }
@@ -58,7 +61,7 @@ function DistributionBars({ items, emptyText, compact = false }: { items: Distri
     <div className={compact ? "grid gap-x-6 gap-y-3 sm:grid-cols-2" : "space-y-4"} role="list">
       {items.map((item, index) => (
         <div key={item.id} role="listitem" aria-label={`${item.label} ${item.displayValue}${item.unit}，占比 ${item.percentage}%`}>
-          <div className={cn("flex items-center justify-between text-sm", compact ? "mb-1" : "mb-1.5")}>
+          <div className="mb-1 flex items-center justify-between text-sm">
             <span className="font-medium text-neutral-800">{item.label}</span>
             <span className="tabular-nums text-neutral-600">{item.displayValue} {item.unit} · {item.percentage}%</span>
           </div>
@@ -74,68 +77,136 @@ function DistributionBars({ items, emptyText, compact = false }: { items: Distri
   );
 }
 
-function OrganizationRows({ rows }: { rows: OrganizationRiskRow[] }) {
-  if (rows.length === 0) return <div className="py-10 text-center text-sm text-neutral-500">当前范围暂无可展示的组织数据。</div>;
+const gradeColors = ["#0369a1", "#0f766e", "#b45309", "#be123c", "#6d28d9"];
+
+function GradeRiskDonut({ distribution }: { distribution: GradeRiskDistribution }) {
+  if (distribution.isSuppressed) {
+    return <div className="rounded-md border border-dashed border-neutral-300 bg-neutral-50 px-4 py-12 text-center text-sm text-neutral-600">当前班级为小数量范围，年级构成精确值已隐藏。</div>;
+  }
+  if (distribution.totalStudentCount === 0) {
+    return <div className="py-12 text-center text-sm text-neutral-500">当前暂无心理老师确认的活动风险学生。</div>;
+  }
+
+  let offset = 0;
   return (
-    <div className="divide-y divide-neutral-100">
-      <div className="hidden grid-cols-[minmax(80px,1.2fr)_repeat(5,minmax(72px,1fr))] gap-3 px-2 pb-2 text-xs text-neutral-500 md:grid">
-        <span>组织</span><span>在校学生</span><span>确认风险</span><span>风险占比</span><span>中 / 高 / 危险</span><span>隐私状态</span>
-      </div>
-      {rows.map((row) => (
-        <div className="grid gap-2 px-2 py-3 text-sm md:grid-cols-[minmax(80px,1.2fr)_repeat(5,minmax(72px,1fr))] md:items-center md:gap-3" key={row.id} aria-label={row.accessibleSummary}>
-          <span className="font-medium text-neutral-900">{row.label}</span>
-          <span className="text-neutral-600"><span className="md:hidden">在校：</span>{row.enrolledCount} 人</span>
-          <span className="text-neutral-600"><span className="md:hidden">确认风险：</span>{row.riskStudentDisplay}{row.isSuppressed ? "" : " 人"}</span>
-          <span className="text-neutral-600"><span className="md:hidden">占比：</span>{row.riskRateDisplay}</span>
-          <span className="text-neutral-600"><span className="md:hidden">等级：</span>{row.isSuppressed ? "已隐藏" : `${row.mediumCount} / ${row.highCount} / ${row.criticalCount}`}</span>
-          <span className="text-xs text-neutral-500">{row.isSuppressed ? "小数量保护" : "可展示"}</span>
+    <div className="grid items-center gap-5 sm:grid-cols-[180px_minmax(0,1fr)]" aria-label={distribution.accessibleSummary}>
+      <div className="relative mx-auto h-40 w-40" role="img" aria-label={distribution.accessibleSummary}>
+        <svg className="h-full w-full" viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="60" cy="60" fill="none" r="45" stroke="#e5e7eb" strokeWidth="15" />
+          {distribution.items.map((item, index) => {
+            const startOffset = offset;
+            offset += item.percentage;
+            return (
+              <circle
+                cx="60"
+                cy="60"
+                fill="none"
+                key={item.id}
+                pathLength="100"
+                r="45"
+                stroke={gradeColors[index % gradeColors.length]}
+                strokeDasharray={`${item.percentage} ${100 - item.percentage}`}
+                strokeDashoffset={-startOffset}
+                strokeWidth="15"
+                transform="rotate(-90 60 60)"
+              >
+                <title>{item.label}：{item.studentCount} 人，占 {item.percentage}%，其中高及危险 {item.highAndCriticalCount} 人</title>
+              </circle>
+            );
+          })}
+        </svg>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+          <span className="text-xs text-neutral-500">风险学生</span>
+          <strong className="mt-0.5 text-xl text-neutral-950">{distribution.totalStudentDisplay} 人</strong>
         </div>
-      ))}
+      </div>
+
+      <TooltipProvider delayDuration={150}>
+        <div className="space-y-2" role="list" aria-label="风险学生年级分布图例">
+          {distribution.items.map((item, index) => (
+            <Tooltip key={item.id}>
+              <TooltipTrigger asChild>
+                <div className="flex cursor-help items-center justify-between gap-3 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-neutral-500" role="listitem" tabIndex={0}>
+                  <span className="flex min-w-0 items-center gap-2 font-medium text-neutral-800">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: gradeColors[index % gradeColors.length] }} aria-hidden="true" />
+                    {item.label}
+                  </span>
+                  <span className="shrink-0 tabular-nums text-neutral-600">{item.studentCount} 人 · {item.percentage}%</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[260px] leading-5" side="top">
+                {item.label}：当前风险学生 {item.studentCount} 人，占全部当前风险学生 {item.percentage}%；其中高及危险风险 {item.highAndCriticalCount} 人。
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      </TooltipProvider>
     </div>
   );
 }
 
-const trendOptions: Array<{ id: SchoolOverviewTrendMetric; label: string; unit: "人" | "项" }> = [
-  { id: "confirmedRiskStudents", label: "新增确认风险学生", unit: "人" },
-  { id: "formalWarningCases", label: "新增正式预警", unit: "项" },
-  { id: "closedCases", label: "闭环事项", unit: "项" },
-  { id: "referralCases", label: "新发起转介", unit: "项" },
-];
-
-function TrendChart({ trends }: { trends: SchoolOverviewTrend[] }) {
-  const [metric, setMetric] = useState<SchoolOverviewTrendMetric>("confirmedRiskStudents");
-  const selected = trendOptions.find((item) => item.id === metric)!;
-  const values = trends.map((item) => item[metric]);
+function TrendChart({ trends, dataThrough }: { trends: SchoolOverviewTrend[]; dataThrough?: string }) {
   if (trends.some((item) => item.isSuppressed)) {
     return <div className="rounded-md border border-dashed border-neutral-300 bg-neutral-50 px-4 py-12 text-center text-sm text-neutral-600">当前班级为小数量范围，历史趋势精确值已隐藏。</div>;
   }
-  const max = Math.max(...values.map((value) => value ?? 0), 1);
+  const max = Math.max(...trends.flatMap((item) => [item.formalWarningCases ?? 0, item.closedCases ?? 0]), 1);
+  const summary = trends.map((item) => `${item.label}新增正式预警 ${item.formalWarningCases ?? 0} 项、闭环 ${item.closedCases ?? 0} 项`).join("；");
 
   return (
     <div>
-      <div className="scrollbar-hidden mb-4 flex gap-1 overflow-x-auto" role="tablist" aria-label="趋势指标">
-        {trendOptions.map((item) => (
-          <button
-            aria-selected={metric === item.id}
-            className={cn("shrink-0 rounded-md px-2.5 py-1.5 text-xs outline-none focus-visible:ring-2 focus-visible:ring-neutral-500", metric === item.id ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200")}
-            key={item.id}
-            onClick={() => setMetric(item.id)}
-            role="tab"
-            type="button"
-          >{item.label}</button>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-600">
+        <div className="flex items-center gap-4">
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-sky-700" />新增正式预警事项</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-emerald-600" />闭环事项</span>
+        </div>
+        {dataThrough ? <span>数据截至 {dataThrough}</span> : null}
+      </div>
+      <div className="grid h-[210px] grid-cols-6 gap-2 border-b border-neutral-200 px-2" role="img" aria-label={`风险变化趋势，单位项。${summary}`}>
+        {trends.map((item) => (
+          <div className="flex min-w-0 flex-col items-center justify-end" key={item.month}>
+            <div className="flex h-[160px] w-full max-w-14 items-end justify-center gap-1">
+              {([
+                [item.formalWarningCases ?? 0, "bg-sky-700", "新增正式预警"],
+                [item.closedCases ?? 0, "bg-emerald-600", "闭环事项"],
+              ] as const).map(([value, tone, label]) => (
+                <div className="flex h-full min-w-0 flex-1 flex-col items-center justify-end" key={label} title={`${item.label}${label} ${value} 项`}>
+                  <span className="mb-1 text-[11px] tabular-nums text-neutral-600">{value}</span>
+                  <div className={cn("w-full max-w-5 rounded-t", tone)} style={{ height: `${value === 0 ? 2 : Math.max((value / max) * 125, 10)}px` }} />
+                </div>
+              ))}
+            </div>
+            <span className="mt-2 text-xs text-neutral-500">{item.label}</span>
+          </div>
         ))}
       </div>
-      <div className="grid h-[190px] grid-cols-6 gap-2 border-b border-neutral-200 px-2" role="img" aria-label={`${selected.label}当前学期按月趋势，单位${selected.unit}`}>
-        {trends.map((item) => {
-          const value = item[metric] ?? 0;
-          return (
-            <div className="flex min-w-0 flex-col items-center justify-end" key={item.month}>
-              <span className="mb-1 text-xs tabular-nums text-neutral-600">{value}</span>
-              <div className="w-full max-w-10 rounded-t bg-sky-600" style={{ height: `${value === 0 ? 2 : Math.max((value / max) * 135, 10)}px` }} />
-              <span className="mt-2 text-xs text-neutral-500">{item.label}</span>
-            </div>
-          );
-        })}
+    </div>
+  );
+}
+
+function DispositionEffectiveness({ viewModel }: { viewModel: SchoolOverviewViewModel }) {
+  const metric = viewModel.dispositionEffectiveness;
+  if (metric.isSuppressed) {
+    return <div className="rounded-md border border-dashed border-neutral-300 bg-neutral-50 px-4 py-12 text-center text-sm text-neutral-600">当前班级为小数量范围，处置成效精确值已隐藏。</div>;
+  }
+  const items = [
+    ["本学期新增正式预警", `${metric.formalWarningDisplay} 项`],
+    ["本学期已闭环", `${metric.closedDisplay} 项`],
+    ["闭环率", metric.closureRateDisplay],
+    ["平均闭环周期", metric.averageClosureDaysDisplay],
+  ];
+  return (
+    <div>
+      <dl className="grid gap-3 sm:grid-cols-2">
+        {items.map(([label, value]) => (
+          <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-3" key={label}>
+            <dt className="text-xs text-neutral-500">{label}</dt>
+            <dd className="mt-1 text-lg font-semibold text-neutral-950">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="mt-3 flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5">
+        <span className="text-sm font-medium text-amber-950">当前阻塞事项</span>
+        <strong className="text-lg text-amber-950">{metric.blockedCaseDisplay} 项</strong>
       </div>
     </div>
   );
@@ -149,21 +220,20 @@ export function SchoolOverviewAnalysis({ viewModel, failedModules = [], onRetryM
         <DistributionBars items={viewModel.riskLevelDistribution} emptyText="当前暂无心理老师确认的活动风险事项。" />
       </AnalysisCard>
 
-      <AnalysisCard title="处置进程分布" description={`活动事项 ${viewModel.dispositionDistribution.activeCaseDisplay}，当前学期闭环 ${viewModel.dispositionDistribution.closedThisTermDisplay}`} icon={GitBranch} failed={failed("disposition")} onRetry={() => onRetryModule?.("disposition")}>
-        <DistributionBars compact items={viewModel.dispositionDistribution.active} emptyText="当前范围暂无活动预警事项。" />
-        <div className="mt-4 rounded-md bg-neutral-50 px-3 py-2 text-sm text-neutral-600">当前学期已闭环：<strong className="text-neutral-900">{viewModel.dispositionDistribution.closedThisTermDisplay}</strong>{viewModel.dispositionDistribution.isSuppressed ? null : " 项"}，不与活动事项共用百分比分母。</div>
+      <AnalysisCard title="当前处理中 / 本学期已闭环" description={`处理中 ${viewModel.dispositionDistribution.activeCaseDisplay} 项 · 已闭环 ${viewModel.dispositionDistribution.closedThisTermDisplay} 项`} icon={GitBranch} failed={failed("disposition")} onRetry={() => onRetryModule?.("disposition")}>
+        <DistributionBars compact items={viewModel.dispositionDistribution.active} emptyText="当前范围暂无正在处理的预警事项。" />
       </AnalysisCard>
 
-      <AnalysisCard className="lg:col-span-2" title={viewModel.scope.organizationFilter.level === "school" ? "年级风险分布" : "班级风险分布"} description="默认按风险占比、危险人数和高风险人数排序；班级小数量在统计层遮蔽" icon={Building2} failed={failed("organization")} onRetry={() => onRetryModule?.("organization")}>
-        <OrganizationRows rows={viewModel.organizationDistribution} />
+      <AnalysisCard title="风险学生年级分布" description="当前确认风险学生按年级的构成，不使用在校学生基数计算风险率" icon={UsersRound} failed={failed("organization")} onRetry={() => onRetryModule?.("organization")}>
+        <GradeRiskDonut distribution={viewModel.gradeRiskDistribution} />
       </AnalysisCard>
 
-      <AnalysisCard title="当前学期趋势" description="按真实业务事件时间归月；趋势变化不代表因果结论" icon={TrendingUp} failed={failed("trends")} onRetry={() => onRetryModule?.("trends")}>
-        <TrendChart trends={viewModel.trends} />
+      <AnalysisCard title="处置成效概览" description="反映本学期正式预警的处理进度，不代表心理老师绩效结论" icon={CircleGauge} failed={failed("effectiveness")} onRetry={() => onRetryModule?.("effectiveness")}>
+        <DispositionEffectiveness viewModel={viewModel} />
       </AnalysisCard>
 
-      <AnalysisCard title="风险线索来源分布" description="来源表示事项最初发现渠道，不等于风险原因" icon={BarChart3} failed={failed("sources")} onRetry={() => onRetryModule?.("sources")}>
-        <DistributionBars items={viewModel.sourceDistribution} emptyText="当前暂无可统计的确认风险事项来源。" />
+      <AnalysisCard className="lg:col-span-2" title="风险变化趋势" description="展示本学期新增正式预警与闭环事项的月度变化" icon={TrendingUp} failed={failed("trends")} onRetry={() => onRetryModule?.("trends")}>
+        <TrendChart dataThrough={viewModel.trendDataThrough} trends={viewModel.trends} />
       </AnalysisCard>
     </section>
   );

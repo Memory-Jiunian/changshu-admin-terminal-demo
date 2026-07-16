@@ -314,6 +314,23 @@ assessment, warning, and time data. The page is aggregate-only and has no case
 drill-down, export, custom dates, prediction, backend, or real permission layer.
 Warning, workbench, and student-profile business rules remain frozen.
 
+## Phase S1.1 refinement: Principal-view school overview
+
+- [x] Remove confirmed-risk-student and referral trend series
+- [x] Rename the principal-facing active-case copy to current processing
+- [x] Add feedback-read unscheduled intervention metric
+- [x] Isolate overdue incomplete re-tests from result-pending work
+- [x] Replace the risk concentration table with a grade-composition donut
+- [x] Replace source distribution with disposition effectiveness
+- [x] Add privacy, accessibility, selector, and visual regression coverage
+- [x] Run test / build / HTTP smoke / three viewport review
+- [x] Commit and push main
+
+Active scope: Phase S1.1 principal-view metric and presentation refinement. All
+statistics remain derived from shared students, assessments, warnings, and mock
+time. Warning, workbench, student-profile, state-transition, and privacy rules
+remain frozen.
+
 ## Phase 6: Polish and validation
 
 - [ ] Match prototype layout

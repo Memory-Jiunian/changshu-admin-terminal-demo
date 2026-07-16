@@ -374,3 +374,19 @@ type SchoolOverviewDataIssueCode =
 - 复测 120 分钟边界一致；
 - 当前学期月份分组一致；
 - 自动化测试稳定。
+
+## 16. Phase S1.1 指标映射
+
+| 指标 | 统计对象 | 口径 |
+|---|---|---|
+| 当前处理中 | 事项 | `isActive=true` 且非 `closed` |
+| 新增正式预警 | 事项 | 当前学期内首条“确认正式预警”事件 |
+| 本学期已闭环 | 事项 | 当前学期内真实闭环时间 |
+| 反馈已阅待安排 | 事项 | 活动正式预警、当前反馈轮次有有效反馈、全部已读且无有效 planned 预约 |
+| 复测超时未完成 | 事项 | 活动待复测、最新未完成计划超过 `plannedAt + 120min` |
+| 风险学生年级分布 | 学生 | 当前活动事项有中/高/危险 `confirmedRiskLevel`，按 studentId 去重后读取当前年级 |
+| 闭环率 | 事项 | 本学期闭环事项 / 本学期新增正式预警事项；分母为 0 时为不可计算 |
+| 平均闭环周期 | 事项 | 本学期闭环且有确认时间的 `closedAt - confirmedAt` 平均天数 |
+| 当前阻塞事项 | 事项 | 反馈超时、干预预约待确认、复测超时未完成的 warningId 并集 |
+
+趋势只输出 `formalWarningCases` 和 `closedCases`，单位为项。删除 `confirmedRiskStudents` 与 `referralCases` 页面趋势系列。平均周期缺少时间或闭环早于确认时排除，并输出 dataIssue。

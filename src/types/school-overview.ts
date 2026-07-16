@@ -27,7 +27,9 @@ export type SchoolOverviewDataIssueCode =
   | "intervention_without_appointment"
   | "retest_without_plan"
   | "feedback_state_mismatch"
-  | "coverage_overflow";
+  | "coverage_overflow"
+  | "missing_formal_warning_time"
+  | "invalid_closure_cycle";
 
 export type SchoolOverviewModuleKey =
   | "coverage"
@@ -36,7 +38,8 @@ export type SchoolOverviewModuleKey =
   | "organization"
   | "disposition"
   | "trends"
-  | "sources";
+  | "sources"
+  | "effectiveness";
 
 export type SchoolOverviewDataIssue = {
   code: SchoolOverviewDataIssueCode;
@@ -73,19 +76,22 @@ export type DistributionItem = {
 };
 
 export type AttentionMetricId =
-  | "intervention_unscheduled"
+  | "critical_risk"
+  | "feedback_read_unscheduled"
   | "intervention_confirmation_required"
   | "feedback_overdue"
-  | "retest_incomplete"
-  | "retest_result_pending"
+  | "retest_overdue_incomplete"
   | "referral";
+
+export type AttentionMetricGroup = "immediate" | "backlog" | "collaboration";
 
 export type AttentionMetric = {
   id: AttentionMetricId;
+  group: AttentionMetricGroup;
   label: string;
   value: number | null;
   displayValue: string;
-  unit: "项";
+  unit: "人" | "项";
   description: string;
   isSuppressed: boolean;
 };
@@ -118,18 +124,44 @@ export type DispositionDistribution = {
 export type SchoolOverviewTrend = {
   month: string;
   label: string;
-  confirmedRiskStudents: number | null;
   formalWarningCases: number | null;
   closedCases: number | null;
-  referralCases: number | null;
   isSuppressed: boolean;
 };
 
 export type SchoolOverviewTrendMetric =
-  | "confirmedRiskStudents"
   | "formalWarningCases"
-  | "closedCases"
-  | "referralCases";
+  | "closedCases";
+
+export type GradeRiskDistributionItem = {
+  id: string;
+  label: string;
+  studentCount: number;
+  percentage: number;
+  highAndCriticalCount: number;
+};
+
+export type GradeRiskDistribution = {
+  totalStudentCount: number | null;
+  totalStudentDisplay: string;
+  items: GradeRiskDistributionItem[];
+  isSuppressed: boolean;
+  accessibleSummary: string;
+};
+
+export type DispositionEffectiveness = {
+  formalWarningCount: number | null;
+  formalWarningDisplay: string;
+  closedCount: number | null;
+  closedDisplay: string;
+  closureRate: number | null;
+  closureRateDisplay: string;
+  averageClosureDays: number | null;
+  averageClosureDaysDisplay: string;
+  blockedCaseCount: number | null;
+  blockedCaseDisplay: string;
+  isSuppressed: boolean;
+};
 
 export type SchoolOverviewFilterOptions = {
   grades: string[];
@@ -146,6 +178,9 @@ export type SchoolOverviewViewModel = {
   organizationDistribution: OrganizationRiskRow[];
   dispositionDistribution: DispositionDistribution;
   trends: SchoolOverviewTrend[];
+  trendDataThrough?: string;
+  gradeRiskDistribution: GradeRiskDistribution;
+  dispositionEffectiveness: DispositionEffectiveness;
   sourceDistribution: DistributionItem[];
   filterOptions: SchoolOverviewFilterOptions;
   dataIssues: SchoolOverviewDataIssue[];

@@ -23,14 +23,14 @@ export function SchoolOverviewMetricCards({ viewModel }: { viewModel: SchoolOver
     {
       label: "高风险学生",
       value: `${viewModel.currentRisk.highDisplay}${viewModel.currentRisk.isSuppressed ? "" : " 人"}`,
-      detail: "当前活动事项，按学生去重",
+      detail: "当前处理中事项，按学生去重",
       icon: AlertTriangle,
       tone: "bg-amber-50 text-amber-700",
     },
     {
       label: "危险风险学生",
       value: `${viewModel.currentRisk.criticalDisplay}${viewModel.currentRisk.isSuppressed ? "" : " 人"}`,
-      detail: "当前活动事项，按学生去重",
+      detail: "当前处理中事项，按学生去重",
       icon: ShieldAlert,
       tone: "bg-red-50 text-red-700",
     },

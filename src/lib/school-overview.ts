@@ -1,6 +1,6 @@
 import { getInterventionAppointmentTiming, getLatestPlannedInterventionAppointment } from "@/lib/intervention-appointments";
 import { getEffectiveFeedbackStatus, getFeedbackDataIssues } from "@/lib/warning-feedback";
-import { getLatestCompletedRetest, getLatestPlannedRetest, isRetestIncompleteAfterGrace } from "@/lib/warning-retests";
+import { getLatestPlannedRetest, isRetestIncompleteAfterGrace } from "@/lib/warning-retests";
 import type { StudentAssessmentRecord } from "@/types/assessment";
 import type { StudentProfileRecord } from "@/types/studentProfile";
 import {
@@ -9,6 +9,7 @@ import {
   schoolWarningStatusLabels,
   type AttentionMetric,
   type DistributionItem,
+  type GradeRiskDistribution,
   type OrganizationRiskRow,
   type SchoolOverviewDataIssue,
   type SchoolOverviewDataIssueCode,
@@ -113,6 +114,106 @@ function getClosedTime(warning: WarningItem) {
   return warning.endedAt ?? [...warning.timeline]
     .filter((item) => item.title === "完成闭环归档")
     .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt))[0]?.occurredAt;
+}
+
+function getCurrentFeedbackRoundRecords(warning: WarningItem) {
+  const latestRequest = [...warning.feedbackRequests]
+    .sort((left, right) => right.requestedAt.localeCompare(left.requestedAt))[0];
+  if (!latestRequest) return [];
+  return warning.feedbackRecords.filter((record) => record.requestId === latestRequest.id);
+}
+
+function hasFeedbackReadForCurrentRound(warning: WarningItem) {
+  const records = getCurrentFeedbackRoundRecords(warning);
+  return records.length > 0 && records.every((record) => Boolean(record.psychologistReadAt));
+}
+
+export function getFeedbackReadUnscheduledInterventionCount(warnings: WarningItem[]) {
+  return warnings.filter((warning) =>
+    warning.isActive
+    && warning.currentStatus === "formal_warning"
+    && !getLatestPlannedInterventionAppointment(warning.interventionAppointments)
+    && hasFeedbackReadForCurrentRound(warning),
+  ).length;
+}
+
+function isInterventionConfirmationRequired(warning: WarningItem, currentTime: string) {
+  if (!warning.isActive || warning.currentStatus !== "in_intervention") return false;
+  const appointment = getLatestPlannedInterventionAppointment(warning.interventionAppointments);
+  return appointment
+    ? getInterventionAppointmentTiming(appointment, currentTime) === "confirmation_required"
+    : false;
+}
+
+function isRetestOverdueIncomplete(warning: WarningItem, currentTime: string) {
+  if (!warning.isActive || warning.currentStatus !== "pending_retest") return false;
+  const planned = getLatestPlannedRetest(warning);
+  return planned ? isRetestIncompleteAfterGrace(planned, currentTime) : false;
+}
+
+function dateTimeMs(value: string) {
+  const result = Date.parse(value.replace(" ", "T"));
+  return Number.isNaN(result) ? undefined : result;
+}
+
+function buildGradeRiskDistribution(
+  enrolledStudents: StudentProfileRecord[],
+  confirmedWarnings: WarningItem[],
+  suppressed: boolean,
+): GradeRiskDistribution {
+  if (suppressed) {
+    return {
+      totalStudentCount: null,
+      totalStudentDisplay: "少量",
+      items: [],
+      isSuppressed: true,
+      accessibleSummary: "当前班级风险学生为少量，年级构成精确值已隐藏。",
+    };
+  }
+
+  const warningByStudent = new Map(confirmedWarnings.map((warning) => [warning.studentId, warning]));
+  const groups = new Map<string, { studentCount: number; highAndCriticalCount: number }>();
+  enrolledStudents.forEach((student) => {
+    const warning = warningByStudent.get(student.studentId);
+    if (!warning?.confirmedRiskLevel || !student.currentGrade) return;
+    const current = groups.get(student.currentGrade) ?? { studentCount: 0, highAndCriticalCount: 0 };
+    current.studentCount += 1;
+    if (warning.confirmedRiskLevel === "high" || warning.confirmedRiskLevel === "critical") {
+      current.highAndCriticalCount += 1;
+    }
+    groups.set(student.currentGrade, current);
+  });
+
+  const total = [...groups.values()].reduce((sum, item) => sum + item.studentCount, 0);
+  const sorted = [...groups.entries()].sort((left, right) =>
+    right[1].studentCount - left[1].studentCount || left[0].localeCompare(right[0]),
+  );
+  const visible = sorted.length > 5
+    ? [
+        ...sorted.slice(0, 4),
+        ["其他", sorted.slice(4).reduce((result, [, item]) => ({
+          studentCount: result.studentCount + item.studentCount,
+          highAndCriticalCount: result.highAndCriticalCount + item.highAndCriticalCount,
+        }), { studentCount: 0, highAndCriticalCount: 0 })] as const,
+      ]
+    : sorted;
+  const items = visible.map(([label, value]) => ({
+    id: label === "其他" ? "other" : label,
+    label,
+    studentCount: value.studentCount,
+    percentage: percentage(value.studentCount, total),
+    highAndCriticalCount: value.highAndCriticalCount,
+  }));
+
+  return {
+    totalStudentCount: total,
+    totalStudentDisplay: String(total),
+    items,
+    isSuppressed: false,
+    accessibleSummary: total === 0
+      ? "当前范围暂无心理老师确认的活动风险学生。"
+      : `当前确认风险学生共 ${total} 人。${items.map((item) => `${item.label} ${item.studentCount} 人，占 ${item.percentage}%，其中高及危险 ${item.highAndCriticalCount} 人`).join("；")}。`,
+  };
 }
 
 function buildFilterOptions(students: StudentProfileRecord[]) {
@@ -242,7 +343,7 @@ export function buildSchoolOverview({
 
   activeCasesByStudent.forEach((cases) => {
     if (cases.length > 1) {
-      addIssue(issues, "multiple_active_cases", "current_risk", "部分学生存在多条活动事项，人数已去重并使用最新事项。", 1);
+      addIssue(issues, "multiple_active_cases", "current_risk", "部分学生存在多条当前处理中事项，人数已去重并使用最新事项。", 1);
     }
   });
 
@@ -254,7 +355,7 @@ export function buildSchoolOverview({
       ["formal_warning", "in_intervention", "pending_retest", "referral"].includes(warning.currentStatus)
       && !warning.confirmedRiskLevel
     ) {
-      addIssue(issues, "missing_confirmed_risk", "current_risk", "正式预警及后续活动事项缺少心理老师确认风险等级，已从当前风险统计中排除。", 1);
+      addIssue(issues, "missing_confirmed_risk", "current_risk", "正式预警及后续处理中事项缺少心理老师确认风险等级，已从当前风险统计中排除。", 1);
     }
     if (warning.currentStatus === "in_intervention" && !getLatestPlannedInterventionAppointment(warning.interventionAppointments)) {
       addIssue(issues, "intervention_without_appointment", "attention", "部分待干预事项缺少有效预约，已保留在处置状态并提示核对。", 1);
@@ -306,61 +407,52 @@ export function buildSchoolOverview({
 
   const rawAttention = [
     {
-      id: "intervention_unscheduled",
-      label: "待安排干预",
-      value: currentWarnings.filter((warning) =>
-        warning.currentStatus === "formal_warning"
-        && !getLatestPlannedInterventionAppointment(warning.interventionAppointments),
-      ).length,
-      unit: "项",
-      description: "正式预警且当前没有有效干预预约。",
-    },
-    {
-      id: "intervention_confirmation_required",
-      label: "干预预约待确认",
-      value: currentWarnings.filter((warning) => {
-        if (warning.currentStatus !== "in_intervention") return false;
-        const appointment = getLatestPlannedInterventionAppointment(warning.interventionAppointments);
-        return appointment
-          ? getInterventionAppointmentTiming(appointment, currentTime) === "confirmation_required"
-          : false;
-      }).length,
-      unit: "项",
-      description: "预约时间已过 60 分钟，等待心理老师确认执行情况，不等同于未到场。",
-    },
-    {
-      id: "feedback_overdue",
-      label: "反馈超时",
-      value: currentWarnings.filter((warning) => getEffectiveFeedbackStatus(warning, currentTime) === "feedback_overdue").length,
-      unit: "项",
-      description: "班主任反馈任务已超过截止时间且尚未收到反馈。",
-    },
-    {
-      id: "retest_incomplete",
-      label: "复测未完成",
-      value: currentWarnings.filter((warning) => {
-        if (warning.currentStatus !== "pending_retest" || getLatestCompletedRetest(warning)) return false;
-        const planned = getLatestPlannedRetest(warning);
-        return planned ? isRetestIncompleteAfterGrace(planned, currentTime) : false;
-      }).length,
-      unit: "项",
-      description: "超过计划复测时间 120 分钟仍未完成。",
-    },
-    {
-      id: "retest_result_pending",
-      label: "复测结果待更新",
-      value: currentWarnings.filter((warning) =>
-        warning.currentStatus === "pending_retest" && Boolean(getLatestCompletedRetest(warning)),
-      ).length,
-      unit: "项",
-      description: "复测已完成，心理老师尚未更新事项状态。",
+      id: "critical_risk",
+      group: "immediate",
+      label: "危险风险学生",
+      value: riskCounts.critical,
+      unit: "人",
+      description: "当前处理中事项中，心理老师确认风险等级为危险的学生人数，按学生去重。",
     },
     {
       id: "referral",
+      group: "immediate",
       label: "转介中",
       value: currentWarnings.filter((warning) => warning.currentStatus === "referral").length,
       unit: "项",
       description: "当前仍处于转介阶段的事项，新增跟进不会自动改变主状态。",
+    },
+    {
+      id: "feedback_read_unscheduled",
+      group: "backlog",
+      label: "反馈已阅待安排",
+      value: getFeedbackReadUnscheduledInterventionCount(currentWarnings),
+      unit: "项",
+      description: "班主任当前反馈轮次已有有效反馈，心理老师已逐条确认查看，且尚未建立有效干预预约。该指标不限制提前预约干预。",
+    },
+    {
+      id: "intervention_confirmation_required",
+      group: "backlog",
+      label: "干预预约待确认",
+      value: currentWarnings.filter((warning) => isInterventionConfirmationRequired(warning, currentTime)).length,
+      unit: "项",
+      description: "预约时间已过 60 分钟，等待心理老师确认执行情况，不等同于未到场。",
+    },
+    {
+      id: "retest_overdue_incomplete",
+      group: "backlog",
+      label: "复测超时未完成",
+      value: currentWarnings.filter((warning) => isRetestOverdueIncomplete(warning, currentTime)).length,
+      unit: "项",
+      description: "已超过计划复测时间和 120 分钟宽限期，尚未产生复测结果。已完成但待更新状态的事项不计入。",
+    },
+    {
+      id: "feedback_overdue",
+      group: "collaboration",
+      label: "班主任反馈超时",
+      value: currentWarnings.filter((warning) => getEffectiveFeedbackStatus(warning, currentTime) === "feedback_overdue").length,
+      unit: "项",
+      description: "班主任反馈任务已超过截止时间且尚未收到有效反馈。",
     },
   ] satisfies Array<Omit<AttentionMetric, "displayValue" | "isSuppressed">>;
   const attention: AttentionMetric[] = rawAttention.map((item) => ({
@@ -391,34 +483,63 @@ export function buildSchoolOverview({
 
   const months = buildMonths(termRange);
   const trends = months.map<SchoolOverviewTrend>((month) => {
-    const confirmedStudents = new Set<string>();
     let formalWarningCases = 0;
     let closedCases = 0;
-    let referralCases = 0;
 
     warnings.filter((warning) => allScopeIds.has(warning.studentId)).forEach((warning) => {
       const formalTime = getFormalWarningTime(warning);
       if (monthKey(formalTime) === month) {
-        confirmedStudents.add(warning.studentId);
         formalWarningCases += 1;
       }
       if (monthKey(getClosedTime(warning)) === month && warning.currentStatus === "closed") closedCases += 1;
-      if (warning.referralRecords.some((record) => monthKey(record.referredAt) === month)) referralCases += 1;
     });
 
     const trend = {
       month,
       label: `${Number(month.slice(5))}月`,
-      confirmedRiskStudents: confirmedStudents.size,
       formalWarningCases,
       closedCases,
-      referralCases,
       isSuppressed: false,
     };
     return suppressClassRisk
-      ? { ...trend, confirmedRiskStudents: null, formalWarningCases: null, closedCases: null, referralCases: null, isSuppressed: true }
+      ? { ...trend, formalWarningCases: null, closedCases: null, isSuppressed: true }
       : trend;
   });
+
+  const scopedWarnings = warnings.filter((warning) => allScopeIds.has(warning.studentId));
+  const formalWarningsThisTerm = scopedWarnings.filter((warning) => inRange(getFormalWarningTime(warning), termRange));
+  const closedWarningsThisTerm = scopedWarnings.filter((warning) =>
+    warning.currentStatus === "closed" && inRange(getClosedTime(warning), termRange),
+  );
+  const closureDurations = closedWarningsThisTerm.flatMap((warning) => {
+    const formalTime = getFormalWarningTime(warning);
+    const closedTime = getClosedTime(warning);
+    if (!formalTime) {
+      addIssue(issues, "missing_formal_warning_time", "effectiveness", "部分本学期闭环事项缺少正式预警确认时间，已从平均闭环周期排除。", 1);
+      return [];
+    }
+    const formalMs = dateTimeMs(formalTime);
+    const closedMs = closedTime ? dateTimeMs(closedTime) : undefined;
+    if (formalMs === undefined || closedMs === undefined || closedMs < formalMs) {
+      addIssue(issues, "invalid_closure_cycle", "effectiveness", "部分事项的正式预警与闭环时间异常，已从平均闭环周期排除。", 1);
+      return [];
+    }
+    return [(closedMs - formalMs) / 86_400_000];
+  });
+  const averageClosureDays = closureDurations.length === 0
+    ? null
+    : Math.round((closureDurations.reduce((sum, value) => sum + value, 0) / closureDurations.length) * 10) / 10;
+  const closureRate = formalWarningsThisTerm.length === 0
+    ? null
+    : percentage(closedWarningsThisTerm.length, formalWarningsThisTerm.length);
+  const blockedWarningIds = new Set(currentWarnings
+    .filter((warning) =>
+      getEffectiveFeedbackStatus(warning, currentTime) === "feedback_overdue"
+      || isInterventionConfirmationRequired(warning, currentTime)
+      || isRetestOverdueIncomplete(warning, currentTime),
+    )
+    .map((warning) => warning.id));
+  const gradeRiskDistribution = buildGradeRiskDistribution(enrolledStudents, confirmedWarnings, suppressClassRisk);
 
   const sourceCounts = new Map<WarningSourceType, number>([
     ["screening_abnormal", 0],
@@ -473,6 +594,21 @@ export function buildSchoolOverview({
       isSuppressed: suppressClassRisk,
     },
     trends,
+    trendDataThrough: currentTime < termRange.end ? currentTime.slice(0, 10) : undefined,
+    gradeRiskDistribution,
+    dispositionEffectiveness: {
+      formalWarningCount: suppressClassRisk ? null : formalWarningsThisTerm.length,
+      formalWarningDisplay: suppressClassRisk ? "少量" : String(formalWarningsThisTerm.length),
+      closedCount: suppressClassRisk ? null : closedWarningsThisTerm.length,
+      closedDisplay: suppressClassRisk ? "少量" : String(closedWarningsThisTerm.length),
+      closureRate: suppressClassRisk ? null : closureRate,
+      closureRateDisplay: suppressClassRisk ? "已隐藏" : closureRate === null ? "暂无可计算数据" : `${closureRate}%`,
+      averageClosureDays: suppressClassRisk ? null : averageClosureDays,
+      averageClosureDaysDisplay: suppressClassRisk ? "已隐藏" : averageClosureDays === null ? "暂无可计算数据" : `平均 ${averageClosureDays} 天`,
+      blockedCaseCount: suppressClassRisk ? null : blockedWarningIds.size,
+      blockedCaseDisplay: suppressClassRisk ? "少量" : String(blockedWarningIds.size),
+      isSuppressed: suppressClassRisk,
+    },
     sourceDistribution,
     filterOptions: buildFilterOptions(students),
     dataIssues: [...issues.values()].map((issue) => suppressClassRisk ? { ...issue, affectedCount: null } : issue),

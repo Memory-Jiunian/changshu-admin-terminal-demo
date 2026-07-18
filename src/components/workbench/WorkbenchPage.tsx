@@ -8,17 +8,21 @@ import { WorkbenchSummary } from "@/components/workbench/WorkbenchSummary";
 import { WorkbenchTaskItem } from "@/components/workbench/WorkbenchTaskItem";
 import { WorkbenchTaskTypeTabs } from "@/components/workbench/WorkbenchTaskTypeTabs";
 import { buildWorkbenchItems } from "@/lib/workbench-tasks";
+import { buildCurrentWarningViews } from "@/lib/system-settings";
 import { formatMockDateTime, WARNING_MOCK_TODAY } from "@/lib/warning-time";
 import { useAdminData } from "@/state/AdminDataProvider";
 import { type WorkbenchNavigationTarget, type WorkbenchReminder, type WorkbenchReturnContext, type WorkbenchTask, type WorkbenchTaskFilter, type WorkbenchTaskType } from "@/types/workbench";
 
-const CURRENT_TEACHER = "陈老师";
 const taskTypes: WorkbenchTaskType[] = ["pending_review", "observation_due", "new_feedback", "feedback_overdue", "intervention_unscheduled", "retest_result_pending", "referral_follow_up"];
 
 export function WorkbenchPage({ initialReturnContext, notice, onOpenWarning, loadState = "ready", onRetry }: { initialReturnContext?: WorkbenchReturnContext; notice?: string; onOpenWarning: (target: WorkbenchNavigationTarget) => void; loadState?: "ready" | "loading" | "error"; onRetry?: () => void }) {
-  const { warnings } = useAdminData();
+  const { baseData, currentOperator, warnings: sharedWarnings } = useAdminData();
+  const warnings = useMemo(
+    () => buildCurrentWarningViews(baseData, sharedWarnings),
+    [baseData, sharedWarnings],
+  );
   const currentTime = formatMockDateTime();
-  const result = useMemo(() => buildWorkbenchItems({ warnings, currentTeacher: CURRENT_TEACHER, currentTime }), [currentTime, warnings]);
+  const result = useMemo(() => buildWorkbenchItems({ warnings, currentTeacher: currentOperator.name, currentTime }), [currentOperator.name, currentTime, warnings]);
   const [selectedTaskType, setSelectedTaskType] = useState<WorkbenchTaskFilter>(initialReturnContext?.selectedTaskType ?? "all");
   const [selectedTaskId, setSelectedTaskId] = useState(initialReturnContext?.selectedTaskId);
   const pageScrollRef = useRef<HTMLElement>(null);
@@ -72,7 +76,7 @@ export function WorkbenchPage({ initialReturnContext, notice, onOpenWarning, loa
 
   return <section className="scrollbar-hidden grid h-full min-h-0 w-full gap-4 overflow-y-auto min-[1180px]:grid-rows-[auto_auto_minmax(0,1fr)] min-[1180px]:overflow-hidden" ref={pageScrollRef}>
     <div className="shrink-0">
-      <header><div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-2xl font-semibold">工作台</h1><p className="mt-1 text-sm text-neutral-500">{WARNING_MOCK_TODAY} · 当前心理老师：{CURRENT_TEACHER}</p></div><div className="text-xs text-neutral-500">按时效、风险等级和触发时间进行事实排序</div></div></header>
+      <header><div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-2xl font-semibold">工作台</h1><p className="mt-1 text-sm text-neutral-500">{WARNING_MOCK_TODAY} · 当前心理老师：{currentOperator.name}</p></div><div className="text-xs text-neutral-500">按时效、风险等级和触发时间进行事实排序</div></div></header>
       {notice ? <div className="mt-3 rounded-md border border-[var(--warning-100)] bg-[var(--warning-50)] px-4 py-3 text-sm text-[var(--warning-600)]">{notice}</div> : null}
     </div>
     <WorkbenchSummary overdueCount={overdueCount} reminderCount={upcomingArrangements.length} taskCount={result.tasks.length + attentionArrangements.length} />

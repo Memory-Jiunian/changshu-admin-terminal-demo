@@ -6,8 +6,9 @@ import { SchoolOverviewHeader } from "@/components/school-overview/SchoolOvervie
 import { SchoolOverviewMethodologyDialog } from "@/components/school-overview/SchoolOverviewMethodologyDialog";
 import { SchoolOverviewMetricCards } from "@/components/school-overview/SchoolOverviewMetricCards";
 import { SchoolOverviewDataIssues, SchoolOverviewEmptyNotice, SchoolOverviewFailure, SchoolOverviewLoading } from "@/components/school-overview/SchoolOverviewStates";
-import { SCHOOL_OVERVIEW_CURRENT_TIME, SCHOOL_OVERVIEW_TERM_RANGE } from "@/data/assessmentMock";
+import { SCHOOL_OVERVIEW_CURRENT_TIME } from "@/data/assessmentMock";
 import { buildSchoolOverview } from "@/lib/school-overview";
+import { getSchoolTermRange } from "@/lib/system-settings";
 import { useAdminData } from "@/state/AdminDataProvider";
 import type { SchoolOverviewModuleKey, SchoolOverviewOrganizationFilter } from "@/types/school-overview";
 
@@ -17,7 +18,7 @@ type SchoolOverviewPageProps = {
 };
 
 export function SchoolOverviewPage({ initialLoadState = "ready", failedModules = [] }: SchoolOverviewPageProps) {
-  const { students, assessments, warnings } = useAdminData();
+  const { baseData, students, assessments, warnings } = useAdminData();
   const [loadState, setLoadState] = useState(initialLoadState);
   const [failedModuleState, setFailedModuleState] = useState<SchoolOverviewModuleKey[]>(failedModules);
   const [organizationFilter, setOrganizationFilter] = useState<SchoolOverviewOrganizationFilter>({ level: "school" });
@@ -27,9 +28,9 @@ export function SchoolOverviewPage({ initialLoadState = "ready", failedModules =
     assessments,
     warnings,
     currentTime: SCHOOL_OVERVIEW_CURRENT_TIME,
-    termRange: SCHOOL_OVERVIEW_TERM_RANGE,
+    termRange: getSchoolTermRange(baseData),
     organizationFilter,
-  }), [assessments, organizationFilter, students, warnings]);
+  }), [assessments, baseData, organizationFilter, students, warnings]);
 
   if (loadState === "loading") return <SchoolOverviewLoading />;
   if (loadState === "error") return <SchoolOverviewFailure onRetry={() => setLoadState("ready")} />;

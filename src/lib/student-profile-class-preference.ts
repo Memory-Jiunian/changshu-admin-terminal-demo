@@ -35,11 +35,13 @@ export function loadStudentClassPreference(
   storage: StorageReader,
   options: StudentProfileFilterOptions,
   profiles: StudentProfileSummary[],
+  schoolId = DEMO_SCHOOL_ID,
+  psychologistId = DEMO_PSYCHOLOGIST_ID,
 ): StudentClassPreference {
   const fallback = getFirstAvailableClass(options);
 
   try {
-    const rawValue = storage.getItem(getStudentClassPreferenceKey());
+    const rawValue = storage.getItem(getStudentClassPreferenceKey(schoolId, psychologistId));
     if (!rawValue) {
       return fallback;
     }
@@ -68,9 +70,11 @@ export function loadStudentClassPreference(
 export function saveStudentClassPreference(
   storage: StorageWriter,
   value: StudentClassPreference,
+  schoolId = DEMO_SCHOOL_ID,
+  psychologistId = DEMO_PSYCHOLOGIST_ID,
 ) {
   storage.setItem(
-    getStudentClassPreferenceKey(),
+    getStudentClassPreferenceKey(schoolId, psychologistId),
     JSON.stringify({ grade: value.grade, className: value.className }),
   );
 }

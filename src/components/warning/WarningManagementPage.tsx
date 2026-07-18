@@ -7,6 +7,7 @@ import { WarningTable } from "@/components/warning/WarningTable";
 import { Button } from "@/components/ui/button";
 import { applyConfirmFormalWarning, applyWarningAction } from "@/lib/warning-actions";
 import { getEffectiveFeedbackStatus, markWarningFeedbackRead } from "@/lib/warning-feedback";
+import { buildCurrentWarningViews } from "@/lib/system-settings";
 import { formatMockDateTime, WARNING_MOCK_TODAY } from "@/lib/warning-time";
 import { useAdminData } from "@/state/AdminDataProvider";
 import {
@@ -26,8 +27,6 @@ import type {
   WarningDetailSection,
   WorkbenchNavigationTarget,
 } from "@/types/workbench";
-
-const currentTeacher = "陈老师";
 
 function getEmptyAdvancedFilters(): AdvancedFilterValues {
   return {
@@ -119,7 +118,11 @@ export function WarningManagementPage({
   onWorkbenchNavigationFailure,
 }: WarningManagementPageProps = {}) {
   const currentTime = formatMockDateTime();
-  const { warnings, setWarnings } = useAdminData();
+  const { baseData, currentOperator, warnings: sharedWarnings, setWarnings } = useAdminData();
+  const warnings = useMemo(
+    () => buildCurrentWarningViews(baseData, sharedWarnings),
+    [baseData, sharedWarnings],
+  );
   const [activeStatus, setActiveStatus] = useState<StatusTabValue>("all");
   const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilterValue | null>(null);
   const [searchValue, setSearchValue] = useState("");
@@ -236,7 +239,7 @@ export function WarningManagementPage({
           case "feedback_overdue":
             return getEffectiveFeedbackStatus(item, currentTime) === "feedback_overdue";
           case "mine":
-            return item.responsibleTeacher === currentTeacher;
+            return item.responsibleTeacher === currentOperator.name;
           case "new_feedback":
             return getEffectiveFeedbackStatus(item, currentTime) === "new_feedback";
           default:
@@ -246,7 +249,7 @@ export function WarningManagementPage({
 
       return matchesQuickFilter && matchesAdvancedFilters(item, advancedFilters, currentTime);
     });
-  }, [activeQuickFilter, activeStatus, activeWarnings, advancedFilters, currentTime, searchValue]);
+  }, [activeQuickFilter, activeStatus, activeWarnings, advancedFilters, currentOperator.name, currentTime, searchValue]);
 
   function handleQuickFilterChange(value: QuickFilterValue) {
     setActiveQuickFilter((current) => (current === value ? null : value));

@@ -1,11 +1,14 @@
 import { Bell, CircleUserRound, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useAdminData } from "@/state/AdminDataProvider";
 
 export function Topbar() {
+  const { baseData, currentOperator } = useAdminData();
+
   return (
     <header className="flex h-16 items-center justify-between bg-neutral-900 px-6 text-white">
-      <div className="text-lg font-semibold tracking-wide">杭州市余杭区第一中学</div>
+      <div className="text-lg font-semibold tracking-wide">{baseData.schoolConfig.schoolName}</div>
       <div className="flex items-center gap-2">
         <Button
           aria-label="搜索"
@@ -25,10 +28,9 @@ export function Topbar() {
         </Button>
         <div className="ml-2 flex items-center gap-2 text-sm font-medium">
           <CircleUserRound className="h-5 w-5" />
-          <span>陈老师</span>
+          <span>{currentOperator.name}</span>
         </div>
       </div>
     </header>
   );
 }
-

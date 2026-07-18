@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { buildStudentProfileDetail, buildStudentProfileSummaries } from "@/lib/student-profile-aggregate";
 import { getFirstAvailableClass, loadStudentClassPreference, saveStudentClassPreference } from "@/lib/student-profile-class-preference";
 import { formatMockDateTime } from "@/lib/warning-time";
+import { buildCurrentWarningViews } from "@/lib/system-settings";
 import { cloneStudentProfileFilterQuery, createDefaultStudentProfileFilterQuery, filterStudentProfiles, getStudentProfileFilterOptions, paginateStudentProfiles } from "@/lib/student-profile-filters";
 import { useAdminData } from "@/state/AdminDataProvider";
 import type { StudentProfileReturnState } from "@/types/navigation";
@@ -23,7 +24,11 @@ type StudentProfilePageProps = {
 };
 
 export function StudentProfilePage({ initialLoadState = "ready", initialReturnState, onOpenWarningDetail }: StudentProfilePageProps) {
-  const { students, warnings } = useAdminData();
+  const { baseData, currentOperator, students, warnings: sharedWarnings } = useAdminData();
+  const warnings = useMemo(
+    () => buildCurrentWarningViews(baseData, sharedWarnings),
+    [baseData, sharedWarnings],
+  );
   const currentTime = formatMockDateTime();
   const summaries = useMemo(
     () => buildStudentProfileSummaries(students, warnings),
@@ -37,7 +42,13 @@ export function StudentProfilePage({ initialLoadState = "ready", initialReturnSt
 
     const initialClass = typeof window === "undefined"
       ? getFirstAvailableClass(options)
-      : loadStudentClassPreference(window.localStorage, options, summaries);
+      : loadStudentClassPreference(
+        window.localStorage,
+        options,
+        summaries,
+        baseData.schoolConfig.schoolId,
+        currentOperator.teacherId,
+      );
 
     return { ...createDefaultStudentProfileFilterQuery(), ...initialClass };
   });
@@ -119,7 +130,12 @@ export function StudentProfilePage({ initialLoadState = "ready", initialReturnSt
 
   function persistClass(grade: string, className: string) {
     if (typeof window !== "undefined" && grade && className) {
-      saveStudentClassPreference(window.localStorage, { grade, className });
+      saveStudentClassPreference(
+        window.localStorage,
+        { grade, className },
+        baseData.schoolConfig.schoolId,
+        currentOperator.teacherId,
+      );
     }
   }
 

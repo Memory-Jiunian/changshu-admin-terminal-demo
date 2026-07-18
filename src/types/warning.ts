@@ -226,6 +226,7 @@ export type WarningItem = {
   activityTime: string;
   feedbackStatus: FeedbackStatus;
   responsibleTeacher: string;
+  responsibleTeacherId?: string;
   headTeacherName: string;
   headTeacherPhone: string;
   assessmentSummary: string;

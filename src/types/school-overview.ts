@@ -35,6 +35,7 @@ export type SchoolOverviewModuleKey =
   | "coverage"
   | "current_risk"
   | "attention"
+  | "assessment_dimensions"
   | "organization"
   | "disposition"
   | "trends"
@@ -58,11 +59,41 @@ export type AssessmentCoverageMetric = {
 export type CurrentRiskMetric = {
   studentCount: number | null;
   studentDisplay: string;
+  mediumCount: number | null;
+  mediumDisplay: string;
   highCount: number | null;
   highDisplay: string;
   criticalCount: number | null;
   criticalDisplay: string;
   isSuppressed: boolean;
+};
+
+export type CurrentAttentionSummary = {
+  total: number | null;
+  totalDisplay: string;
+  referral: number | null;
+  referralDisplay: string;
+  backlog: number | null;
+  backlogDisplay: string;
+  collaborationBlocked: number | null;
+  collaborationBlockedDisplay: string;
+  isSuppressed: boolean;
+};
+
+export type DispositionStageSummary = {
+  assessmentAndConfirmation: number | null;
+  interventionAndRetest: number | null;
+  externalSupport: number | null;
+  closedThisTerm: number | null;
+  isSuppressed: boolean;
+};
+
+export type AssessmentDimensionSummary = {
+  id: string;
+  label: string;
+  scaleName: string;
+  assessedStudentCount: number;
+  confirmedRiskStudentCount: number;
 };
 
 export type DistributionItem = {
@@ -174,6 +205,9 @@ export type SchoolOverviewViewModel = {
   coverage: AssessmentCoverageMetric;
   currentRisk: CurrentRiskMetric;
   attention: AttentionMetric[];
+  attentionSummary: CurrentAttentionSummary;
+  dispositionStages: DispositionStageSummary;
+  highlightedAssessmentDimensions: AssessmentDimensionSummary[];
   riskLevelDistribution: DistributionItem[];
   organizationDistribution: OrganizationRiskRow[];
   dispositionDistribution: DispositionDistribution;

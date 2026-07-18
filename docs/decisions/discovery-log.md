@@ -267,3 +267,11 @@ Phase I1.2 已通过人工走查，校级总览不再暂停。线索池继续暂
 | D/E | 风险率 Top 3 不能直接表达当前风险学生构成 | 改为按学生去重的年级构成环图，超过 5 个年级合并其他 |
 | D/E | 来源分布对校长处置进度判断帮助有限 | 页面替换为新增预警、闭环率、平均周期和阻塞事项组成的处置成效概览 |
 | B/E | 图表可能通过颜色或班级小样本泄露信息 | 图例、Tooltip 和 ARIA 提供文字语义，班级 `<3` 继续在 ViewModel 层遮蔽 |
+## 2026-07-18 - Phase S1.2 school overview structure
+
+- The previous overview split risk level, attention, disposition, effectiveness, and trend into too many independent modules, lowering first-screen decision density.
+- The approved structure is three core cards, one full-width four-stage overview, and three analysis cards.
+- Prototype numbers are illustrative only; all values remain derived from shared data.
+- The repository uses `WarningDeepAssessmentRecord.dimensions` rather than the draft name `dimensionResults`.
+- Dimension threshold membership must be an explicit structured fact. It must not be inferred from summary prose or generated in React.
+- Old risk-level, six-item attention, grade table, detailed disposition, source, and duplicate-analysis page modules are deprecated.

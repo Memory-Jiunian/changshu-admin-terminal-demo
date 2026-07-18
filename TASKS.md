@@ -331,6 +331,22 @@ statistics remain derived from shared students, assessments, warnings, and mock
 time. Warning, workbench, student-profile, state-transition, and privacy rules
 remain frozen.
 
+## Phase S1.2 refinement: School overview structure
+
+- [x] Synchronize page structure and metric specifications
+- [x] Reshape the overview ViewModel for three core cards
+- [x] Add deduplicated current-attention summary
+- [x] Add four grouped disposition stages
+- [x] Add structured highlighted assessment dimensions
+- [x] Replace old analysis modules with the three-card layout
+- [x] Preserve privacy, empty, loading, and methodology states
+- [x] Run regressions, build, HTTP smoke, and three-viewport review
+- [x] Commit and push main
+
+Active scope: Phase S1.2 school-overview information architecture and responsive
+decision-dashboard layout. Warning, workbench, student-profile, system-setting,
+state-transition, grace-period, feedback-read, and privacy rules remain frozen.
+
 ## Phase 6: Polish and validation
 
 - [ ] Match prototype layout

@@ -7,6 +7,7 @@ import {
   schoolRiskLevelLabels,
   schoolWarningSourceLabels,
   schoolWarningStatusLabels,
+  type AssessmentDimensionSummary,
   type AttentionMetric,
   type DistributionItem,
   type GradeRiskDistribution,
@@ -216,6 +217,60 @@ function buildGradeRiskDistribution(
   };
 }
 
+function buildHighlightedAssessmentDimensions(
+  warnings: WarningItem[],
+  scopedStudentIds: Set<string>,
+  confirmedRiskStudentIds: Set<string>,
+  termRange: SchoolOverviewTermRange,
+  suppressed: boolean,
+): AssessmentDimensionSummary[] {
+  if (suppressed) return [];
+
+  const dimensions = new Map<string, {
+    label: string;
+    scaleName: string;
+    assessedStudentIds: Set<string>;
+    confirmedRiskStudentIds: Set<string>;
+  }>();
+
+  warnings.forEach((warning) => {
+    if (!scopedStudentIds.has(warning.studentId)) return;
+    warning.deepAssessmentRecords.forEach((record) => {
+      if (!inRange(record.completedAt, termRange)) return;
+      record.dimensions.forEach((dimension) => {
+        if (!dimension.isConcernThresholdMet) return;
+        const id = `${record.scaleId}:${dimension.id}`;
+        const current = dimensions.get(id) ?? {
+          label: dimension.name,
+          scaleName: record.scaleName,
+          assessedStudentIds: new Set<string>(),
+          confirmedRiskStudentIds: new Set<string>(),
+        };
+        current.assessedStudentIds.add(warning.studentId);
+        if (confirmedRiskStudentIds.has(warning.studentId)) {
+          current.confirmedRiskStudentIds.add(warning.studentId);
+        }
+        dimensions.set(id, current);
+      });
+    });
+  });
+
+  return [...dimensions.entries()]
+    .map(([id, item]) => ({
+      id,
+      label: item.label,
+      scaleName: item.scaleName,
+      assessedStudentCount: item.assessedStudentIds.size,
+      confirmedRiskStudentCount: item.confirmedRiskStudentIds.size,
+    }))
+    .sort((left, right) =>
+      right.confirmedRiskStudentCount - left.confirmedRiskStudentCount
+      || right.assessedStudentCount - left.assessedStudentCount
+      || left.label.localeCompare(right.label),
+    )
+    .slice(0, 6);
+}
+
 function buildFilterOptions(students: StudentProfileRecord[]) {
   const enrolled = students.filter((student) => student.enrollmentStatus === "enrolled");
   const grades = [...new Set(enrolled.map((student) => student.currentGrade).filter(Boolean))].sort();
@@ -405,6 +460,29 @@ export function buildSchoolOverview({
     isSuppressed: suppressClassRisk,
   }));
 
+  const referralWarningIds = new Set(currentWarnings
+    .filter((warning) => warning.currentStatus === "referral")
+    .map((warning) => warning.id));
+  const backlogWarningIds = new Set(currentWarnings
+    .filter((warning) =>
+      (
+        warning.currentStatus === "formal_warning"
+        && !getLatestPlannedInterventionAppointment(warning.interventionAppointments)
+        && hasFeedbackReadForCurrentRound(warning)
+      )
+      || isInterventionConfirmationRequired(warning, currentTime)
+      || isRetestOverdueIncomplete(warning, currentTime),
+    )
+    .map((warning) => warning.id));
+  const collaborationBlockedWarningIds = new Set(currentWarnings
+    .filter((warning) => getEffectiveFeedbackStatus(warning, currentTime) === "feedback_overdue")
+    .map((warning) => warning.id));
+  const attentionWarningIds = new Set([
+    ...referralWarningIds,
+    ...backlogWarningIds,
+    ...collaborationBlockedWarningIds,
+  ]);
+
   const rawAttention = [
     {
       id: "critical_risk",
@@ -480,6 +558,16 @@ export function buildSchoolOverview({
     && allScopeIds.has(warning.studentId)
     && inRange(getClosedTime(warning), termRange),
   ).length;
+  const dispositionStages = {
+    assessmentAndConfirmation: currentWarnings.filter((warning) =>
+      ["pending_review", "observing", "formal_warning"].includes(warning.currentStatus),
+    ).length,
+    interventionAndRetest: currentWarnings.filter((warning) =>
+      ["in_intervention", "pending_retest"].includes(warning.currentStatus),
+    ).length,
+    externalSupport: referralWarningIds.size,
+    closedThisTerm: closedThisTermCount,
+  };
 
   const months = buildMonths(termRange);
   const trends = months.map<SchoolOverviewTrend>((month) => {
@@ -540,6 +628,13 @@ export function buildSchoolOverview({
     )
     .map((warning) => warning.id));
   const gradeRiskDistribution = buildGradeRiskDistribution(enrolledStudents, confirmedWarnings, suppressClassRisk);
+  const highlightedAssessmentDimensions = buildHighlightedAssessmentDimensions(
+    warnings,
+    enrolledIds,
+    new Set(confirmedWarnings.map((warning) => warning.studentId)),
+    termRange,
+    suppressClassRisk,
+  );
 
   const sourceCounts = new Map<WarningSourceType, number>([
     ["screening_abnormal", 0],
@@ -576,6 +671,8 @@ export function buildSchoolOverview({
     currentRisk: {
       studentCount: suppressClassRisk ? null : riskTotal,
       studentDisplay: suppressClassRisk ? "少量" : String(riskTotal),
+      mediumCount: suppressClassRisk ? null : riskCounts.medium,
+      mediumDisplay: suppressClassRisk ? "少量" : String(riskCounts.medium),
       highCount: suppressClassRisk ? null : riskCounts.high,
       highDisplay: suppressClassRisk ? "少量" : String(riskCounts.high),
       criticalCount: suppressClassRisk ? null : riskCounts.critical,
@@ -583,6 +680,25 @@ export function buildSchoolOverview({
       isSuppressed: suppressClassRisk,
     },
     attention,
+    attentionSummary: {
+      total: suppressClassRisk ? null : attentionWarningIds.size,
+      totalDisplay: suppressClassRisk ? "少量" : String(attentionWarningIds.size),
+      referral: suppressClassRisk ? null : referralWarningIds.size,
+      referralDisplay: suppressClassRisk ? "少量" : String(referralWarningIds.size),
+      backlog: suppressClassRisk ? null : backlogWarningIds.size,
+      backlogDisplay: suppressClassRisk ? "少量" : String(backlogWarningIds.size),
+      collaborationBlocked: suppressClassRisk ? null : collaborationBlockedWarningIds.size,
+      collaborationBlockedDisplay: suppressClassRisk ? "少量" : String(collaborationBlockedWarningIds.size),
+      isSuppressed: suppressClassRisk,
+    },
+    dispositionStages: {
+      assessmentAndConfirmation: suppressClassRisk ? null : dispositionStages.assessmentAndConfirmation,
+      interventionAndRetest: suppressClassRisk ? null : dispositionStages.interventionAndRetest,
+      externalSupport: suppressClassRisk ? null : dispositionStages.externalSupport,
+      closedThisTerm: suppressClassRisk ? null : dispositionStages.closedThisTerm,
+      isSuppressed: suppressClassRisk,
+    },
+    highlightedAssessmentDimensions,
     riskLevelDistribution,
     organizationDistribution: buildOrganizationRows(enrolledStudents, confirmedWarnings, organizationFilter),
     dispositionDistribution: {

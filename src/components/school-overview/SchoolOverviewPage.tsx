@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { SchoolOverviewAnalysis } from "@/components/school-overview/SchoolOverviewAnalysis";
-import { SchoolOverviewAttention } from "@/components/school-overview/SchoolOverviewAttention";
+import { SchoolOverviewDispositionStages } from "@/components/school-overview/SchoolOverviewDispositionStages";
 import { SchoolOverviewHeader } from "@/components/school-overview/SchoolOverviewHeader";
 import { SchoolOverviewMethodologyDialog } from "@/components/school-overview/SchoolOverviewMethodologyDialog";
 import { SchoolOverviewMetricCards } from "@/components/school-overview/SchoolOverviewMetricCards";
@@ -51,7 +51,7 @@ export function SchoolOverviewPage({ initialLoadState = "ready", failedModules =
       {viewModel.isSmallClassSuppressed ? <SchoolOverviewEmptyNotice>当前班级属于小数量范围，风险相关精确值已按隐私规则隐藏。</SchoolOverviewEmptyNotice> : null}
 
       <SchoolOverviewMetricCards viewModel={viewModel} />
-      <SchoolOverviewAttention items={viewModel.attention} />
+      <SchoolOverviewDispositionStages viewModel={viewModel} />
       <SchoolOverviewAnalysis
         failedModules={failedModuleState}
         onRetryModule={(module) => setFailedModuleState((current) => current.filter((item) => item !== module))}

@@ -74,6 +74,7 @@ export type WarningAssessmentDimensionResult = {
   name: string;
   score?: number;
   level?: string;
+  isConcernThresholdMet?: boolean;
   summary?: string;
 };
 

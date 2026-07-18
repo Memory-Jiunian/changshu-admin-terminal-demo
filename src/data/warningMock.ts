@@ -1023,10 +1023,19 @@ function buildDeepAssessmentRecords(
     riskLevel: warning.id === "WRN-20260708-002" ? "low" : warning.suggestedRiskLevel,
     resultSummary: warning.assessmentSummary,
     gradeClassAtTime: warning.gradeClass,
-    dimensions: [
-      { id: "mood", name: "情绪状态", score: index % 5 + 3, level: "需关注", summary: "近期情绪波动较明显。" },
-      { id: "sleep", name: "睡眠与精力", score: index % 4 + 2, level: "轻度异常", summary: "睡眠或精力状态出现阶段性变化。" },
-    ],
+    dimensions: index % 2 === 0
+      ? [
+          { id: "mood", name: "情绪低落", score: index % 5 + 3, level: "需关注", isConcernThresholdMet: true, summary: "近期情绪低落表现较明显。" },
+          { id: "interest", name: "兴趣减退", score: index % 4 + 2, level: index % 3 === 0 ? "需关注" : "正常", isConcernThresholdMet: index % 3 === 0, summary: "对日常活动的兴趣出现变化。" },
+          { id: "sleep-energy", name: "睡眠与精力", score: index % 4 + 2, level: "轻度异常", isConcernThresholdMet: true, summary: "睡眠或精力状态出现阶段性变化。" },
+          { id: "self-worth", name: "自我评价", score: index % 3 + 1, level: index % 4 === 0 ? "需关注" : "正常", isConcernThresholdMet: index % 4 === 0, summary: "自我评价维度存在波动。" },
+        ]
+      : [
+          { id: "tension", name: "焦虑紧张", score: index % 5 + 3, level: "需关注", isConcernThresholdMet: true, summary: "近期紧张和担忧体验较明显。" },
+          { id: "worry-control", name: "担忧控制", score: index % 4 + 2, level: "轻度异常", isConcernThresholdMet: true, summary: "控制担忧存在一定困难。" },
+          { id: "restlessness", name: "坐立不安", score: index % 3 + 1, level: index % 3 === 1 ? "需关注" : "正常", isConcernThresholdMet: index % 3 === 1, summary: "部分情境下出现坐立不安。" },
+          { id: "irritability", name: "易激惹", score: index % 3 + 1, level: index % 4 === 1 ? "需关注" : "正常", isConcernThresholdMet: index % 4 === 1, summary: "近期易激惹程度有所变化。" },
+        ],
     responses: [
       { id: "q1", questionText: "过去两周是否经常感到情绪低落？", answerText: "有几天", score: 1 },
       { id: "q2", questionText: "过去两周睡眠是否受到影响？", answerText: "超过一半天数", score: 2 },

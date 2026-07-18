@@ -233,3 +233,10 @@ The first implementation should match the current prototype direction:
   supplementary, not the only encoding.
 - Suppressed class values use the same safe copy in visible text, tooltips, ARIA,
   and DOM attributes; hidden precise numbers must not be rendered.
+## School Overview Phase S1.2
+
+- 校级总览使用三层决策看板结构：三张核心概览卡、全宽四阶段概览、三张分析卡。
+- 1360px 以上概览卡采用约 `0.8fr / 1.2fr / 1.2fr`，分析卡采用约 `1.1fr / 1.1fr / 0.7fr`。
+- 处置阶段卡的横条只表示相对规模，不使用完成率文案。
+- 图表保持白底、轻边框和克制阴影；风险色只用于必要强调。
+- 1024px 以下使用单列页面滚动，不产生整页横向滚动或嵌套可见滚动条。

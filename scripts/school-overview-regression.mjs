@@ -97,8 +97,29 @@ function warning(id, studentId, overrides = {}) {
     interventionRecords: [],
     retestRecords: [],
     referralRecords: [],
+    deepAssessmentRecords: [],
     timeline: [{ id: `${id}-FORMAL`, title: "确认正式预警", operator: "陈老师", occurredAt: "2026-03-10 10:00", description: "已确认。" }],
     ...overrides,
+  };
+}
+
+function deepAssessment(id, studentId, dimensions, completedAt = "2026-06-01 09:00") {
+  return {
+    id,
+    scaleId: "structured-scale",
+    scaleName: "结构化心理测评",
+    completedAt,
+    riskLevel: "medium",
+    resultSummary: "结构化维度结果。",
+    dimensions: dimensions.map(([dimensionId, name, isConcernThresholdMet]) => ({
+      id: dimensionId,
+      name,
+      level: isConcernThresholdMet ? "需关注" : "正常",
+      isConcernThresholdMet,
+    })),
+    responses: [],
+    gradeClassAtTime: "初一（1）班",
+    studentId,
   };
 }
 
@@ -136,9 +157,9 @@ const assessments = [
 ];
 
 const warnings = [
-  warning("W1", "S1", { confirmedRiskLevel: "high", sourceType: "screening_abnormal", responsibleTeacher: "周老师", feedbackRequests: [{ id: "FR-1", requestedAt: "2026-07-01 09:00", requestedBy: "周老师", requestNote: "请反馈", deadline: "2026-07-09 17:00", status: "completed" }], feedbackRecords: [{ id: "FB-1", requestId: "FR-1", authorRole: "班主任", authorName: "王老师", content: "已反馈", submittedAt: "2026-07-08 09:00", psychologistReadAt: "2026-07-08 09:30" }] }),
-  warning("W2", "S2", { confirmedRiskLevel: "critical", sourceType: "ai_chat_trigger", feedbackRequests: [{ id: "FR-2", requestedAt: "2026-07-01 09:00", requestedBy: "刘老师", requestNote: "请反馈", deadline: "2026-07-09 17:00", status: "completed" }], feedbackRecords: [{ id: "FB-2", requestId: "FR-2", authorRole: "班主任", authorName: "王老师", content: "未读反馈", submittedAt: "2026-07-08 09:00" }], timeline: [{ id: "W2-F", title: "确认正式预警", operator: "刘老师", occurredAt: "2026-04-10 10:00", description: "已确认。" }] }),
-  warning("W3", "S3", { sourceType: "teacher_report", interventionAppointments: [{ id: "IA-3", plannedAt: "2026-07-10 09:00", location: "咨询室", responsibleTeacher: "陈老师", status: "planned", createdAt: "2026-07-01 09:00", createdBy: "陈老师", notificationOffsetsMinutes: [] }], feedbackRequests: [{ id: "FR-3", requestedAt: "2026-07-01 09:00", requestedBy: "陈老师", requestNote: "请反馈", deadline: "2026-07-09 17:00", status: "completed" }], feedbackRecords: [{ id: "FB-3", requestId: "FR-3", authorRole: "班主任", authorName: "王老师", content: "已读反馈", submittedAt: "2026-07-08 09:00", psychologistReadAt: "2026-07-08 09:30" }], timeline: [{ id: "W3-F", title: "确认正式预警", operator: "陈老师", occurredAt: "2026-05-10 10:00", description: "已确认。" }] }),
+  warning("W1", "S1", { confirmedRiskLevel: "high", sourceType: "screening_abnormal", responsibleTeacher: "周老师", deepAssessmentRecords: [deepAssessment("DA-1", "S1", [["mood", "情绪低落", true], ["sleep", "睡眠困扰", true], ["pressure", "学业压力", true], ["social", "人际关系", false]])], feedbackRequests: [{ id: "FR-1", requestedAt: "2026-07-01 09:00", requestedBy: "周老师", requestNote: "请反馈", deadline: "2026-07-09 17:00", status: "completed" }], feedbackRecords: [{ id: "FB-1", requestId: "FR-1", authorRole: "班主任", authorName: "王老师", content: "已反馈", submittedAt: "2026-07-08 09:00", psychologistReadAt: "2026-07-08 09:30" }] }),
+  warning("W2", "S2", { confirmedRiskLevel: "critical", sourceType: "ai_chat_trigger", deepAssessmentRecords: [deepAssessment("DA-2", "S2", [["mood", "情绪低落", true], ["sleep", "睡眠困扰", true], ["anxiety", "焦虑紧张", true]])], feedbackRequests: [{ id: "FR-2", requestedAt: "2026-07-01 09:00", requestedBy: "刘老师", requestNote: "请反馈", deadline: "2026-07-09 17:00", status: "completed" }], feedbackRecords: [{ id: "FB-2", requestId: "FR-2", authorRole: "班主任", authorName: "王老师", content: "未读反馈", submittedAt: "2026-07-08 09:00" }], timeline: [{ id: "W2-F", title: "确认正式预警", operator: "刘老师", occurredAt: "2026-04-10 10:00", description: "已确认。" }] }),
+  warning("W3", "S3", { sourceType: "teacher_report", deepAssessmentRecords: [deepAssessment("DA-3", "S3", [["pressure", "学业压力", true], ["social", "人际关系", true], ["worth", "自我评价", true]])], interventionAppointments: [{ id: "IA-3", plannedAt: "2026-07-10 09:00", location: "咨询室", responsibleTeacher: "陈老师", status: "planned", createdAt: "2026-07-01 09:00", createdBy: "陈老师", notificationOffsetsMinutes: [] }], feedbackRequests: [{ id: "FR-3", requestedAt: "2026-07-01 09:00", requestedBy: "陈老师", requestNote: "请反馈", deadline: "2026-07-09 17:00", status: "completed" }], feedbackRecords: [{ id: "FB-3", requestId: "FR-3", authorRole: "班主任", authorName: "王老师", content: "已读反馈", submittedAt: "2026-07-08 09:00", psychologistReadAt: "2026-07-08 09:30" }], timeline: [{ id: "W3-F", title: "确认正式预警", operator: "陈老师", occurredAt: "2026-05-10 10:00", description: "已确认。" }] }),
   warning("W4", "S4", { confirmedRiskLevel: "high", sourceType: "screening_abnormal", currentStatus: "in_intervention", feedbackRequests: [{ id: "FR-4", requestedAt: "2026-07-01 09:00", requestedBy: "陈老师", requestNote: "请反馈", deadline: "2026-07-07 17:00", status: "pending" }], interventionAppointments: [{ id: "IA-4", plannedAt: "2026-07-08 09:00", location: "咨询室", responsibleTeacher: "陈老师", status: "planned", createdAt: "2026-07-01 09:00", createdBy: "陈老师", notificationOffsetsMinutes: [1440, 120] }] }),
   warning("W5", "S5", { currentStatus: "referral", sourceType: "ai_chat_trigger", referralRecords: [{ id: "REF-5", referredAt: "2026-05-12 10:00", referralType: "医疗", reason: "持续关注", followUpRecords: [{ id: "FU-5", occurredAt: "2026-06-01 10:00", authorName: "陈老师", summary: "已联系", conclusion: "继续跟进" }] }] }),
   warning("W6", "S6", { confirmedRiskLevel: undefined, currentStatus: "pending_review", sourceType: "teacher_report" }),
@@ -158,6 +179,7 @@ assert(overview.coverage.enrolledCount === 7, "coverage excludes left-school stu
 assert(overview.coverage.completedCount === 2, "coverage deduplicates students and excludes outside-term assessments");
 assert(overview.coverage.incompleteCount === 5, "coverage exposes the enrolled incomplete count");
 assert(overview.currentRisk.studentCount === 6, "current confirmed risk counts students, not cases");
+assert(overview.currentRisk.mediumCount + overview.currentRisk.highCount + overview.currentRisk.criticalCount === overview.currentRisk.studentCount, "confirmed risk level counts sum to the deduplicated total");
 assert(overview.currentRisk.highCount === 2 && overview.currentRisk.criticalCount === 1, "high and critical student counts use confirmed levels");
 assert(!overview.riskLevelDistribution.some((item) => item.id === "low"), "active risk distribution never includes low");
 assert(!overview.currentRisk.studentCount.toString().includes("S"), "current risk exposes no identity");
@@ -177,6 +199,16 @@ assert(overview.attention.find((item) => item.id === "feedback_overdue")?.value 
 assert(overview.attention.find((item) => item.id === "retest_overdue_incomplete")?.value === 1, "overdue incomplete re-test uses the 120-minute grace");
 assert(!overview.attention.some((item) => item.id === "retest_result_pending"), "completed re-test waiting for status update is not merged into principal attention");
 assert(overview.attention.find((item) => item.id === "referral")?.value === 1, "referral follow-ups do not remove referral cases");
+assert(overview.attentionSummary.total <= overview.attentionSummary.referral + overview.attentionSummary.backlog + overview.attentionSummary.collaborationBlocked, "current-attention total is a warning-id union, not a category sum");
+assert(overview.attentionSummary.referral === 1, "current-attention referral category uses active referral cases");
+assert(overview.dispositionStages.assessmentAndConfirmation === 6, "assessment and confirmation merges pending review, observing, and formal warning");
+assert(overview.dispositionStages.interventionAndRetest === 3, "intervention and re-test merges intervention and pending re-test");
+assert(overview.dispositionStages.externalSupport === 1, "external support counts active referral cases only");
+assert(overview.dispositionStages.closedThisTerm === 2, "disposition stages keep current-term closure separate");
+assert(overview.highlightedAssessmentDimensions.length === 6, "structured assessment dimensions expose the top six concern dimensions");
+assert(overview.highlightedAssessmentDimensions.every((item) => item.assessedStudentCount >= item.confirmedRiskStudentCount), "dimension all-assessed counts never fall below current-risk counts");
+assert(overview.highlightedAssessmentDimensions[0].confirmedRiskStudentCount >= overview.highlightedAssessmentDimensions.at(-1).confirmedRiskStudentCount, "dimensions sort by current confirmed-risk student hits");
+assert(!overview.highlightedAssessmentDimensions.some((item) => item.label.startsWith("问题")), "dimension labels come from structured records rather than placeholders");
 assert(overview.sourceDistribution.every((item) => item.value > 0), "all three structured source types are represented");
 assert(overview.trends.length === 6, "current term trend includes every natural month");
 const marchTrend = overview.trends.find((item) => item.month === "2026-03");
@@ -207,6 +239,9 @@ const smallClassOverview = selector.buildSchoolOverview({ ...input, organization
 assert(smallClassOverview.isSmallClassSuppressed && smallClassOverview.currentRisk.studentCount === null, "small-class scope removes the top-level exact risk count");
 assert(smallClassOverview.riskLevelDistribution.every((item) => item.value === null && item.percentage === null), "small-class scope removes exact level values and percentages");
 assert(smallClassOverview.attention.every((item) => item.value === null), "small-class scope removes exact attention counts");
+assert(smallClassOverview.attentionSummary.total === null, "small-class scope removes the deduplicated attention total");
+assert(smallClassOverview.dispositionStages.assessmentAndConfirmation === null, "small-class scope removes grouped disposition counts");
+assert(smallClassOverview.highlightedAssessmentDimensions.length === 0, "small-class scope removes assessment dimension counts");
 assert(smallClassOverview.dispositionDistribution.active.every((item) => item.value === null) && smallClassOverview.dispositionDistribution.closedThisTermCount === null, "small-class scope removes exact disposition counts");
 assert(smallClassOverview.sourceDistribution.every((item) => item.value === null), "small-class scope removes exact source counts");
 assert(smallClassOverview.trends.every((item) => item.formalWarningCases === null && item.closedCases === null), "small-class scope removes exact trend values");
@@ -258,7 +293,9 @@ assert(!pageSource.includes("onOpenWarning") && !analysisSource.includes("studen
 assert(analysisSource.includes("风险学生年级分布") && analysisSource.includes("highAndCriticalCount"), "grade donut provides a text legend and high-or-critical tooltip detail");
 assert(analysisSource.includes("风险变化趋势") && !analysisSource.includes("新增确认风险学生") && !analysisSource.includes("风险线索来源分布"), "page removes deprecated principal-facing trend and source modules");
 assert(analysisSource.includes("风险变化趋势，单位项"), "principal trend accessibility copy uses the case unit");
-assert(analysisSource.includes("当前处理中 / 本学期已闭环"), "principal-facing copy uses current processing");
+assert(analysisSource.includes("测评突出问题") && analysisSource.includes("highlightedAssessmentDimensions"), "page renders structured assessment dimensions from the ViewModel");
+assert(!analysisSource.includes("风险等级分布") && !analysisSource.includes("处置成效概览"), "page removes deprecated standalone analysis modules");
+assert(pageSource.includes("SchoolOverviewDispositionStages") && !pageSource.includes("SchoolOverviewAttention"), "page uses the grouped disposition row and removes the old attention grid");
 
 const sharedOverview = selector.buildSchoolOverview({
   students: studentMock.studentProfileMockData,

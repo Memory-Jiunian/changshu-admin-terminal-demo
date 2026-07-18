@@ -369,10 +369,10 @@ state-transition, grace-period, feedback-read, and privacy rules remain frozen.
 - [x] G1.4 Replace the settings placeholder with five internal tabs
 - [x] G1.5 Verify Topbar, overview, profile, workbench, and new-business defaults
 - [x] G1.6 Run regressions, build, HTTP smoke, and viewport review
-- [ ] G1.6 Commit and push
+- [x] G1.6 Commit and push
 
-Active scope: Phase G1 system settings implementation is complete pending final
-commit and push. Historical warning records remain frozen.
+Active scope: Phase G1 system settings implementation is complete. Historical
+warning records remain frozen. No next implementation slice is approved.
 Real permissions, passwords, batch export, multi-school, backend, and third-party
 school-system synchronization remain out of scope.
 

@@ -280,17 +280,17 @@ function previewTeacherRow(
   if (existing && diffs.length === 0) {
     return rowResult(rowNumber, staffNumber, name, "skip", normalizedRow, [], ["内容无变化。"]);
   }
-  const warnings = [];
-  if (!phone) warnings.push("手机号为空，请确认后续联系信息。");
-  if (existing && existing.name !== name) warnings.push("教师姓名发生变化，请核对工号与姓名。");
+  const warningMessages = [];
+  if (!phone) warningMessages.push("手机号为空，请确认后续联系信息。");
+  if (existing && existing.name !== name) warningMessages.push("教师姓名发生变化，请核对工号与姓名。");
   return rowResult(
     rowNumber,
     staffNumber,
     name,
-    warnings.length ? "warning" : existing ? "update" : "create",
+    warningMessages.length ? "warning" : existing ? "update" : "create",
     normalizedRow,
     diffs,
-    warnings,
+    warningMessages,
   );
 }
 

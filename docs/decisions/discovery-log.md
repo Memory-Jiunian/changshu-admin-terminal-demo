@@ -287,3 +287,14 @@ Phase I1.2 已通过人工走查，校级总览不再暂停。线索池继续暂
 | D/F | 页面本地 CRUD 会形成第二份可提交真值 | 所有写操作通过共享 action 和 `AdminDataProvider` |
 | D/F | 批量导入可能部分成功污染共享数据 | 固定模板、先 Preview、Error 阻止、版本复核、内存副本原子替换 |
 | C/D | 管理资料变更可能被误写入学生处置时间线 | 只写 `AdminAuditLog`，不写 `WarningTimelineItem` |
+
+## 2026-07-18 - Phase G1 system settings implementation
+
+| 分类 | 发现 | 决策 |
+|---|---|---|
+| D/F | 共享资料操作时间若在 Provider 渲染时缓存，会产生过期审计时间 | 每次 action 调用时生成操作上下文 |
+| D/F | 教师改名后仅按姓名筛选会使当前负责事项从工作台消失 | Warning 增加稳定的可选 `responsibleTeacherId`，当前视图按共享教师资料投影，历史记录不改写 |
+| D/F | 学籍“前一天”通过本地时间再转 UTC 会在东八区偏移一天 | 日期区间运算固定使用 UTC 日历运算 |
+| D/F | 导入预览和提交共用可变对象会破坏原子性 | 预览纯计算，提交在深拷贝上执行，通过版本校验后一次替换 |
+| D/F | 重复点击确认可能二次应用同一导入 | 共享数据记录 `processedImportIds`，已确认预览拒绝重复提交 |
+| F | 通用 Excel 解析库会显著增加包体 | 仅引入 `read-excel-file` 解析固定 `.xlsx` 模板；构建保留现有大包警告，未引入新的 UI 库 |

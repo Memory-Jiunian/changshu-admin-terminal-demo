@@ -170,7 +170,7 @@ assert(detailSource.includes("requestedTarget ?? overviewTarget"), "missing targ
 assert(detailSource.includes("consumedTargetRef"), "a navigation target is consumed once");
 assert(appSource.includes('useState<AppPage>("workbench")'), "workbench is the default app entry");
 assert(sidebarSource.includes('page: "workbench"'), "sidebar links to the real workbench");
-assert(appSource.includes("<SchoolOverviewPage />") && appSource.includes("PlaceholderPage title=\"系统设置\""), "school overview is real while the remaining unimplemented page stays explicit");
+assert(appSource.includes("<SchoolOverviewPage />") && appSource.includes("<SystemSettingsPage />"), "school overview and system settings routes render their real pages");
 assert(feedbackPanelSource.includes("标记为已查看"), "feedback module exposes explicit read confirmation");
 assert(!warningPageSource.includes("canMarkWorkbenchFeedbackRead"), "navigation rendering no longer marks feedback read automatically");
 assert(reminderSource.includes("item.ctaLabel") && taskSelectorSource.includes('ctaLabel: "查看安排"') && taskSelectorSource.includes('ctaLabel: "确认干预情况"') && taskSelectorSource.includes('ctaLabel: "查看并重新安排"'), "arrangements use the approved dynamic labels");

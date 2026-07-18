@@ -163,10 +163,10 @@ function Field({
   return (
     <label className="block">
       <span className="text-sm font-semibold text-neutral-900">
-        {label} {required ? <span className="text-red-600">*</span> : null}
+        {label} {required ? <span className="text-[var(--danger-600)]">*</span> : null}
       </span>
       <div className="mt-2">{children}</div>
-      {error ? <span className="mt-1 block text-xs font-medium text-red-600">{error}</span> : null}
+      {error ? <span className="mt-1 block text-xs font-medium text-[var(--danger-600)]">{error}</span> : null}
     </label>
   );
 }
@@ -182,7 +182,7 @@ function TextArea({
 }) {
   return (
     <textarea
-      className="min-h-20 w-full resize-none rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+      className="min-h-20 w-full resize-none rounded-md border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm leading-6 outline-none focus:border-[var(--primary-500)] focus:ring-[3px] focus:ring-primary/20"
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
       value={value}
@@ -564,7 +564,7 @@ export function WarningActionDialog({
               <Field label="补充说明">
                 <TextArea onChange={(value) => updateField("note", value)} placeholder="选填" value={form.note} />
               </Field>
-              <div className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-800">
+              <div className="rounded-md border border-[var(--primary-200)] bg-[var(--primary-50)] px-3 py-2 text-xs leading-5 text-[var(--primary-600)]">
                 将生成提前 24 小时和 2 小时的模拟通知计划；当前 Demo 不发送真实通知。
               </div>
             </>
@@ -605,7 +605,7 @@ export function WarningActionDialog({
                     ["schedule_retest", "安排复测"],
                     ["referral", "发起转介"],
                   ] as const).map(([value, label]) => (
-                    <Button className={cn(form.nextPlan === value && "bg-neutral-900 text-white hover:bg-neutral-800")} key={value} onClick={() => updateField("nextPlan", value)} type="button" variant="outline">{label}</Button>
+                    <Button className={cn(form.nextPlan === value && "border-[var(--primary-600)] bg-[var(--primary-600)] text-white hover:bg-[var(--primary-500)]")} key={value} onClick={() => updateField("nextPlan", value)} type="button" variant="outline">{label}</Button>
                   ))}
                 </div>
               </Field>
@@ -649,7 +649,7 @@ export function WarningActionDialog({
                     <div className="grid gap-2">
                       {assessmentScaleOptions.map((scale) => {
                         const selected = form.scaleIds.includes(scale.id);
-                        return <Button className={cn("justify-start", selected && "bg-neutral-900 text-white hover:bg-neutral-800")} key={scale.id} onClick={() => updateField("scaleIds", selected ? form.scaleIds.filter((id) => id !== scale.id) : [...form.scaleIds, scale.id])} type="button" variant="outline">{scale.name}</Button>;
+                        return <Button className={cn("justify-start", selected && "border-[var(--primary-600)] bg-[var(--primary-600)] text-white hover:bg-[var(--primary-500)]")} key={scale.id} onClick={() => updateField("scaleIds", selected ? form.scaleIds.filter((id) => id !== scale.id) : [...form.scaleIds, scale.id])} type="button" variant="outline">{scale.name}</Button>;
                       })}
                     </div>
                   </Field>
@@ -682,7 +682,7 @@ export function WarningActionDialog({
                     return (
                       <Button
                         aria-pressed={selected}
-                        className={cn("justify-start", selected && "bg-neutral-900 text-white hover:bg-neutral-800")}
+                        className={cn("justify-start", selected && "border-[var(--primary-600)] bg-[var(--primary-600)] text-white hover:bg-[var(--primary-500)]")}
                         key={scale.id}
                         onClick={() =>
                           updateField(
@@ -726,7 +726,7 @@ export function WarningActionDialog({
 
           {action === "add_referral_follow_up" ? (
             <>
-              {!hasReferral ? <div className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">当前没有可跟进的转介记录。</div> : null}
+              {!hasReferral ? <div className="rounded-md border border-[var(--warning-100)] bg-[var(--warning-50)] px-3 py-2 text-sm text-[var(--warning-600)]">当前没有可跟进的转介记录。</div> : null}
               <Field error={errors.followUpOccurredAt} label="跟进时间" required>
                 <Input onChange={(event) => updateField("followUpOccurredAt", event.target.value)} type="datetime-local" value={form.followUpOccurredAt} />
               </Field>
@@ -744,13 +744,13 @@ export function WarningActionDialog({
 
           {action === "update_retest_status" ? (
             <>
-              {!canUpdateRetest ? <div className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">复测尚未完成，当前不能更新状态。</div> : null}
+              {!canUpdateRetest ? <div className="rounded-md border border-[var(--warning-100)] bg-[var(--warning-50)] px-3 py-2 text-sm text-[var(--warning-600)]">复测尚未完成，当前不能更新状态。</div> : null}
               <Field error={errors.outcome} label="状态更新结果" required>
                 <div className="grid gap-2">
                   {outcomeOptions.map((option) => (
                     <Button
                       aria-pressed={form.outcome === option.value}
-                      className={cn("justify-start", form.outcome === option.value && "bg-neutral-900 text-white hover:bg-neutral-800")}
+                      className={cn("justify-start", form.outcome === option.value && "border-[var(--primary-600)] bg-[var(--primary-600)] text-white hover:bg-[var(--primary-500)]")}
                       key={option.value}
                       onClick={() => updateField("outcome", option.value)}
                       type="button"
@@ -764,12 +764,12 @@ export function WarningActionDialog({
             </>
           ) : null}
 
-          {formError ? <div className="rounded-md bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{formError}</div> : null}
+          {formError ? <div className="rounded-md border border-[var(--danger-100)] bg-[var(--danger-50)] px-3 py-2 text-sm font-medium text-[var(--danger-600)]">{formError}</div> : null}
         </div>
 
         <DialogFooter className={BUSINESS_DIALOG_FOOTER_CLASS}>
           <Button onClick={() => onOpenChange(false)} type="button" variant="outline">取消</Button>
-          <Button className="bg-neutral-900 text-white hover:bg-neutral-800" onClick={handleSubmit} type="button">确认提交</Button>
+          <Button onClick={handleSubmit} type="button">确认提交</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

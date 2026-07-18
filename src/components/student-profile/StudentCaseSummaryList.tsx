@@ -3,6 +3,12 @@ import { Button } from "@/components/ui/button";
 import type { StudentProfileCaseSummary } from "@/types/studentProfile";
 import { riskLevelLabels, warningSourceTypeLabels } from "@/types/warning";
 
+const outcomeBadgeClasses = {
+  active: "border-[var(--primary-200)] bg-[var(--primary-50)] text-[var(--primary-600)]",
+  closed: "border-[var(--success-200)] bg-[var(--success-50)] text-[var(--success-700)]",
+  ended_without_warning: "border-[var(--border-default)] bg-[var(--bg-subtle)] text-[var(--text-secondary)]",
+} as const;
+
 const outcomeLabels = {
   active: "进行中",
   closed: "已闭环",
@@ -22,7 +28,7 @@ export function StudentCaseSummaryList({ cases, onViewCaseRecord, onViewWarning 
                   <div className="font-semibold">{item.warningId}</div>
                   <div className="mt-1 text-xs text-neutral-500">{item.startedAt} 至 {item.endedAt ?? item.activityTime}</div>
                 </div>
-                <Badge className="shrink-0 bg-neutral-50" variant="outline">{outcomeLabels[item.outcome]}</Badge>
+                <Badge className={`shrink-0 ${outcomeBadgeClasses[item.outcome]}`} variant="outline">{outcomeLabels[item.outcome]}</Badge>
               </div>
               <dl className="mt-4 grid grid-cols-2 gap-x-5 gap-y-3 text-sm">
                 <div><dt className="text-neutral-500">来源</dt><dd className="mt-1 font-medium">{warningSourceTypeLabels[item.sourceType]}</dd></div>

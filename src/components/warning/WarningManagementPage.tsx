@@ -349,7 +349,7 @@ export function WarningManagementPage({
         </div>
       ) : null}
       {navigationNotice ? (
-        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="rounded-md border border-[var(--warning-100)] bg-[var(--warning-50)] px-4 py-3 text-sm text-[var(--warning-600)]">
           {navigationNotice}
         </div>
       ) : null}

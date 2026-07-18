@@ -10,7 +10,7 @@ export function CaseTimelineSection({ detail }: { detail: StudentProfileCaseDeta
     <ol className="space-y-4">
       {detail.timeline.map((item) => (
         <li className="relative border-l border-neutral-200 pl-4" key={item.id}>
-          <span className="absolute -left-1.5 top-1 h-3 w-3 rounded-full border-2 border-white bg-neutral-900" />
+          <span className="absolute -left-1.5 top-1 h-3 w-3 rounded-full border-2 border-white bg-[var(--primary-500)]" />
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="text-sm font-semibold text-neutral-900">{item.title}</div>
             <div className="text-xs text-neutral-500">{item.occurredAt}</div>

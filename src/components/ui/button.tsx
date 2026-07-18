@@ -5,19 +5,19 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-[background-color,border-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:pointer-events-none disabled:border-[var(--border-default)] disabled:bg-[var(--bg-subtle)] disabled:text-[var(--text-disabled)] disabled:opacity-100 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        default: "bg-[var(--primary-600)] text-white shadow-sm hover:bg-[var(--primary-500)]",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+          "bg-[var(--danger-600)] text-white shadow-sm hover:bg-[var(--danger-500)]",
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+          "border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm hover:border-[var(--primary-200)] hover:bg-[var(--primary-50)] hover:text-[var(--primary-600)]",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "border border-[var(--border-default)] bg-[var(--bg-subtle)] text-[var(--text-primary)] shadow-sm hover:border-[var(--primary-200)] hover:bg-[var(--primary-50)]",
+        ghost: "text-[var(--text-secondary)] hover:bg-[var(--primary-50)] hover:text-[var(--primary-600)]",
+        link: "text-[var(--primary-600)] underline-offset-4 hover:text-[var(--primary-500)] hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2",
@@ -55,4 +55,3 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 
 export { Button, buttonVariants };
-

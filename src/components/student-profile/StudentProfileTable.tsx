@@ -20,7 +20,7 @@ type StudentProfileTableProps = {
 
 export function StudentProfileTable({ profiles, selectedStudentId, hasFilters, currentPage, totalPages, totalProfiles, onView, onReset, onPageChange }: StudentProfileTableProps) {
   return (
-    <Card className="overflow-hidden rounded-lg border-neutral-200 shadow-sm">
+    <Card className="overflow-hidden">
       <div className="flex items-center justify-between border-b px-5 py-3">
         <div className="text-sm font-medium text-neutral-700">学生档案</div>
         <div className="text-sm text-neutral-500">共 {totalProfiles} 名学生</div>
@@ -37,7 +37,7 @@ export function StudentProfileTable({ profiles, selectedStudentId, hasFilters, c
         </TableHeader>
         <TableBody>
           {profiles.map((profile) => (
-            <TableRow className={cn(selectedStudentId === profile.studentId && "bg-neutral-100")} key={profile.studentId}>
+            <TableRow className={cn(selectedStudentId === profile.studentId && "bg-[var(--primary-100)]")} data-interactive="true" key={profile.studentId}>
               <TableCell className="px-5 py-4">
                 <div className="font-semibold text-neutral-950">{profile.studentName}</div>
               </TableCell>

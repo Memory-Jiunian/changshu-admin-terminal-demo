@@ -22,26 +22,85 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Brand */
+    --primary-600: #2368d9;
+    --primary-500: #2f7df4;
+    --primary-400: #5795f7;
+    --primary-200: #a1c4fa;
+    --primary-100: #dcebff;
+    --primary-50: #f2f7ff;
+
+    /* Neutral */
+    --text-title: #171b24;
+    --text-primary: #343b48;
+    --text-secondary: #646d7e;
+    --text-tertiary: #8992a3;
+    --text-disabled: #b3bbc7;
+    --bg-page: #f6f8fb;
+    --bg-card: #ffffff;
+    --bg-subtle: #f8fafc;
+    --border-default: #e4e9f0;
+    --border-strong: #d4dbe6;
+    --divider: #edf0f4;
+    --icon-default: #526074;
+
+    /* Functional states */
+    --success-600: #16865a;
+    --success-500: #22b573;
+    --success-100: #ddf6ea;
+    --success-50: #f0fbf6;
+    --warning-600: #c2410c;
+    --warning-500: #ff9d3d;
+    --warning-100: #ffe5cc;
+    --warning-50: #fff7ef;
+    --danger-600: #d93642;
+    --danger-500: #ef4b54;
+    --danger-100: #ffdadc;
+    --danger-50: #fff2f3;
+    --purple-600: #6f4ac9;
+    --purple-500: #916fef;
+    --purple-100: #e7deff;
+    --purple-50: #f6f2ff;
+    --cyan-600: #0f7c80;
+    --cyan-500: #38bfc2;
+    --cyan-100: #d8f4f3;
+    --cyan-50: #f0fbfa;
+
+    /* Charts */
+    --chart-blue: #347ff4;
+    --chart-green: #22b573;
+    --chart-orange: #ff8a34;
+    --chart-purple: #8c6ff0;
+    --chart-cyan: #36bfc4;
+    --chart-red: #ef5b62;
+
+    /* Surfaces */
+    --card-radius: 10px;
+    --card-shadow: 0 2px 10px rgb(31 47 70 / 5%);
+    --card-shadow-hover: 0 6px 18px rgb(35 104 217 / 9%);
+    --focus-ring: 0 0 0 3px var(--primary-100);
+
+    /* shadcn semantic aliases */
+    --background: 216 38% 97%;
+    --foreground: 218 22% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 218 16% 24%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --popover-foreground: 218 16% 24%;
+    --primary: 217 72% 49%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 98%;
+    --secondary-foreground: 218 16% 24%;
+    --muted: 210 40% 98%;
+    --muted-foreground: 218 13% 44%;
+    --accent: 216 100% 97%;
+    --accent-foreground: 217 72% 49%;
+    --destructive: 356 68% 53%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 29% 92%;
+    --input: 215 29% 92%;
+    --ring: 216 90% 57%;
+    --radius: 0.625rem;
   }
 
   .dark {
@@ -72,6 +131,7 @@
 
   body {
     @apply min-h-screen bg-background text-foreground antialiased;
+    color: var(--text-primary);
     font-family:
       Inter, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui,
       sans-serif;

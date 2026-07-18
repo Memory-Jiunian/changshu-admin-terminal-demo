@@ -130,7 +130,7 @@ export function ConfirmFormalWarningDialog({
 
           <div>
             <div className="mb-2 text-sm font-semibold text-neutral-900">
-              正式风险等级 <span className="text-red-600">*</span>
+              正式风险等级 <span className="text-[var(--danger-600)]">*</span>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {riskLevels.map((riskLevel) => {
@@ -141,7 +141,7 @@ export function ConfirmFormalWarningDialog({
                     aria-pressed={isSelected}
                     className={cn(
                       "border-neutral-200",
-                      isSelected && "border-neutral-900 bg-neutral-900 text-white hover:bg-neutral-800",
+                      isSelected && "border-[var(--primary-600)] bg-[var(--primary-600)] text-white hover:bg-[var(--primary-500)]",
                     )}
                     key={riskLevel}
                     onClick={() => {
@@ -161,7 +161,7 @@ export function ConfirmFormalWarningDialog({
           <label className="block">
             <span className="text-sm font-semibold text-neutral-900">判断说明（选填）</span>
             <textarea
-              className="mt-2 min-h-20 w-full resize-none rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+              className="mt-2 min-h-20 w-full resize-none rounded-md border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm leading-6 outline-none focus:border-[var(--primary-500)] focus:ring-[3px] focus:ring-primary/20"
               onChange={(event) => setJudgmentNote(event.target.value)}
               placeholder="记录本次专业判断的补充说明"
               value={judgmentNote}
@@ -171,10 +171,10 @@ export function ConfirmFormalWarningDialog({
           {riskLevelChanged ? (
             <label className="block">
               <span className="text-sm font-semibold text-neutral-900">
-                风险等级调整理由 <span className="text-red-600">*</span>
+                风险等级调整理由 <span className="text-[var(--danger-600)]">*</span>
               </span>
               <textarea
-                className="mt-2 min-h-20 w-full resize-none rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+                className="mt-2 min-h-20 w-full resize-none rounded-md border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm leading-6 outline-none focus:border-[var(--primary-500)] focus:ring-[3px] focus:ring-primary/20"
                 onChange={(event) => {
                   setAdjustmentReason(event.target.value);
                   setErrorMessage("");
@@ -195,10 +195,10 @@ export function ConfirmFormalWarningDialog({
 
           <label className="block">
             <span className="text-sm font-semibold text-neutral-900">
-              补充反馈要求 <span className="text-red-600">*</span>
+              补充反馈要求 <span className="text-[var(--danger-600)]">*</span>
             </span>
             <textarea
-              className="mt-2 min-h-20 w-full resize-none rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+              className="mt-2 min-h-20 w-full resize-none rounded-md border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm leading-6 outline-none focus:border-[var(--primary-500)] focus:ring-[3px] focus:ring-primary/20"
               onChange={(event) => {
                 setFeedbackRequestNote(event.target.value);
                 setErrorMessage("");
@@ -210,10 +210,10 @@ export function ConfirmFormalWarningDialog({
 
           <label className="block">
             <span className="text-sm font-semibold text-neutral-900">
-              反馈截止时间 <span className="text-red-600">*</span>
+              反馈截止时间 <span className="text-[var(--danger-600)]">*</span>
             </span>
             <input
-              className="mt-2 h-10 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+              className="mt-2 h-10 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-card)] px-3 text-sm outline-none focus:border-[var(--primary-500)] focus:ring-[3px] focus:ring-primary/20"
               min={getMockDateTimeInput()}
               onChange={(event) => {
                 setFeedbackDeadline(event.target.value);
@@ -225,7 +225,7 @@ export function ConfirmFormalWarningDialog({
           </label>
 
           {errorMessage ? (
-            <div className="rounded-md bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+            <div className="rounded-md border border-[var(--danger-100)] bg-[var(--danger-50)] px-3 py-2 text-sm font-medium text-[var(--danger-600)]">
               {errorMessage}
             </div>
           ) : null}
@@ -236,7 +236,6 @@ export function ConfirmFormalWarningDialog({
             取消
           </Button>
           <Button
-            className="bg-neutral-900 text-white hover:bg-neutral-800"
             onClick={handleSubmit}
             type="button"
           >

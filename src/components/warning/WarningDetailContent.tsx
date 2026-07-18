@@ -12,6 +12,7 @@ import { RetestRecords } from "@/components/warning/RetestRecords";
 import { ReferralRecords } from "@/components/warning/ReferralRecords";
 import { RiskEvidence } from "@/components/warning/RiskEvidence";
 import { cn } from "@/lib/utils";
+import { warningStatusBadgeClasses } from "@/lib/visual-tokens";
 import { buildEffectiveWarningTimeline } from "@/lib/warning-records";
 import {
   statusLabels,
@@ -81,7 +82,7 @@ function StudentOverview({ warning }: { warning: WarningItem }) {
           <div className="text-xl font-semibold text-neutral-950">{warning.studentName}</div>
           <div className="mt-1 text-sm font-medium text-neutral-500">{warning.gradeClass}</div>
         </div>
-        <Badge className="border-neutral-300 bg-neutral-100 text-neutral-800" variant="outline">
+        <Badge className={warningStatusBadgeClasses[warning.currentStatus]} variant="outline">
           {statusLabels[warning.currentStatus]}
         </Badge>
       </div>

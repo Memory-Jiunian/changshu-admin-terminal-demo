@@ -224,7 +224,7 @@ export function AdvancedFilterDialog({
           <SlidersHorizontal className="h-4 w-4" />
           高级筛选
           {appliedCount > 0 ? (
-            <Badge className="ml-1 border-neutral-900 bg-neutral-900 text-white" variant="outline">
+            <Badge className="ml-1 border-[var(--primary-600)] bg-[var(--primary-600)] text-white" variant="outline">
               {appliedCount}
             </Badge>
           ) : null}
@@ -287,7 +287,7 @@ export function AdvancedFilterDialog({
                   >
                     <span>{category.label}</span>
                     {selectedCount > 0 ? (
-                      <span className="rounded-full bg-neutral-900 px-2 py-0.5 text-xs text-white">
+                      <span className="rounded-full bg-[var(--primary-600)] px-2 py-0.5 text-xs text-white">
                         {selectedCount}
                       </span>
                     ) : null}
@@ -313,8 +313,8 @@ export function AdvancedFilterDialog({
                       className={cn(
                         "h-9 rounded-full border px-4 text-sm font-medium shadow-none",
                         isSelected
-                          ? "border-neutral-900 bg-neutral-900 text-white hover:bg-neutral-800"
-                          : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-100",
+                          ? "border-[var(--primary-600)] bg-[var(--primary-600)] text-white hover:bg-[var(--primary-500)]"
+                          : "border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--primary-50)]",
                       )}
                       key={option.value}
                       onClick={() => toggleOption(activeCategoryConfig.key, option.value)}
@@ -334,7 +334,7 @@ export function AdvancedFilterDialog({
           <Button onClick={resetDraftFilters} type="button" variant="outline">
             重置
           </Button>
-          <Button className="bg-neutral-900 text-white hover:bg-neutral-800" onClick={handleApply} type="button">
+          <Button onClick={handleApply} type="button">
             应用筛选
           </Button>
         </DialogFooter>

@@ -240,3 +240,11 @@ The first implementation should match the current prototype direction:
 - 处置阶段卡的横条只表示相对规模，不使用完成率文案。
 - 图表保持白底、轻边框和克制阴影；风险色只用于必要强调。
 - 1024px 以下使用单列页面滚动，不产生整页横向滚动或嵌套可见滚动条。
+
+## Visual Token V1
+
+- 视觉 Token、领域状态色和图表色以 `docs/specs/visual-tokens-v1.md` 与 `src/index.css` 为准。
+- 保留深色 Topbar 和 Sidebar；内容区使用轻蓝灰页面背景和白色卡片。
+- 中风险固定蓝色，高风险固定橙色，危险固定红色，已闭环固定绿色。
+- Primary 600 承载小号白字主按钮；Primary 500 用于链接、图标和图表。
+- 纯展示 Card 无明显 Hover，仅显式可交互 Card 提供 Hover 和 Focus。

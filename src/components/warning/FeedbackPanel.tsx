@@ -12,19 +12,12 @@ import {
   type FeedbackStatus,
   type WarningItem,
 } from "@/types/warning";
+import { feedbackBadgeClasses } from "@/lib/visual-tokens";
 
 type FeedbackPanelProps = {
   warning: WarningItem;
   currentTime: string;
   onMarkFeedbackRead?: () => void;
-};
-
-const feedbackBadgeClass: Record<FeedbackStatus, string> = {
-  not_requested: "border-neutral-200 bg-neutral-50 text-neutral-500",
-  pending_feedback: "border-neutral-200 bg-neutral-100 text-neutral-700",
-  feedback_received: "border-neutral-200 bg-white text-neutral-700",
-  feedback_overdue: "border-neutral-900 bg-neutral-900 text-white",
-  new_feedback: "border-neutral-300 bg-neutral-100 text-neutral-950",
 };
 
 function getEmptyFeedbackText(status: FeedbackStatus) {
@@ -52,7 +45,7 @@ export function FeedbackPanel({ warning, currentTime, onMarkFeedbackRead }: Feed
     <section className="rounded-lg border border-neutral-200 bg-white p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-neutral-950">班主任反馈</h3>
-        <Badge className={feedbackBadgeClass[effectiveFeedbackStatus]} variant="outline">
+        <Badge className={feedbackBadgeClasses[effectiveFeedbackStatus]} variant="outline">
           {feedbackStatusLabels[effectiveFeedbackStatus]}
         </Badge>
       </div>
@@ -64,7 +57,7 @@ export function FeedbackPanel({ warning, currentTime, onMarkFeedbackRead }: Feed
       </div>
 
       {dataIssues.length ? (
-        <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <div className="mb-3 rounded-md border border-[var(--warning-100)] bg-[var(--warning-50)] px-3 py-2 text-xs text-[var(--warning-600)]">
           {dataIssues.map((issue) => <div key={issue}>{issue}</div>)}
         </div>
       ) : null}

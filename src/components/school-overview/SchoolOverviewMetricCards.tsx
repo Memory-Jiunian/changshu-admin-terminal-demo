@@ -7,9 +7,9 @@ import type { SchoolOverviewViewModel } from "@/types/school-overview";
 function DetailMetric({ label, value, unit }: { label: string; value: string; unit: "人" | "项" }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs leading-5 text-neutral-500">{label}</dt>
-      <dd className="mt-1 whitespace-nowrap text-xl font-semibold tabular-nums text-neutral-950">
-        {value}<span className="ml-1 text-xs font-normal text-neutral-500">{unit}</span>
+      <dt className="text-xs leading-5 text-[var(--text-secondary)]">{label}</dt>
+      <dd className="mt-1 whitespace-nowrap text-xl font-semibold tabular-nums text-[var(--text-title)]">
+        {value}<span className="ml-1 text-xs font-normal text-[var(--text-tertiary)]">{unit}</span>
       </dd>
     </div>
   );
@@ -26,13 +26,13 @@ export function SchoolOverviewMetricCards({ viewModel }: { viewModel: SchoolOver
         <Card className="flex min-h-[180px] flex-col justify-between p-5 shadow-sm lg:col-span-2 min-[1360px]:col-span-1">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-base font-semibold text-neutral-950">测评覆盖率</p>
-              <p className="mt-1 text-xs leading-5 text-neutral-500">当前学期有效测评，按学生去重</p>
+              <p className="text-base font-semibold text-[var(--text-title)]">测评覆盖率</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">当前学期有效测评，按学生去重</p>
             </div>
-            <div className="rounded-md bg-emerald-50 p-2 text-emerald-700"><ClipboardCheck className="h-5 w-5" aria-hidden="true" /></div>
+            <div className="rounded-md bg-[var(--cyan-50)] p-2 text-[var(--cyan-600)]"><ClipboardCheck className="h-5 w-5" aria-hidden="true" /></div>
           </div>
           <div>
-            <p className="text-3xl font-semibold tabular-nums text-neutral-950">{coverage === null ? "暂无可计算数据" : `${coverage}%`}</p>
+            <p className="text-3xl font-semibold tabular-nums text-[var(--text-title)]">{coverage === null ? "暂无可计算数据" : `${coverage}%`}</p>
             <dl className="mt-5 grid grid-cols-2 gap-5">
               <DetailMetric label="全部在校学生" unit="人" value={String(viewModel.coverage.enrolledCount)} />
               <DetailMetric label="已测评" unit="人" value={String(viewModel.coverage.completedCount)} />
@@ -43,13 +43,13 @@ export function SchoolOverviewMetricCards({ viewModel }: { viewModel: SchoolOver
         <Card className="flex min-h-[180px] flex-col justify-between p-5 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-base font-semibold text-neutral-950">确认风险学生</p>
-              <p className="mt-1 text-xs leading-5 text-neutral-500">仅使用心理老师确认等级，按学生去重</p>
+              <p className="text-base font-semibold text-[var(--text-title)]">确认风险学生</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">仅使用心理老师确认等级，按学生去重</p>
             </div>
-            <div className="rounded-md bg-sky-50 p-2 text-sky-700"><UsersRound className="h-5 w-5" aria-hidden="true" /></div>
+            <div className="rounded-md bg-[var(--primary-50)] p-2 text-[var(--primary-600)]"><UsersRound className="h-5 w-5" aria-hidden="true" /></div>
           </div>
           <div>
-            <p className="text-3xl font-semibold tabular-nums text-neutral-950">{viewModel.currentRisk.studentDisplay}{viewModel.currentRisk.isSuppressed ? "" : " 人"}</p>
+            <p className="text-3xl font-semibold tabular-nums text-[var(--text-title)]">{viewModel.currentRisk.studentDisplay}{viewModel.currentRisk.isSuppressed ? "" : " 人"}</p>
             <dl className="mt-5 grid grid-cols-3 gap-3">
               <DetailMetric label="中风险学生" unit="人" value={viewModel.currentRisk.mediumDisplay} />
               <DetailMetric label="高风险学生" unit="人" value={viewModel.currentRisk.highDisplay} />
@@ -62,11 +62,11 @@ export function SchoolOverviewMetricCards({ viewModel }: { viewModel: SchoolOver
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <p className="text-base font-semibold text-neutral-950">当前需关注</p>
+                <p className="text-base font-semibold text-[var(--text-title)]">当前需关注</p>
                 <TooltipProvider delayDuration={150}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button className="rounded p-0.5 text-neutral-400 outline-none hover:text-neutral-700 focus-visible:ring-2 focus-visible:ring-neutral-500" type="button" aria-label="当前需关注统计说明">
+                      <button className="rounded p-0.5 text-[var(--text-tertiary)] outline-none hover:text-[var(--primary-600)] focus-visible:ring-[3px] focus-visible:ring-primary/20" type="button" aria-label="当前需关注统计说明">
                         <Info className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </TooltipTrigger>
@@ -74,12 +74,12 @@ export function SchoolOverviewMetricCards({ viewModel }: { viewModel: SchoolOver
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <p className="mt-1 text-xs leading-5 text-neutral-500">管理关注事项，不代表专业处置建议</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">管理关注事项，不代表专业处置建议</p>
             </div>
-            <div className="rounded-md bg-amber-50 p-2 text-amber-700"><ShieldAlert className="h-5 w-5" aria-hidden="true" /></div>
+            <div className="rounded-md bg-[var(--warning-50)] p-2 text-[var(--warning-600)]"><ShieldAlert className="h-5 w-5" aria-hidden="true" /></div>
           </div>
           <div>
-            <p className="text-3xl font-semibold tabular-nums text-neutral-950">{attention.totalDisplay}{attention.isSuppressed ? "" : " 项"}</p>
+            <p className="text-3xl font-semibold tabular-nums text-[var(--text-title)]">{attention.totalDisplay}{attention.isSuppressed ? "" : " 项"}</p>
             <dl className="mt-5 grid grid-cols-3 gap-3">
               <DetailMetric label="转介中" unit="项" value={attention.referralDisplay} />
               <DetailMetric label="积压处置" unit="项" value={attention.backlogDisplay} />

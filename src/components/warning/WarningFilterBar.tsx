@@ -62,7 +62,7 @@ export function WarningFilterBar({
         <TabsList className="grid h-14 w-full grid-cols-8 rounded-lg bg-white p-1">
           {statusOrder.map((item) => (
             <TabsTrigger
-              className="h-12 rounded-md text-base font-semibold text-neutral-500 data-[state=active]:bg-neutral-900 data-[state=active]:text-white"
+              className="h-12 rounded-md text-base font-semibold text-[var(--text-secondary)] data-[state=active]:bg-[var(--primary-600)] data-[state=active]:text-white"
               key={item}
               value={item}
             >
@@ -80,7 +80,7 @@ export function WarningFilterBar({
 
             return (
               <Button
-                className="h-10 rounded-md bg-white text-sm font-semibold text-neutral-500 shadow-none hover:bg-neutral-100 data-[active=true]:bg-neutral-900 data-[active=true]:text-white"
+                className="h-10 rounded-md bg-[var(--bg-card)] text-sm font-semibold text-[var(--text-secondary)] shadow-none hover:bg-[var(--primary-50)] hover:text-[var(--primary-600)] data-[active=true]:bg-[var(--primary-600)] data-[active=true]:text-white"
                 data-active={isActive}
                 key={item.value}
                 onClick={() => onQuickFilterChange(item.value)}
@@ -97,7 +97,7 @@ export function WarningFilterBar({
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
             <Input
-              className="h-10 rounded-full border-neutral-900 bg-white pl-9 pr-4 font-medium"
+              className="h-10 rounded-full border-[var(--border-default)] bg-[var(--bg-card)] pl-9 pr-4 font-medium"
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="搜索学生姓名 / 班级 / 最新动态"
               value={searchValue}

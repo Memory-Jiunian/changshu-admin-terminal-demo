@@ -19,9 +19,9 @@ export function SchoolOverviewLoading() {
 export function SchoolOverviewFailure({ onRetry }: { onRetry: () => void }) {
   return (
     <Card className="flex min-h-[420px] flex-col items-center justify-center p-8 text-center" role="alert">
-      <AlertCircle className="h-8 w-8 text-neutral-500" aria-hidden="true" />
-      <h1 className="mt-4 text-xl font-semibold text-neutral-950">校级总览加载失败</h1>
-      <p className="mt-2 text-sm text-neutral-500">当前无法生成可靠的聚合统计，请重新加载。</p>
+      <AlertCircle className="h-8 w-8 text-[var(--danger-500)]" aria-hidden="true" />
+      <h1 className="mt-4 text-xl font-semibold text-[var(--text-title)]">校级总览加载失败</h1>
+      <p className="mt-2 text-sm text-[var(--text-secondary)]">当前无法生成可靠的聚合统计，请重新加载。</p>
       <Button className="mt-5" onClick={onRetry} type="button">重新加载</Button>
     </Card>
   );
@@ -30,13 +30,13 @@ export function SchoolOverviewFailure({ onRetry }: { onRetry: () => void }) {
 export function SchoolOverviewDataIssues({ issues }: { issues: SchoolOverviewDataIssue[] }) {
   if (issues.length === 0) return null;
   return (
-    <Card className="border-amber-200 bg-amber-50 p-4 shadow-none" role="status">
+    <Card className="border-[var(--warning-100)] bg-[var(--warning-50)] p-4 shadow-none" role="status">
       <div className="flex items-start gap-3">
-        <DatabaseZap className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+        <DatabaseZap className="mt-0.5 h-5 w-5 shrink-0 text-[var(--warning-500)]" aria-hidden="true" />
         <div>
-          <h2 className="text-sm font-semibold text-amber-950">部分数据需要核对</h2>
-          <p className="mt-1 text-xs leading-5 text-amber-900">相关记录未被静默修正；受影响模块按照安全兼容规则展示。此处不提供学生身份。</p>
-          <ul className="mt-2 space-y-1 text-xs text-amber-900">
+          <h2 className="text-sm font-semibold text-[var(--warning-600)]">部分数据需要核对</h2>
+          <p className="mt-1 text-xs leading-5 text-[var(--warning-600)]">相关记录未被静默修正；受影响模块按照安全兼容规则展示。此处不提供学生身份。</p>
+          <ul className="mt-2 space-y-1 text-xs text-[var(--warning-600)]">
             {issues.map((issue) => <li key={`${issue.code}:${issue.module}`}>· {issue.message}{issue.affectedCount === null ? "" : `（${issue.affectedCount} 条）`}</li>)}
           </ul>
         </div>
@@ -46,5 +46,5 @@ export function SchoolOverviewDataIssues({ issues }: { issues: SchoolOverviewDat
 }
 
 export function SchoolOverviewEmptyNotice({ children }: { children: string }) {
-  return <div className="rounded-md border border-dashed border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-600" role="status">{children}</div>;
+  return <div className="rounded-md border border-dashed border-[var(--border-strong)] bg-[var(--bg-card)] px-4 py-3 text-sm text-[var(--text-secondary)]" role="status">{children}</div>;
 }

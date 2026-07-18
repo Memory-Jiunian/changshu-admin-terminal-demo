@@ -17,9 +17,9 @@ export function ProcessTimeline({ items }: ProcessTimelineProps) {
         <ol className="space-y-4">
           {sortedItems.map((item, index) => (
             <li className="relative pl-5" key={item.id}>
-              <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full bg-neutral-900" />
+              <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full bg-[var(--primary-500)]" />
               {index < sortedItems.length - 1 ? (
-                <span className="absolute left-[4px] top-4 h-[calc(100%+16px)] w-px bg-neutral-200" />
+                <span className="absolute left-[4px] top-4 h-[calc(100%+16px)] w-px bg-[var(--divider)]" />
               ) : null}
               <div className="flex items-start justify-between gap-3">
                 <div>

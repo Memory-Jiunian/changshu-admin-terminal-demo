@@ -347,6 +347,15 @@ Active scope: Phase S1.2 school-overview information architecture and responsive
 decision-dashboard layout. Warning, workbench, student-profile, system-setting,
 state-transition, grace-period, feedback-read, and privacy rules remain frozen.
 
+## Phase V1: Visual tokens and color consistency
+
+- [x] V1.0 Audit current colors and add shared visual tokens
+- [x] V1.0 Map Button, Badge, Card, Input, Table, Dialog, and Drawer
+- [x] V1.1 Pilot tokens in school overview
+- [x] V1.2 Migrate workbench and warning management
+- [x] V1.3 Migrate student profile and system settings
+- [x] V1.4 Run full visual regression, build, commit, and push
+
 ## Phase 6: Polish and validation
 
 - [ ] Match prototype layout

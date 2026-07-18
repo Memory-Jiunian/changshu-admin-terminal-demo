@@ -27,7 +27,7 @@ export function StudentProfileExportDialog({ detail, selectedCase, open, onOpenC
             <label className="flex items-center gap-2 text-sm"><input checked={scope === "all_cases"} name="scope" onChange={() => setScope("all_cases")} type="radio" />全部事项</label>
             {selectedCase ? <label className="flex items-center gap-2 text-sm"><input checked={scope === "current_case"} name="scope" onChange={() => setScope("current_case")} type="radio" />当前事项 {selectedCase.summary.warningId}</label> : null}
           </fieldset>
-          <label className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"><input checked={includeSensitive} className="mt-1" onChange={(event) => setIncludeSensitive(event.target.checked)} type="checkbox" /><span>包含完整测评作答和 AI 倾诉可见会话。该内容敏感，默认不导出，请确认接收方具备授权。</span></label>
+          <label className="flex items-start gap-2 rounded-md border border-[var(--warning-200)] bg-[var(--warning-50)] p-3 text-sm text-[var(--warning-700)]"><input checked={includeSensitive} className="mt-1" onChange={(event) => setIncludeSensitive(event.target.checked)} type="checkbox" /><span>包含完整测评作答和 AI 倾诉可见会话。该内容敏感，默认不导出，请确认接收方具备授权。</span></label>
         </div>
         <DialogFooter><Button onClick={() => onOpenChange(false)} variant="outline">取消</Button><Button onClick={printReport}>打开打印 / 保存 PDF</Button></DialogFooter>
       </DialogContent>

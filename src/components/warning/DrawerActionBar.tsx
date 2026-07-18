@@ -109,7 +109,7 @@ export function DrawerActionBar({ warning, currentTime, actionMessage, onAction 
           <Button
             className={
               action.emphasis === "primary"
-                ? "min-w-28 flex-1 bg-neutral-900 text-white hover:bg-neutral-800"
+                ? "min-w-28 flex-1"
                 : "min-w-24 flex-1"
             }
             key={action.type}

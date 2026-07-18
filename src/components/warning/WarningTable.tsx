@@ -17,14 +17,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { feedbackBadgeClasses, riskBadgeClasses, warningStatusBadgeClasses } from "@/lib/visual-tokens";
 import { getEffectiveFeedbackStatus } from "@/lib/warning-feedback";
 import {
   feedbackStatusLabels,
   getEffectiveRiskLevel,
   riskLevelLabels,
   statusLabels,
-  type FeedbackStatus,
-  type RiskLevel,
   type WarningItem,
 } from "@/types/warning";
 
@@ -35,30 +34,15 @@ type WarningTableProps = {
   currentTime: string;
 };
 
-const riskBadgeClass: Record<RiskLevel, string> = {
-  low: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  medium: "border-neutral-200 bg-neutral-100 text-neutral-700",
-  high: "border-neutral-300 bg-neutral-900 text-white",
-  critical: "border-neutral-900 bg-white text-neutral-950",
-};
-
-const feedbackBadgeClass: Record<FeedbackStatus, string> = {
-  not_requested: "border-neutral-200 bg-neutral-50 text-neutral-500",
-  pending_feedback: "border-neutral-200 bg-neutral-100 text-neutral-700",
-  feedback_received: "border-neutral-200 bg-white text-neutral-700",
-  feedback_overdue: "border-neutral-900 bg-neutral-900 text-white",
-  new_feedback: "border-neutral-300 bg-neutral-100 text-neutral-950",
-};
-
 export function WarningTable({ items, selectedId, onViewDetail, currentTime }: WarningTableProps) {
   return (
-    <Card className="rounded-lg border-0 bg-neutral-200/70 shadow-none">
+    <Card className="border-0 bg-[var(--border-default)] shadow-none">
       <CardHeader className="flex-row items-center justify-between px-5 py-4">
         <CardTitle className="text-lg font-semibold text-neutral-900">预警学生列表</CardTitle>
         <span className="text-sm font-medium text-neutral-500">共 {items.length} 条</span>
       </CardHeader>
       <CardContent className="px-5 pb-5">
-        <div className="overflow-hidden rounded-lg bg-white">
+        <div className="overflow-hidden rounded-[var(--card-radius)] bg-[var(--bg-card)]">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -85,10 +69,8 @@ export function WarningTable({ items, selectedId, onViewDetail, currentTime }: W
 
                   return (
                     <TableRow
-                      className={cn(
-                        "h-14 text-[15px] font-medium",
-                        selectedId === item.id && "bg-neutral-100",
-                      )}
+                      className={cn("h-14 text-[15px] font-medium", selectedId === item.id && "bg-[var(--primary-100)]")}
+                      data-interactive="true"
                       key={item.id}
                     >
                       <TableCell className="pl-6">
@@ -98,25 +80,27 @@ export function WarningTable({ items, selectedId, onViewDetail, currentTime }: W
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={riskBadgeClass[riskLevel]} variant="outline">
+                        <Badge className={riskBadgeClasses[riskLevel]} variant="outline">
                           {riskLevelLabels[riskLevel]}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-neutral-800">
-                        {statusLabels[item.currentStatus]}
+                      <TableCell>
+                        <Badge className={warningStatusBadgeClasses[item.currentStatus]} variant="outline">
+                          {statusLabels[item.currentStatus]}
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-neutral-900">{item.latestActivity}</TableCell>
                       <TableCell className="whitespace-nowrap text-neutral-700">
                         {item.activityTime}
                       </TableCell>
                       <TableCell>
-                        <Badge className={feedbackBadgeClass[feedbackStatus]} variant="outline">
+                        <Badge className={feedbackBadgeClasses[feedbackStatus]} variant="outline">
                           {feedbackStatusLabels[feedbackStatus]}
                         </Badge>
                       </TableCell>
                       <TableCell className="pr-6 text-right">
                         <Button
-                          className="gap-2 px-0 font-semibold text-neutral-900 hover:bg-transparent"
+                          className="gap-2 px-0 font-semibold text-[var(--primary-600)] hover:bg-transparent hover:text-[var(--primary-500)]"
                           onClick={() => onViewDetail(item)}
                           type="button"
                           variant="ghost"

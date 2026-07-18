@@ -13,7 +13,7 @@ export function AppShell({ children, activePage, onNavigate }: AppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="h-screen overflow-hidden bg-neutral-100 text-neutral-950">
+    <div className="h-screen overflow-hidden bg-[var(--bg-page)] text-[var(--text-primary)]">
       <Topbar />
       <div
         className={cn(

@@ -4,19 +4,12 @@ import { AiConversationRecords } from "@/components/case-records/AiConversationR
 import {
   getEffectiveRiskLevel,
   riskLevelLabels,
-  type RiskLevel,
   type WarningItem,
 } from "@/types/warning";
+import { riskBadgeClasses } from "@/lib/visual-tokens";
 
 type RiskEvidenceProps = {
   warning: WarningItem;
-};
-
-const riskBadgeClass: Record<RiskLevel, string> = {
-  low: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  medium: "border-neutral-200 bg-neutral-100 text-neutral-700",
-  high: "border-neutral-300 bg-neutral-900 text-white",
-  critical: "border-neutral-900 bg-white text-neutral-950",
 };
 
 export function RiskEvidence({ warning }: RiskEvidenceProps) {
@@ -26,7 +19,7 @@ export function RiskEvidence({ warning }: RiskEvidenceProps) {
     <section className="rounded-lg border border-neutral-200 bg-white p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-neutral-950">风险依据</h3>
-        <Badge className={riskBadgeClass[effectiveRiskLevel]} variant="outline">
+        <Badge className={riskBadgeClasses[effectiveRiskLevel]} variant="outline">
           {riskLevelLabels[effectiveRiskLevel]}
         </Badge>
       </div>

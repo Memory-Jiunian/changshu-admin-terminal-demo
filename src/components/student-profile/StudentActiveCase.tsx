@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { warningStatusBadgeClasses } from "@/lib/visual-tokens";
 import type { StudentProfileCaseSummary } from "@/types/studentProfile";
 import { feedbackStatusLabels, riskLevelLabels, statusLabels, warningSourceTypeLabels } from "@/types/warning";
 
@@ -11,7 +12,7 @@ export function StudentActiveCase({ activeCase, onViewCaseRecord, onViewWarning 
         <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
           <div className="flex items-center justify-between gap-3">
             <div className="font-semibold text-neutral-950">{activeCase.warningId}</div>
-            <Badge className="bg-white" variant="outline">{statusLabels[activeCase.currentStatus]}</Badge>
+            <Badge className={warningStatusBadgeClasses[activeCase.currentStatus]} variant="outline">{statusLabels[activeCase.currentStatus]}</Badge>
           </div>
           <dl className="mt-4 grid grid-cols-2 gap-x-5 gap-y-4 text-sm">
             <div><dt className="text-neutral-500">来源类型</dt><dd className="mt-1 font-medium">{warningSourceTypeLabels[activeCase.sourceType]}</dd></div>

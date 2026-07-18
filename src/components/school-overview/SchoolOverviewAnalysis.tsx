@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { chartColors } from "@/lib/visual-tokens";
 import type {
   AssessmentDimensionSummary,
   GradeRiskDistribution,
@@ -28,10 +29,10 @@ function AnalysisCard({ title, description, icon: Icon, children, failed, onRetr
     <Card className={cn("min-w-0 p-4 shadow-sm", className)}>
       <div className="mb-4 min-h-[58px]">
         <h2 className="flex items-center gap-2 font-semibold text-neutral-950">
-          <Icon className="h-4 w-4 text-neutral-500" aria-hidden="true" />
+          <Icon className="h-4 w-4 text-[var(--icon-default)]" aria-hidden="true" />
           {title}
         </h2>
-        <p className="mt-1 text-xs leading-5 text-neutral-500">{description}</p>
+        <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{description}</p>
       </div>
       {failed ? <ModuleFailure onRetry={onRetry} /> : children}
     </Card>
@@ -41,7 +42,7 @@ function AnalysisCard({ title, description, icon: Icon, children, failed, onRetr
 function ModuleFailure({ onRetry }: { onRetry?: () => void }) {
   return (
     <div className="flex min-h-[230px] flex-col items-center justify-center rounded-md border border-dashed border-neutral-300 bg-neutral-50 px-4 text-center" role="status">
-      <AlertCircle className="h-5 w-5 text-neutral-500" aria-hidden="true" />
+      <AlertCircle className="h-5 w-5 text-[var(--danger-500)]" aria-hidden="true" />
       <p className="mt-2 text-sm font-medium text-neutral-800">本模块加载失败</p>
       <Button className="mt-3 gap-2" onClick={onRetry} size="sm" type="button" variant="outline">
         <RefreshCw className="h-3.5 w-3.5" />重试
@@ -52,10 +53,10 @@ function ModuleFailure({ onRetry }: { onRetry?: () => void }) {
 
 function AssessmentDimensionChart({ items, suppressed }: { items: AssessmentDimensionSummary[]; suppressed: boolean }) {
   if (suppressed) {
-    return <div className="flex min-h-[250px] items-center justify-center rounded-md border border-dashed border-neutral-300 bg-neutral-50 px-4 text-center text-sm text-neutral-600">当前班级为小数量范围，测评维度精确值已隐藏。</div>;
+    return <div className="flex min-h-[250px] items-center justify-center rounded-md border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)] px-4 text-center text-sm text-[var(--text-secondary)]">当前班级为小数量范围，测评维度精确值已隐藏。</div>;
   }
   if (items.length < 3) {
-    return <div className="flex min-h-[250px] items-center justify-center rounded-md border border-dashed border-neutral-300 bg-neutral-50 px-4 text-center text-sm text-neutral-500">当前暂无足够的结构化测评维度数据</div>;
+    return <div className="flex min-h-[250px] items-center justify-center rounded-md border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)] px-4 text-center text-sm text-[var(--text-secondary)]">当前暂无足够的结构化测评维度数据</div>;
   }
 
   const max = Math.max(...items.flatMap((item) => [item.assessedStudentCount, item.confirmedRiskStudentCount]), 1);
@@ -63,10 +64,10 @@ function AssessmentDimensionChart({ items, suppressed }: { items: AssessmentDime
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap items-center gap-4 text-xs text-neutral-600">
-        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-sky-200" />全部已测评学生</span>
-        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-sky-700" />当前确认风险学生</span>
-        <span className="ml-auto text-neutral-500">单位：人</span>
+      <div className="mb-3 flex flex-wrap items-center gap-4 text-xs text-[var(--text-secondary)]">
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[var(--primary-200)]" />全部已测评学生</span>
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[var(--chart-blue)]" />当前确认风险学生</span>
+        <span className="ml-auto text-[var(--text-tertiary)]">单位：人</span>
       </div>
       <div className="grid h-[250px] gap-2 border-b border-neutral-200 px-1" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }} role="img" aria-label={`测评突出问题。${summary}`}>
         {items.map((item) => (
@@ -76,8 +77,8 @@ function AssessmentDimensionChart({ items, suppressed }: { items: AssessmentDime
                 <div className="flex min-w-0 flex-col items-center justify-end outline-none focus-visible:ring-2 focus-visible:ring-neutral-500" tabIndex={0}>
                   <div className="flex h-[178px] w-full max-w-14 items-end justify-center gap-1">
                     {([
-                      [item.assessedStudentCount, "bg-sky-200"],
-                      [item.confirmedRiskStudentCount, "bg-sky-700"],
+                      [item.assessedStudentCount, "bg-[var(--primary-200)]"],
+                      [item.confirmedRiskStudentCount, "bg-[var(--chart-blue)]"],
                     ] as const).map(([value, tone]) => (
                       <div className="flex h-full min-w-0 flex-1 flex-col items-center justify-end" key={tone}>
                         <span className="mb-1 text-[10px] tabular-nums text-neutral-600">{value}</span>
@@ -103,17 +104,17 @@ function AssessmentDimensionChart({ items, suppressed }: { items: AssessmentDime
 
 function TrendChart({ trends, dataThrough }: { trends: SchoolOverviewTrend[]; dataThrough?: string }) {
   if (trends.some((item) => item.isSuppressed)) {
-    return <div className="flex min-h-[250px] items-center justify-center rounded-md border border-dashed border-neutral-300 bg-neutral-50 px-4 text-center text-sm text-neutral-600">当前班级为小数量范围，历史趋势精确值已隐藏。</div>;
+    return <div className="flex min-h-[250px] items-center justify-center rounded-md border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)] px-4 text-center text-sm text-[var(--text-secondary)]">当前班级为小数量范围，历史趋势精确值已隐藏。</div>;
   }
   const max = Math.max(...trends.flatMap((item) => [item.formalWarningCases ?? 0, item.closedCases ?? 0]), 1);
   const summary = trends.map((item) => `${item.label}新增正式预警 ${item.formalWarningCases ?? 0} 项、闭环 ${item.closedCases ?? 0} 项`).join("；");
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-600">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-secondary)]">
         <div className="flex items-center gap-4">
-          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-sky-700" />新增正式预警事项</span>
-          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-emerald-600" />闭环事项</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[var(--chart-blue)]" />新增正式预警事项</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[var(--chart-green)]" />闭环事项</span>
         </div>
         <span className="text-neutral-500">{dataThrough ? `数据截至 ${dataThrough}` : "单位：项"}</span>
       </div>
@@ -122,8 +123,8 @@ function TrendChart({ trends, dataThrough }: { trends: SchoolOverviewTrend[]; da
           <div className="flex min-w-0 flex-col items-center justify-end" key={item.month}>
             <div className="flex h-[190px] w-full max-w-14 items-end justify-center gap-1">
               {([
-                [item.formalWarningCases ?? 0, "bg-sky-700", "新增正式预警"],
-                [item.closedCases ?? 0, "bg-emerald-600", "闭环事项"],
+                [item.formalWarningCases ?? 0, "bg-[var(--chart-blue)]", "新增正式预警"],
+                [item.closedCases ?? 0, "bg-[var(--chart-green)]", "闭环事项"],
               ] as const).map(([value, tone, label]) => (
                 <div className="flex h-full min-w-0 flex-1 flex-col items-center justify-end" key={label} title={`${item.label}${label} ${value} 项`}>
                   <span className="mb-1 text-[10px] tabular-nums text-neutral-600">{value}</span>
@@ -139,11 +140,17 @@ function TrendChart({ trends, dataThrough }: { trends: SchoolOverviewTrend[]; da
   );
 }
 
-const gradeColors = ["#0369a1", "#0f766e", "#b45309", "#be123c", "#6d28d9"];
+const gradeColors = [
+  chartColors.blue,
+  chartColors.green,
+  chartColors.orange,
+  chartColors.purple,
+  chartColors.cyan,
+];
 
 function GradeRiskDonut({ distribution }: { distribution: GradeRiskDistribution }) {
   if (distribution.isSuppressed) {
-    return <div className="flex min-h-[250px] items-center justify-center rounded-md border border-dashed border-neutral-300 bg-neutral-50 px-4 text-center text-sm text-neutral-600">当前班级为小数量范围，年级构成精确值已隐藏。</div>;
+    return <div className="flex min-h-[250px] items-center justify-center rounded-md border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)] px-4 text-center text-sm text-[var(--text-secondary)]">当前班级为小数量范围，年级构成精确值已隐藏。</div>;
   }
   if (distribution.totalStudentCount === 0) {
     return <div className="flex min-h-[250px] items-center justify-center text-center text-sm text-neutral-500">当前暂无心理老师确认的活动风险学生。</div>;
@@ -154,7 +161,7 @@ function GradeRiskDonut({ distribution }: { distribution: GradeRiskDistribution 
     <div className="flex min-h-[250px] flex-col items-center justify-center gap-4" aria-label={distribution.accessibleSummary}>
       <div className="relative h-36 w-36" role="img" aria-label={distribution.accessibleSummary}>
         <svg className="h-full w-full" viewBox="0 0 120 120" aria-hidden="true">
-          <circle cx="60" cy="60" fill="none" r="45" stroke="#e5e7eb" strokeWidth="15" />
+          <circle cx="60" cy="60" fill="none" r="45" stroke="var(--divider)" strokeWidth="15" />
           {distribution.items.map((item, index) => {
             const startOffset = offset;
             offset += item.percentage;

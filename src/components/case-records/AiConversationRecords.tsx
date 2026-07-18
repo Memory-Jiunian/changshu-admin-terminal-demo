@@ -15,7 +15,7 @@ export function AiConversationRecords({ records }: { records: WarningAiConversat
             <span>{message.role === "student" ? "学生" : "AI 助手"}</span><span>{message.sentAt}</span>
           </div>
           <p className="mt-1 leading-6 text-neutral-800">{message.content}</p>
-          {message.riskMarker ? <div className="mt-2 text-xs font-medium text-red-700">风险标记：{message.riskMarker}</div> : null}
+          {message.riskMarker ? <div className="mt-2 text-xs font-medium text-[var(--danger-700)]">风险标记：{message.riskMarker}</div> : null}
         </div>
       ))}</div>
       <p className="mt-3 text-xs text-neutral-500">仅展示当前数据源中明确可见的会话，不代表学生全部历史对话。</p>

@@ -32,7 +32,7 @@ function InterventionResult({ record }: { record: WarningInterventionRecord }) {
 }
 
 function UnlinkedRecord({ record }: { record: WarningInterventionRecord }) {
-  return <div className="rounded-md border border-dashed border-amber-300 bg-amber-50/60 p-3">
+  return <div className="rounded-md border border-dashed border-[var(--warning-200)] bg-[var(--warning-50)] p-3">
     <InterventionResult record={record} />
   </div>;
 }
@@ -43,7 +43,7 @@ export function InterventionHistoryView({ history }: { history: WarningIntervent
   }
 
   return <div className="space-y-3">
-    {history.dataIssues.length ? <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">{history.dataIssues.map((issue) => <div key={issue}>{issue}</div>)}</div> : null}
+    {history.dataIssues.length ? <div className="rounded-md border border-[var(--warning-200)] bg-[var(--warning-50)] px-3 py-2 text-xs leading-5 text-[var(--warning-700)]">{history.dataIssues.map((issue) => <div key={issue}>{issue}</div>)}</div> : null}
     {history.rounds.map(({ appointment, result, dataIssues }, index) => (
       <article className="rounded-md border border-neutral-200 bg-white p-3" key={appointment.id}>
         <div className="flex items-center justify-between gap-3">
@@ -62,12 +62,12 @@ export function InterventionHistoryView({ history }: { history: WarningIntervent
           {appointment.cancellationReason ? <div className="sm:col-span-2"><Value label="取消原因" value={appointment.cancellationReason} /></div> : null}
           {appointment.note ? <div className="sm:col-span-2"><Value label="预约说明" value={appointment.note} /></div> : null}
         </dl>
-        {dataIssues.map((issue) => <div className="mt-3 text-xs text-amber-800" key={issue}>{issue}</div>)}
+        {dataIssues.map((issue) => <div className="mt-3 text-xs text-[var(--warning-700)]" key={issue}>{issue}</div>)}
         {result ? <InterventionResult record={result} /> : <div className="mt-3 border-t border-dashed border-neutral-200 pt-3 text-sm text-neutral-500">尚未记录本次干预结果</div>}
       </article>
     ))}
     {history.unlinkedRecords.length ? <section>
-      <h4 className="mb-2 text-sm font-semibold text-amber-900">未关联历史记录</h4>
+      <h4 className="mb-2 text-sm font-semibold text-[var(--warning-700)]">未关联历史记录</h4>
       <div className="space-y-2">{history.unlinkedRecords.map((record) => <UnlinkedRecord key={record.id} record={record} />)}</div>
     </section> : null}
   </div>;

@@ -18,7 +18,7 @@ export function FeedbackCollaborationRounds({ collaboration }: { collaboration: 
       <div className="mt-3 space-y-2">{records.length ? records.map((record) => <FeedbackItem key={record.id} record={record} />) : <CaseRecordEmptyState text="本轮尚未收到反馈" />}</div>
     </section>)}
     {collaboration.proactiveRecords.length ? <section><h5 className="mb-2 text-sm font-semibold">主动提交 / 未关联请求</h5><div className="space-y-2">{collaboration.proactiveRecords.map((record) => <FeedbackItem key={record.id} record={record} />)}</div></section> : null}
-    {collaboration.unmatchedRecords.length ? <section><h5 className="mb-2 text-sm font-semibold text-amber-800">待核对关联</h5><div className="space-y-2">{collaboration.unmatchedRecords.map((record) => <FeedbackItem key={record.id} record={record} />)}</div></section> : null}
-    {collaboration.dataIssues.map((issue) => <p className="text-xs text-amber-800" key={issue}>{issue}</p>)}
+    {collaboration.unmatchedRecords.length ? <section><h5 className="mb-2 text-sm font-semibold text-[var(--warning-700)]">待核对关联</h5><div className="space-y-2">{collaboration.unmatchedRecords.map((record) => <FeedbackItem key={record.id} record={record} />)}</div></section> : null}
+    {collaboration.dataIssues.map((issue) => <p className="text-xs text-[var(--warning-700)]" key={issue}>{issue}</p>)}
   </div>;
 }

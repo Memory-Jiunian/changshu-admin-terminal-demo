@@ -204,7 +204,7 @@ export function StudentProfileAdvancedFilter({
           <SlidersHorizontal className="h-4 w-4" />
           高级筛选
           {countNonDefaultFilters(value) > 0 ? (
-            <Badge className="ml-1 bg-neutral-900 text-white" variant="outline">
+            <Badge className="ml-1 border-[var(--primary-600)] bg-[var(--primary-600)] text-white" variant="outline">
               {countNonDefaultFilters(value)}
             </Badge>
           ) : null}
@@ -222,7 +222,7 @@ export function StudentProfileAdvancedFilter({
           <div className="mb-2 text-xs font-semibold text-neutral-500">已选条件</div>
           <div className="flex max-h-24 min-h-8 flex-wrap gap-2 overflow-y-auto">
             {selectedChips.map((chip) => (
-              <Badge className="gap-1 rounded-full bg-neutral-100 text-neutral-800" key={`${chip.categoryKey}-${chip.value}`} variant="outline">
+              <Badge className="gap-1 rounded-full border-[var(--primary-200)] bg-[var(--primary-50)] text-[var(--primary-600)]" key={`${chip.categoryKey}-${chip.value}`} variant="outline">
                 <span className="text-neutral-500">{chip.categoryLabel}</span>
                 {chip.label}
                 <button aria-label={`移除 ${chip.label}`} onClick={() => clearOption(chip.categoryKey, chip.value)} type="button">
@@ -241,7 +241,7 @@ export function StudentProfileAdvancedFilter({
                 <button
                   className={cn(
                     "mb-1 flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm font-medium text-neutral-600",
-                    activeCategory === key && "bg-white text-neutral-950 shadow-sm",
+                    activeCategory === key && "bg-white text-[var(--primary-600)] shadow-sm",
                   )}
                   key={key}
                   onClick={() => setActiveCategory(key)}
@@ -249,7 +249,7 @@ export function StudentProfileAdvancedFilter({
                 >
                   {category.label}
                   {draft[key].length > 0 ? (
-                    <span className="rounded-full bg-neutral-900 px-2 py-0.5 text-xs text-white">{draft[key].length}</span>
+                    <span className="rounded-full bg-[var(--primary-600)] px-2 py-0.5 text-xs text-white">{draft[key].length}</span>
                   ) : null}
                 </button>
               );
@@ -263,7 +263,7 @@ export function StudentProfileAdvancedFilter({
                   const selected = (draft[activeConfig.key] as string[]).includes(option.value);
                   return (
                     <Button
-                      className={cn("rounded-full", selected && "bg-neutral-900 text-white hover:bg-neutral-800")}
+                      className={cn("rounded-full", selected && "border-[var(--primary-600)] bg-[var(--primary-600)] text-white hover:bg-[var(--primary-500)]")}
                       key={option.value}
                       onClick={() => toggleOption(activeConfig.key, option.value)}
                       type="button"
@@ -280,7 +280,7 @@ export function StudentProfileAdvancedFilter({
 
         <DialogFooter className="shrink-0 border-t px-5 py-4">
           <Button onClick={resetDraft} type="button" variant="outline">重置</Button>
-          <Button className="bg-neutral-900 text-white hover:bg-neutral-800" onClick={() => { onApply(cloneStudentProfileAdvancedFilters(draft)); setOpen(false); }} type="button">
+          <Button onClick={() => { onApply(cloneStudentProfileAdvancedFilters(draft)); setOpen(false); }} type="button">
             应用筛选
           </Button>
         </DialogFooter>

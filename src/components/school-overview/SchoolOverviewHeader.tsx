@@ -28,8 +28,8 @@ export function SchoolOverviewHeader({
   return (
     <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-950">校级总览</h1>
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold text-[var(--text-title)]">校级总览</h1>
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[var(--text-secondary)]">
           <span className="inline-flex items-center gap-1.5">
             <CalendarRange className="h-4 w-4" aria-hidden="true" />
             {termRange.label} · {termRange.start.slice(0, 10)} 至 {termRange.end.slice(0, 10)}
@@ -43,7 +43,7 @@ export function SchoolOverviewHeader({
           value={selectedGrade}
           onValueChange={(value) => onFilterChange(value === "school" ? { level: "school" } : { level: "grade", grade: value })}
         >
-          <SelectTrigger className="w-[148px] bg-white" aria-label="选择全校或年级">
+          <SelectTrigger className="w-[148px] bg-[var(--bg-card)]" aria-label="选择全校或年级">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -59,7 +59,7 @@ export function SchoolOverviewHeader({
               ? { level: "grade", grade: selectedGrade }
               : { level: "class", grade: selectedGrade, className: value })}
           >
-            <SelectTrigger className="w-[132px] bg-white" aria-label="选择班级">
+            <SelectTrigger className="w-[132px] bg-[var(--bg-card)]" aria-label="选择班级">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

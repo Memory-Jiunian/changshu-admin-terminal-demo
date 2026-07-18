@@ -67,7 +67,7 @@ export function Sidebar({ activePage, collapsed, onNavigate, onToggle }: Sidebar
                   "flex w-full items-center border-l-4 py-3 text-sm font-semibold transition-colors",
                   collapsed ? "justify-center px-0" : "gap-3 px-4",
                   isActive
-                    ? "border-neutral-950 bg-white text-neutral-950"
+                    ? "border-[var(--primary-500)] bg-white/10 text-white"
                     : "border-transparent text-white hover:bg-white/10",
                 )}
                 onClick={() => onNavigate(item.page)}

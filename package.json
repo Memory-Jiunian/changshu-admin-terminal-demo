@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "test": "node scripts/warning-regression.mjs && node scripts/student-profile-regression.mjs && node scripts/workbench-regression.mjs && node scripts/school-overview-regression.mjs",
+    "test": "node scripts/warning-regression.mjs && node scripts/student-profile-regression.mjs && node scripts/workbench-regression.mjs && node scripts/school-overview-regression.mjs && node scripts/system-settings-regression.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -23,6 +23,7 @@
     "lucide-react": "^1.23.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "read-excel-file": "^9.3.2",
     "tailwind-merge": "^3.6.0",
     "tailwindcss-animate": "^1.0.7"
   },

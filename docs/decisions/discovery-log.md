@@ -275,3 +275,15 @@ Phase I1.2 已通过人工走查，校级总览不再暂停。线索池继续暂
 - The repository uses `WarningDeepAssessmentRecord.dimensions` rather than the draft name `dimensionResults`.
 - Dimension threshold membership must be an explicit structured fact. It must not be inferred from summary prose or generated in React.
 - Old risk-level, six-item attention, grade table, detailed disposition, source, and duplicate-analysis page modules are deprecated.
+## 2026-07-18 - Phase G1.0 system settings ownership audit
+
+| 分类 | 发现 | 决策 |
+|---|---|---|
+| D/F | 学校名称与当前心理老师仍是组件常量 | 迁移到共享学校和教师主数据，Topbar 只读取 Provider |
+| D/F | 当前学期由测评 Mock 常量维护 | 迁移到 `SchoolConfig`，校级总览从共享配置构建周期 |
+| D/F | 学生、年级、班级和当前班主任由档案 Mock 字符串维护 | 规范化为 `SchoolStudent`、`SchoolGrade`、`SchoolClass.headTeacherId` |
+| D | Warning 中重复保存学生、班级、班主任和负责人 | 保留为发生时业务快照；当前资料更新不得批量覆盖 |
+| C/D | 教师停用可能破坏活动预警、班主任和未来预约引用 | 停用前统一检查并返回可解释冲突 |
+| D/F | 页面本地 CRUD 会形成第二份可提交真值 | 所有写操作通过共享 action 和 `AdminDataProvider` |
+| D/F | 批量导入可能部分成功污染共享数据 | 固定模板、先 Preview、Error 阻止、版本复核、内存副本原子替换 |
+| C/D | 管理资料变更可能被误写入学生处置时间线 | 只写 `AdminAuditLog`，不写 `WarningTimelineItem` |

@@ -356,6 +356,25 @@ state-transition, grace-period, feedback-read, and privacy rules remain frozen.
 - [x] V1.3 Migrate student profile and system settings
 - [x] V1.4 Run full visual regression, build, commit, and push
 
+## Phase G1: System settings MVP
+
+- [x] G1.0 Read specifications and audit current data ownership
+- [x] G1.0 Define current master data versus historical snapshots
+- [ ] G1.1 Add shared school, organization, teacher, and student models
+- [ ] G1.1 Migrate AdminDataProvider and current-view adapters
+- [ ] G1.2 Add validated school and organization actions
+- [ ] G1.2 Add teacher reference checks and student enrollment actions
+- [ ] G1.3 Add fixed CSV/XLSX templates and import preview
+- [ ] G1.3 Add version validation and atomic import commit
+- [ ] G1.4 Replace the settings placeholder with five internal tabs
+- [ ] G1.5 Verify Topbar, overview, profile, workbench, and new-business defaults
+- [ ] G1.6 Run regressions, build, HTTP smoke, viewport review, commit, and push
+
+Active scope: Phase G1 system settings shared master data, validated local
+actions, and fixed-template import. Historical warning records remain frozen.
+Real permissions, passwords, batch export, multi-school, backend, and third-party
+school-system synchronization remain out of scope.
+
 ## Phase 6: Polish and validation
 
 - [ ] Match prototype layout

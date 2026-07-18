@@ -457,7 +457,7 @@ grace-period, task-admission, ordering, timeline-event, or professional-judgment
 rules. Unlinked legacy intervention records remain visible and are never matched
 by timestamp inference.
 
-Phase S1 is the active implementation slice. The school overview derives one
+Phase S1 is complete. The school overview derives one
 read-only ViewModel from shared enrolled-student, assessment, warning, and time
 data. It aggregates the full school and must never reuse the workbench's current
 psychological-teacher filter. Current confirmed-risk students require an active
@@ -507,11 +507,25 @@ the current MVP. This does not grant cross-owner warning operations or alter
 the warning-management ownership rules. Homeroom teachers, grade directors,
 and school leaders do not enter individual student profiles.
 
+Phase G1 is the active implementation slice. System settings owns current
+school configuration, organization, teacher, and student master data through
+`AdminDataProvider`. Student profile remains a read-only aggregate. Current
+master-data edits may update current views and new-business defaults, but must
+never rewrite historical warning, feedback, appointment, intervention, re-test,
+referral, or timeline snapshots. System-setting actions write `AdminAuditLog`,
+never `WarningTimelineItem`.
+
+Imports use fixed organization, teacher, and student templates. Every import
+must be parsed and previewed before confirmation. Any Error blocks confirmation;
+Warnings require explicit confirmation; Skip rows do not write. Confirmation
+must recheck the base-data version and replace shared data only after the entire
+batch succeeds.
+
 The clue-pool page, detailed student profile record modules,
 fullscreen profile mode, cross-case record indexes, all cross-module navigation except the
-two approved round trips above, organization CRUD, real
-permissions, real backend, school-overview case drill-down/export, and
-school-system synchronization remain out of scope.
+two approved round trips above, real permissions, passwords, batch export,
+multi-school support, real backend, school-overview case drill-down/export, and
+third-party school-system synchronization remain out of scope.
 
 When a new page PRD is completed, update this section before implementation.
 
